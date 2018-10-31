@@ -471,7 +471,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (defvar ivy-sort-function-alist nil)
 (defvar which-key-replacement-alist nil)
 (defvar which-key-mode nil)
-(defvar which-key-idle-delay nil)
+(defvar which-key-idle-delay 1.0)
 (defvar which-key--using-top-level nil)
 (defvar avy-all-windows nil)
 (defvar avy-action nil)
