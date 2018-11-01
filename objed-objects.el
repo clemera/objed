@@ -1434,17 +1434,15 @@ Ignores simple structured expressions like words or symbols."
   
   :try-next
   (forward-word 1)
-  ;; TODO: remove error
-  (unless (or (objed--in-string-or-comment-p)
-	      (derived-mode-p 'text-mode)
-	      (not (derived-mode-p 'prog-mode)))
-    (error "No textblock found"))
+  (or (objed--in-string-or-comment-p)
+      (derived-mode-p 'text-mode)
+      (not (derived-mode-p 'prog-mode)))
+
   :try-prev
   (forward-word -1)
-  (unless (or (objed--in-string-or-comment-p)
-	      (derived-mode-p 'text-mode)
-	      (not (derived-mode-p 'prog-mode)))
-    (error "No textblock found")))
+  (or (objed--in-string-or-comment-p)
+      (derived-mode-p 'text-mode)
+      (not (derived-mode-p 'prog-mode))))
 
 
 (defun objed--column (pos)
