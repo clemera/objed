@@ -674,7 +674,7 @@ IEND: the end position of the inner part"
 	   (setf (cadr (cadr objed--current-obj)) end)))
 	(t
 	 (error "No valid `objed--obj-state'"))))
-  
+
 
 (defun objed--distant-p (o)
   "Determine if point is outside object O."
@@ -1261,7 +1261,7 @@ property list where each key has an associated progn."
   :try-prev
   (re-search-backward  ".\\>" nil t))
 
- 
+
 (defun objed--next-symbol ()
   "Move to next symbol."
   (re-search-forward  "\\_<" nil t)
@@ -1431,7 +1431,7 @@ Ignores simple structured expressions like words or symbols."
 		  (or (not (eq (car bounds) (point-min)))
 		      (not (eq (cdr bounds) (point-max)))))
 	 (objed-make-object :obounds bounds)))))
-  
+
   :try-next
   (forward-word 1)
   (or (objed--in-string-or-comment-p)
@@ -1606,7 +1606,7 @@ non-nil the indentation block can contain empty lines."
   "Return non-nil if bounds B are inside C."
   (and (>= (car b) (car c))
        (<= (cdr b) (cdr c))))
-		   
+
 
 (defun objed--get-textblock-bounds ()
   "Get cons cell of beginnine and end position of textblock."

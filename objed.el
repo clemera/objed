@@ -92,7 +92,7 @@
 ;; commands:
 ;;
 ;; Basic movement commands (switch the object type on movement):
-;; 
+;;
 ;; [`objed-map']
 ;; f/b: Move forward/backward one character and activate the char object.
 ;; s/r: Move forward/backward one word and activate the word object (*).
@@ -122,7 +122,7 @@
 ;; Commands for context objects. Those objects are common programming constructs
 ;; like defuns, strings, parentheses but also sentences inside comments for
 ;; example. Any whitespace after point is skipped before determine the context:
-;; 
+;;
 ;; [`objed-map']
 ;; t/h: If coming from basic movement the object at point is guessed
 ;;      based on context. Point is moved  to the beginning/end of object.
@@ -135,7 +135,7 @@
 ;;      On repeat toggle between beginning/end inside the object.
 ;; q  : Move point to the other side of the current object.
 ;; i  : Toggle the state of the current object (inner/whole).
-;; 
+;;
 ;; Commands to switch to other objects (and move point to its start):
 ;;
 ;; [`objed-map']
@@ -152,7 +152,7 @@
 ;; Commands to edit objects (applying operations to them). When the region is
 ;; active the operation acts on the current region. To act on multiple objects
 ;; at once you can mark them first (see the "Misc commands" below):
-;; 
+;;
 ;; [`objed-map']
 ;; x  : Prefix to access other operations,
 ;;      see `objed-op-map' for available operations
@@ -175,7 +175,7 @@
 ;; "([{   : Surround object with corresponding chars using `electric',
 ;;
 ;; Misc commands:
-;; 
+;;
 ;; [`objed-map']
 ;; ,    : Pop to last state, which restores the last position and any object data.
 ;; j    : Choose an instance of current object type with completion,
@@ -191,7 +191,7 @@
 ;; g/C-g: Exit and deactivate `objed'.
 ;;
 ;; Dispatch keys (dispatch to any object defined in `objed-object-map'):
-;; 
+;;
 ;; [You can add your own prefix bindings using `objed-define-dispatch']
 ;;  *  : Mark all instances of current object inside another object type.
 ;;  <  : Activate part from point backward until boundary of some object.
@@ -229,9 +229,10 @@
 
 (defvar objed-mode-map
   (let ((map (make-sparse-keymap)))
-    ;; command can be used without using `objed-mode', too
+    ;; because objed is a "big" addition to the interface overriding M-SPC might
+    ;; be ok
     (define-key map (kbd "M-SPC") 'objed-activate)
-    ;; (define-key map (kbd "C-.") 'objed-activate)
+    ;;(define-key map (kbd "C-.") 'objed-activate)
     map)
   "Keymap for /function`objed-mode'.")
 
@@ -257,6 +258,7 @@ and `avy' if they are available. This can be deactivated by
 setting the user options `objed-use-which-key-if-available-p' and
 `objed-use-avy-if-available-p' before loading."
   :global t
+  :require 'objed
   (if objed-mode
       (progn
         (setq objed--which-key-avail-p (when objed-use-which-key-if-available-p
@@ -383,7 +385,7 @@ be used to restore previous states."
   :group 'objed
   :type 'integer)
 
-  
+
 (defcustom objed-keeper-commands '(save-buffer read-only-mode undo)
   "Regular Emacs commands which should not exit modal edit state.
 
@@ -629,8 +631,8 @@ object as an argument."
     (define-key map (kbd "/") (objed--call-and-switch undo char))
     ;; usual emacs keys which should not trigger reset should be added to
     ;; objed-keeper-commands...
-    
-    
+
+
     ;; general movement
     (define-key map "b" (objed--call-and-switch backward-char char))
     (define-key map "f" (objed--call-and-switch forward-char char))
@@ -640,7 +642,7 @@ object as an argument."
 
     (define-key map "S" 'objed-forward-symbol)
     (define-key map "R" 'objed-backward-symbol)
-   
+
 
     (define-key map "p" (objed--call-and-switch previous-line line))
     (define-key map "n" (objed--call-and-switch next-line line))
@@ -656,15 +658,15 @@ object as an argument."
     (define-key map "h" 'objed-current-or-next-context)
     (define-key map "o" 'objed-expand-context)
     (define-key map "u" 'objed-upto-context)
-    
+
     (define-key map "i" 'objed-toggle-state)
     (define-key map "q" 'objed-toggle-side)
-    
+
     ;; TODO: birdview mode/scroll mode
     (define-key map "v" 'scroll-up-command)
     (define-key map "\ev" 'scroll-down-command)
     (define-key map "V" 'scroll-down-command)
-    
+
     ;; marking/unmarking
     (define-key map "m" 'objed-mark)
     ;; jump back and  mark, unmark if necessary
@@ -679,7 +681,7 @@ object as an argument."
     (define-key map (kbd "TAB")
       (objed-define-op nil objed-indent))
 
-      
+
     (define-key map ";"
       (objed-define-op nil objed-comment-or-uncomment-region))
     (define-key map ":"
@@ -691,13 +693,13 @@ object as an argument."
     (dolist (str (split-string  "'\"([{" "" t))
       (define-key map (kbd str)
 	(objed-define-op nil objed-electric)))
-    
+
     ;; quote op
     (define-key map "`"
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
 
-    
+
     ;; special commands
     (define-key map "," 'objed-last)
     ;; jump to objects with avy
@@ -724,7 +726,7 @@ object as an argument."
     ;; (define-key map "{" 'objed-paragraph-object)
     ;; (define-key map "[" 'objed-section-object)
     ;; (define-key map "(" 'objed-textblock-object)
-    
+
     map)
   "Keymap for commands when `objed' is active.")
 
@@ -762,7 +764,7 @@ Other single character keys are bound to `objed-undefined'."
 (defvar objed-op-map
   (let ((map (objed--define-prefix "x" 'objed-op-map)))
     (define-key map "x" 'objed-op-x)
-    
+
     (define-key map "c"
        ;; upcase, downcase, capitalize, reformat
       (objed-define-op nil objed-case-op))
@@ -772,7 +774,7 @@ Other single character keys are bound to `objed-undefined'."
       (objed-define-op nil objed-replace-op))
     (define-key map "p"
       (objed-define-op nil objed-pipe-region))
-    
+
     ;; experimental
     (define-key map "e" 'objed-eval)
     ;; uses edit-indirect if av., via prefix
@@ -792,19 +794,19 @@ To define new operations see `objed-define-op'.")
     (define-key map "c" 'objed-char-object)
     ;; sexp at point
     (define-key map "o" 'objed-sexp-object)
-    
+
     (define-key map "a" 'objed-sentence-object)
     (define-key map "k" 'objed-textblock-object)
     (define-key map "q" 'objed-paragraph-object)
     (define-key map "i" 'objed-indent-object)
     ;; meg
     (define-key map "m" 'objed-iblock-object)
-    
+
     (define-key map "b" 'objed-bracket-object)
     (define-key map "d" 'objed-defun-object)
     (define-key map "s" 'objed-string-object)
     (define-key map ";" 'objed-comment-object)
-    
+
     (define-key map "t" 'objed-tag-object)
     (define-key map "f" 'objed-file-object)
 
@@ -1082,7 +1084,7 @@ SYM is a symbol (command or object symbol) used to initialize."
         (set-transient-map objed-map
 			   #'objed--keep-transient-p
 			   #'objed--reset))
-  
+
   (when objed-modeline-hint-p
     (funcall objed-modeline-setup-func objed-mode-line-format))
   ;; show which key after redisplay if active
@@ -1113,7 +1115,7 @@ one of `objed-keeper-commands'."
 		  objed-keeper-commands)
 	    (prog1 #'ignore
 	      (add-hook 'post-command-hook 'objed--reinit-object-one-time nil t)))))
-  
+
 
 (defun objed--reinit-object-one-time ()
   "To be used with `post-command-hook'.
@@ -1598,7 +1600,7 @@ Uses `objed-initial-object' for initialization."
    (if (eq objed--object 'char)
        pos
      (objed--skip-forward pos 'ws))))
- 
+
 
 (defun objed-toggle-side ()
   "Move to other side of object.
@@ -1653,7 +1655,7 @@ textual content of an object via the content object."
       (objed--switch-to 'content))
     (goto-char (objed--beg))
     (force-mode-line-update)))
-  
+
 
 (defun objed-ace ()
   "Jump to an object with `avy'."
@@ -2329,7 +2331,7 @@ Marked object sequences are merged to built a single text object."
 	   (setq objed--marked-ovs nil)
 	   (objed-exit-op op))
 	(t
-	 
+
 	 ;; no marked objects
 	 (objed--ob-apply op cmd (objed--current))
 	 ;; for possible repeats like default conf. (kill line...)
@@ -2405,7 +2407,7 @@ on."
 
       (setq objed--opoint nil)
       (setq objed--electric-event nil)
-      
+
       (when objed--marked-ovs
         (dolist (ov objed--marked-ovs)
           (delete-overlay ov))
@@ -2419,7 +2421,7 @@ on."
 
       (when objed--saved-cursor
 	(set-cursor-color objed--saved-cursor))
-      
+
       (when objed--hl-cookie
 	(face-remap-remove-relative objed--hl-cookie))
 
