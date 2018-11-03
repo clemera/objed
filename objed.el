@@ -2,7 +2,7 @@
 ;; Copyright (C) 2018  Clemens Radermacher
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
-;; Package-Requires: ((emacs "24.5") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
 ;; Version: 0.1
 ;; Keywords: convenience
 ;; URL: https://github.com/clemera/objed
