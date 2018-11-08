@@ -388,7 +388,12 @@ be used to restore previous states."
   :type 'integer)
 
 
-(defcustom objed-keeper-commands '(save-buffer read-only-mode undo undo-only)
+(defcustom objed-keeper-commands
+  '(save-buffer
+    read-only-mode
+    undo
+    undo-only
+    recenter-top-bottom)
   "Regular Emacs commands which should not exit modal edit state.
 
 When regular commands are executed `objed' will exit its editing
