@@ -1016,8 +1016,9 @@ See `objed-cmd-alist'."
   (setq objed--opoint (point)))
 
 (defun objed--goto-start (&optional _)
-  "Goto start of current object."
-  (goto-char (objed--beg)))
+  "Goto start of current object if there is one."
+  (when objed--current-obj
+    (goto-char (objed--beg))))
 
 (defun objed--object-trailing-line (pos)
   "Activate trailing part from POS."
