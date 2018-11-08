@@ -1097,8 +1097,12 @@ If SYN is given use it instead of syntax at point."
 
 (defun objed--bounds-of-string-at-point ()
   "Return bounds of string at point."
-  (let ((beg (objed--in-string-p)))
-    (when beg
+  (let* ((beg (objed--in-string-p))
+	 (end (and beg (save-excursion
+			 (goto-char beg)
+			(when (ignore-errors (forward-sexp 1) t)
+			  (point))))))
+    (when (and beg end)
       (cons beg
             (save-excursion (goto-char beg)
                             (forward-sexp 1)
