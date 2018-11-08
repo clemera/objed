@@ -1520,6 +1520,7 @@ non-nil the indentation block can contain empty lines."
 (objed-define-object nil sentence
   :atp
   (when (or (derived-mode-p 'text-mode)
+	    (eq major-mode 'fundamental-mode)
 	    (objed--at-comment-p)
 	    (objed--in-string-or-comment-p))
     (let ((ip (ignore-errors
@@ -1530,6 +1531,7 @@ non-nil the indentation block can contain empty lines."
       (and ip (= (point) ip))))
   :get-obj
   (when (or (derived-mode-p 'text-mode)
+	    (eq major-mode 'fundamental-mode)
 	    (objed--at-comment-p)
 	    (objed--in-string-or-comment-p))
     (objed--with-narrow-for-text
@@ -1564,8 +1566,9 @@ non-nil the indentation block can contain empty lines."
                                 (forward-sentence)
                                 (point)))
       (forward-sentence 1))
+    (forward-sentence 1)
     ;; move to start
-    (forward-sentence 1))
+    (forward-sentence -1))
   :try-prev
   (objed--with-narrow-for-text
    ;; call twice at end of sentence
