@@ -365,6 +365,8 @@ See also `objed-disabled-p'"
     ;; editing entry commands
     (delete-char . char)
     (kill-line . char)
+    (yank . region)
+    (yank-pop . region)
     )
   "Entry commands and associated objects.
 
@@ -2009,10 +2011,13 @@ EVENT is used for wrapping according to
 (defun objed-yank (arg)
   "Yank and indent.
 
-ARG is passed to `yank'."
+ARG is passed to `yank'. On repreat `yank-pop'."
   (interactive "*P")
   (let ((start (point)))
-    (yank arg)
+    (if (eq last-command 'yank)
+	(yank-pop arg)
+      (yank arg)
+      (objed--switch-to 'region))
     (indent-region start (point))
     (indent-according-to-mode)
     (objed--update-current-object)))
