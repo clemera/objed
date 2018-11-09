@@ -693,6 +693,7 @@ object as an argument."
     (define-key map (kbd "TAB")
       ;; dont exit
       (objed-define-op nil objed-indent ignore))
+    (define-key map (kbd "C-x TAB") 'objed-indent-rigidly)
 
     (define-key map ";"
       (objed-define-op nil objed-comment-or-uncomment-region))
@@ -2069,7 +2070,7 @@ ARG is passed to `yank'. On repreat `yank-pop'."
 (defun objed-indent (beg end)
   "Indent region between BEG and END.
 
-Moves point over any whitespace afterwards."
+	Moves point over any whitespace afterwards."
   (interactive "r")
   (indent-region beg end)
   (objed--switch-to 'region))
@@ -2077,8 +2078,8 @@ Moves point over any whitespace afterwards."
 (defun objed--indent (f &optional arg)
   "Execute indent function F.
 
-If arg is given pass it on to the indent function. Switches
-temporary to `objed--indent-map'"
+   If arg is given pass it on to the indent function. Switches
+   temporary to `objed--indent-map'"
   ;; init
   (unless (memq last-command
 		objed--indent-commands)
@@ -2107,23 +2108,17 @@ temporary to `objed--indent-map'"
   (interactive)
   (objed--indent #'indent-rigidly-left-to-tab-stop))
 
-(defun objed-indent-to-right-tab-stop (arg)
+(defun objed-indent-to-right-tab-stop ()
   "Indent all lines in object rightward to a tab stop."
-  (interactive "p")
+  (interactive)
   (objed--indent #'indent-rigidly-right-to-tab-stop))
 
-(defun objed-indent-rigidly (arg)
+(defun objed-indent-rigidly (beg end &optional arg)
   "Similar to `indent-rigidly' but work on current object lines."
-  (interactive "P")
-  (goto-char (objed--beg))
-  (push-mark (objed--end) t)
-  (when arg
-    (indent-rigidly (point) (region-end)
-		    (prefix-numeric-value arg))
-    (setq deactivate-mark nil))
-  (message
-   (substitute-command-keys objed--indent-map-message))
-  (set-transient-map objed--indent-map t))
+  (interactive "r\nP")
+  (if arg
+      (objed--indent #'indent-rigidly (prefix-numeric-value arg))
+    (objed--indent #'ignore)))
 
 (defun objed-narrow (&optional arg)
   "Narrow to object.
