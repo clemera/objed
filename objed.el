@@ -640,7 +640,6 @@ object as an argument."
     ;; usual emacs keys which should not trigger reset should be added to
     ;; objed-keeper-commands...
 
-
     ;; general movement
     (define-key map "b" (objed--call-and-switch backward-char char))
     (define-key map "f" (objed--call-and-switch forward-char char))
@@ -651,14 +650,16 @@ object as an argument."
     (define-key map "s" (objed--call-and-switch forward-word word))
     (define-key map "r" (objed--call-and-switch backward-word word))
 
-    (define-key map "S" 'objed-forward-symbol)
-    (define-key map "R" 'objed-backward-symbol)
-
+    (define-key map "S" 'objed-indent-to-right-tab-stop)
+    (define-key map "R" 'objed-indent-to-left-tab-stop)
 
     (define-key map "p" (objed--call-and-switch previous-line line))
     (define-key map "n" (objed--call-and-switch next-line line))
-
-
+    ;; TODO: N/P move object up/down like move region
+    
+    (define-key map "`" 'objed-backward-symbol)
+    (define-key map "´" 'objed-forward-symbol)
+    
     ;; block expansions
     (define-key map "l" 'objed-expand-block)
     (define-key map "a" 'objed-beg-of-block)
@@ -693,7 +694,6 @@ object as an argument."
       ;; dont exit
       (objed-define-op nil objed-indent ignore))
 
-
     (define-key map ";"
       (objed-define-op nil objed-comment-or-uncomment-region))
     (define-key map ":"
@@ -707,7 +707,7 @@ object as an argument."
 	(objed-define-op nil objed-electric)))
 
     ;; quote op
-    (define-key map "`"
+    (define-key map "~"
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
 
@@ -2049,13 +2049,24 @@ ARG is passed to `yank'. On repreat `yank-pop'."
     (define-key map (kbd "TAB") 'objed-indent)
     (define-key map (kbd "f") 'objed-indent-right)
     (define-key map (kbd "b") 'objed-indent-left)
+    (define-key map (kbd "S") 'objed-indent-to-right-tab-stop)
+    (define-key map (kbd "R") 'objed-indent-to-left-tab-stop)
     map)
   "Map used for indentation.")
 
 (defvar objed--indent-map-message
   (concat "Indent object further with "
 	  "\\<objed--indent-map>\\[objed-indent-right], "
-	  "\\[objed-indent-left], \\[objed-indent]."))
+	  "\\[objed-indent-left], \\[objed-indent-to-left-tab-stop], "
+	  "\\[objed-indent-to-right-tab-stop], \\[objed-indent]."))
+
+(defvar objed--indent-commands
+  '(objed-indent
+    objed-indent-left
+    objed-indent-right
+    objed-indent-to-left-tab-stop
+    objed-indent-to-right-tab-stop)
+  "Commands for indentation.")
 
 (defun objed-indent (beg end)
   "Indent region between BEG and END.
@@ -2065,35 +2076,39 @@ Moves point over any whitespace afterwards."
   (indent-region beg end)
   (objed--switch-to 'region))
 
-(defun objed-indent-left (arg)
-  "Indent all lines in object leftward by ARG space."
-  (interactive "p")
+(defun objed--indent (f &optional arg)
   ;; init
   (unless (memq last-command
-		'(objed-indent objed-indent-left objed-indent-right))
+		objed--indent-commands)
     (goto-char (objed--beg))
     (push-mark (objed--end) t))
-  (indent-rigidly (point) (region-end)
-		  (- arg))
+  (if arg
+      (funcall f (region-beginning) (region-end) arg)
+    (funcall f (region-beginning) (region-end)))
   (objed--switch-to 'region)
   (message
    (substitute-command-keys objed--indent-map-message))
   (set-transient-map objed--indent-map t))
+  
+(defun objed-indent-left (arg)
+  "Indent all lines in object leftward by ARG space."
+  (interactive "p")
+  (objed--indent #'indent-rigidly (- arg)))
 
 (defun objed-indent-right (arg)
   "Indent all lines in object rightward by ARG space."
   (interactive "p")
-  ;; init
-  (unless (memq last-command
-		'(objed-indent objed-indent-left objed-indent-right))
-    (goto-char (objed--beg))
-    (push-mark (objed--end) t))
-  (indent-rigidly (point) (region-end)
-		  arg)
-  (objed--switch-to 'region)
-  (message
-   (substitute-command-keys objed--indent-map-message))
-  (set-transient-map objed--indent-map t))
+  (objed--indent #'indent-rigidly arg))
+
+(defun objed-indent-to-left-tab-stop ()
+  "Indent all lines in object lefttward to a tab stop."
+  (interactive)
+  (objed--indent #'indent-rigidly-left-to-tab-stop))
+
+(defun objed-indent-to-right-tab-stop (arg)
+  "Indent all lines in object rightward to a tab stop."
+  (interactive "p")
+  (objed--indent #'indent-rigidly-right-to-tab-stop))
 
 (defun objed-indent-rigidly (arg)
   "Similar to `indent-rigidly' but work on current object lines."
