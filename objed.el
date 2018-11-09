@@ -645,6 +645,9 @@ object as an argument."
     (define-key map "b" (objed--call-and-switch backward-char char))
     (define-key map "f" (objed--call-and-switch forward-char char))
 
+    (define-key map "B" 'objed-indent-left)
+    (define-key map "F" 'objed-indent-right)
+
     (define-key map "s" (objed--call-and-switch forward-word word))
     (define-key map "r" (objed--call-and-switch backward-word word))
 
@@ -687,7 +690,8 @@ object as an argument."
     (define-key map "d" 'objed-delete)
     (define-key map "y" 'objed-yank)
     (define-key map (kbd "TAB")
-      (objed-define-op nil objed-indent))
+      ;; dont exit
+      (objed-define-op nil objed-indent ignore))
 
 
     (define-key map ";"
@@ -2036,12 +2040,73 @@ ARG is passed to `yank'. On repreat `yank-pop'."
     (indent-according-to-mode)
     (objed--update-current-object)))
 
+(defvar objed--indent-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "F") 'objed-indent-right)
+    (define-key map (kbd "B") 'objed-indent-left)
+    (define-key map (kbd "<left>") 'objed-indent-left)
+    (define-key map (kbd "<right>") 'objed-indent-right)
+    (define-key map (kbd "TAB") 'objed-indent)
+    (define-key map (kbd "f") 'objed-indent-right)
+    (define-key map (kbd "b") 'objed-indent-left)
+    map)
+  "Map used for indentation.")
+
+(defvar objed--indent-map-message
+  (concat "Indent object further with "
+	  "\\<objed--indent-map>\\[objed-indent-right], "
+	  "\\[objed-indent-left], \\[objed-indent]."))
+
 (defun objed-indent (beg end)
   "Indent region between BEG and END.
 
 Moves point over any whitespace afterwards."
+  (interactive "r")
   (indent-region beg end)
-  (indent-according-to-mode))
+  (objed--switch-to 'region))
+
+(defun objed-indent-left (arg)
+  "Indent all lines in object leftward by ARG space."
+  (interactive "p")
+  ;; init
+  (unless (memq last-command
+		'(objed-indent objed-indent-left objed-indent-right))
+    (goto-char (objed--beg))
+    (push-mark (objed--end) t))
+  (indent-rigidly (point) (region-end)
+		  (- arg))
+  (objed--switch-to 'region)
+  (message
+   (substitute-command-keys objed--indent-map-message))
+  (set-transient-map objed--indent-map t))
+
+(defun objed-indent-right (arg)
+  "Indent all lines in object rightward by ARG space."
+  (interactive "p")
+  ;; init
+  (unless (memq last-command
+		'(objed-indent objed-indent-left objed-indent-right))
+    (goto-char (objed--beg))
+    (push-mark (objed--end) t))
+  (indent-rigidly (point) (region-end)
+		  arg)
+  (objed--switch-to 'region)
+  (message
+   (substitute-command-keys objed--indent-map-message))
+  (set-transient-map objed--indent-map t))
+
+(defun objed-indent-rigidly (arg)
+  "Similar to `indent-rigidly' but work on current object lines."
+  (interactive "P")
+  (goto-char (objed--beg))
+  (push-mark (objed--end) t)
+  (when arg
+    (indent-rigidly (point) (region-end)
+		    (prefix-numeric-value arg))
+    (setq deactivate-mark nil))
+  (message
+   (substitute-command-keys objed--indent-map-message))
+  (set-transient-map objed--indent-map t))
 
 (defun objed-narrow (&optional arg)
   "Narrow to object.
