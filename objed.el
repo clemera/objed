@@ -2047,12 +2047,8 @@ ARG is passed to `yank'. On repreat `yank-pop'."
     (define-key map (kbd "<left>") 'objed-indent-left)
     (define-key map (kbd "<right>") 'objed-indent-right)
     (define-key map (kbd "TAB") 'objed-indent)
-    (define-key map (kbd "f") 'objed-indent-right)
-    (define-key map (kbd "b") 'objed-indent-left)
     (define-key map (kbd "S") 'objed-indent-to-right-tab-stop)
     (define-key map (kbd "R") 'objed-indent-to-left-tab-stop)
-    (define-key map (kbd "s") 'objed-indent-to-right-tab-stop)
-    (define-key map (kbd "r") 'objed-indent-to-left-tab-stop)
     map)
   "Map used for indentation.")
 
@@ -2079,6 +2075,10 @@ Moves point over any whitespace afterwards."
   (objed--switch-to 'region))
 
 (defun objed--indent (f &optional arg)
+  "Execute indent function F.
+
+If arg is given pass it on to the indent function. Switches
+temporary to `objed--indent-map'"
   ;; init
   (unless (memq last-command
 		objed--indent-commands)
