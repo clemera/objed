@@ -1240,8 +1240,8 @@ property list where each key has an associated progn."
   (objed-make-object
    :beg (point)
    :ibeg (point)
-   :end (1+ (point))
-   :iend (1+ (point)))
+   :end (if (eobp) (point) (1+ (point)))
+   :iend (if (eobp) (point) (1+ (point))))
   :try-next
   ;; current one is skipped, for chars this means we are already at
   ;; the next..
