@@ -1973,7 +1973,11 @@ region command."
 (defun objed-copy ()
   "Copy objects."
   (interactive)
+  (when (eq last-command 'kill-region)
+    (objed--goto-next))
   (objed--kill-op 'ignore #'copy-region-as-kill t)
+  ;; append on repeat
+  (setq this-command 'kill-region)
   (message "Copied to `kill-ring.'"))
 
 
