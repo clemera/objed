@@ -2002,11 +2002,12 @@ append it to the `kill-ring'."
 
 
 (defun objed-electric (beg end &optional event)
-  "Wrap region between BEG and END like `electric'.
+  "Wrap region between BEG and END using `elec-pair'.
 
 EVENT is used for wrapping according to
 `electric-pair-post-self-insert-function' and defaults to
-`last-command-event'."
+`last-command-event'. If event is not an electric event fallback
+to sourround region string representation of event."
   (interactive "r")
   (require 'elec-pair)
   (let ((electric-pair-mode t)
@@ -2015,18 +2016,29 @@ EVENT is used for wrapping according to
 	;; make sure to go to beginning
 	(rbeg (if (> beg end) end beg))
 	(rend (if (> beg end) beg end)))
-    (save-mark-and-excursion
-     ;; skip ws optionally?
-     (push-mark (objed--skip-backward rend 'ws) t t)
-     (goto-char rbeg)
-     (objed--skip-ws)
-     (insert last-command-event)
-     (setq epos (point))
-     (electric-pair-post-self-insert-function))
-    ;; leave point like electric would for region
-    (goto-char epos)))
+    (if (not (memq (car (electric-pair-syntax-info last-command-event))
+		   '(?\( ?\) ?\" ?\$)))
+	(objed--surround beg end
+			 (char-to-string last-command-event))
+      (save-mark-and-excursion
+       ;; skip ws optionally?
+       (push-mark (objed--skip-backward rend 'ws) t t)
+       (goto-char rbeg)
+       (objed--skip-ws)
+       (insert last-command-event)
+       (setq epos (point))
+       (electric-pair-post-self-insert-function))
+      ;; leave point like electric would for region
+      (goto-char epos))))
 
-
+(defun objed--surround (beg end str)
+  "Surround region BEG,END with string STR."
+  (goto-char end)
+  (insert str)
+  (save-excursion
+    (goto-char beg)
+    (insert str)))
+  
 (defun objed-yank (arg)
   "Yank and indent.
 
@@ -2070,7 +2082,7 @@ ARG is passed to `yank'. On repreat `yank-pop'."
 (defun objed-indent (beg end)
   "Indent region between BEG and END.
 
-	Moves point over any whitespace afterwards."
+Moves point over any whitespace afterwards."
   (interactive "r")
   (indent-region beg end)
   (objed--switch-to 'region))
@@ -2078,8 +2090,8 @@ ARG is passed to `yank'. On repreat `yank-pop'."
 (defun objed--indent (f &optional arg)
   "Execute indent function F.
 
-   If arg is given pass it on to the indent function. Switches
-   temporary to `objed--indent-map'"
+If arg is given pass it on to the indent function. Switches
+temporary to `objed--indent-map'"
   ;; init
   (unless (memq last-command
 		objed--indent-commands)
