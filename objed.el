@@ -655,7 +655,8 @@ object as an argument."
 
     (define-key map "p" (objed--call-and-switch previous-line line))
     (define-key map "n" (objed--call-and-switch next-line line))
-    ;; TODO: N/P move object up/down like move region
+    (define-key map "N" 'objed-move-object-forward)
+    (define-key map "P" 'objed-move-object-backward)
     
     (define-key map "`" 'objed-backward-symbol)
     (define-key map "´" 'objed-forward-symbol)
@@ -2044,7 +2045,8 @@ to sourround region string representation of event."
 
 ARG is passed to `yank'. On repreat `yank-pop'."
   (interactive "*P")
-  (let ((start (point)))
+  (let ((start (point))
+	(inhibit-message t))
     (if (eq last-command 'yank)
 	(yank-pop arg)
       (yank arg)
@@ -2060,8 +2062,8 @@ ARG is passed to `yank'. On repreat `yank-pop'."
     (define-key map (kbd "<left>") 'objed-indent-left)
     (define-key map (kbd "<right>") 'objed-indent-right)
     (define-key map (kbd "TAB") 'objed-indent)
-    (define-key map (kbd "S") 'objed-indent-to-right-tab-stop)
     (define-key map (kbd "R") 'objed-indent-to-left-tab-stop)
+    (define-key map (kbd "S") 'objed-indent-to-right-tab-stop)
     map)
   "Map used for indentation.")
 
@@ -2079,14 +2081,6 @@ ARG is passed to `yank'. On repreat `yank-pop'."
     objed-indent-to-right-tab-stop)
   "Commands for indentation.")
 
-(defun objed-indent (beg end)
-  "Indent region between BEG and END.
-
-Moves point over any whitespace afterwards."
-  (interactive "r")
-  (indent-region beg end)
-  (objed--switch-to 'region))
-
 (defun objed--indent (f &optional arg)
   "Execute indent function F.
 
@@ -2096,14 +2090,24 @@ temporary to `objed--indent-map'"
   (unless (memq last-command
 		objed--indent-commands)
     (goto-char (objed--beg))
-    (push-mark (objed--end) t))
+    (push-mark (objed--end) t)
+    (set-transient-map objed--indent-map t
+		       (let ((obj objed--object))
+			 (lambda () (objed--switch-to obj)))))
   (if arg
       (funcall f (region-beginning) (region-end) arg)
     (funcall f (region-beginning) (region-end)))
   (objed--switch-to 'region)
   (message
-   (substitute-command-keys objed--indent-map-message))
-  (set-transient-map objed--indent-map t))
+   (substitute-command-keys objed--indent-map-message)))
+
+(defun objed-indent (beg end)
+  "Indent region between BEG and END.
+
+Moves point over any whitespace afterwards."
+  (interactive "r")
+  (indent-region beg end)
+  (objed--switch-to 'region))
   
 (defun objed-indent-left (arg)
   "Indent all lines in object leftward by ARG space."
@@ -2131,6 +2135,56 @@ temporary to `objed--indent-map'"
   (if arg
       (objed--indent #'indent-rigidly (prefix-numeric-value arg))
     (objed--indent #'ignore)))
+
+(defun objed-move-object-forward ()
+  "Move object forward.
+
+Swaps the current object with the next one."
+  (interactive)
+  (let* ((current (buffer-substring (objed--beg)
+				    (objed--end)))
+
+	 (nexto (objed--get-next))
+       	 (next (and nexto (apply #'buffer-substring
+				 (objed--current nexto))))
+	 (nend (objed--end nexto)))
+    (apply #'delete-region (objed--current nexto))
+    (goto-char (objed--beg nexto))
+    (insert current)
+
+    (apply #'delete-region (objed--current))
+    (goto-char (objed--beg))
+    (insert next)
+
+    (goto-char (- nend (length current)))
+    (objed--update-current-object
+     (objed-make-object :beg (point) :end nend))))
+
+
+(defun objed-move-object-backward ()
+  "Move object backward. 
+
+Swaps the current object with the previous one."
+  (interactive)
+  (let* ((current (buffer-substring (objed--beg)
+				    (objed--end)))
+
+	 (prevo (objed--get-prev))
+       	 (prev (and prevo (apply #'buffer-substring
+				 (objed--current prevo))))
+	 (pbeg (objed--beg prevo)))
+
+    (apply #'delete-region (objed--current))
+    (goto-char (objed--beg))
+    (insert prev)
+
+    (apply #'delete-region (objed--current prevo))
+    (goto-char (objed--beg prevo))
+    (insert current)
+    
+    (objed--update-current-object
+     (objed-make-object :beg pbeg :end (point)))
+    (goto-char (objed--beg))))
 
 (defun objed-narrow (&optional arg)
   "Narrow to object.
