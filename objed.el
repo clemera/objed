@@ -644,19 +644,25 @@ object as an argument."
     (define-key map "b" (objed--call-and-switch backward-char char))
     (define-key map "f" (objed--call-and-switch forward-char char))
 
-    (define-key map "B" 'objed-indent-left)
-    (define-key map "F" 'objed-indent-right)
-
+    (define-key map "B" 'objed-move-char-backward)
+    (define-key map "F" 'objed-move-char-forward)
+    
     (define-key map "s" (objed--call-and-switch forward-word word))
     (define-key map "r" (objed--call-and-switch backward-word word))
 
-    (define-key map "S" 'objed-indent-to-right-tab-stop)
-    (define-key map "R" 'objed-indent-to-left-tab-stop)
-
+    (define-key map "S" 'objed-move-word-forward)
+    (define-key map "R" 'objed-move-word-backward)
+    
     (define-key map "p" (objed--call-and-switch previous-line line))
     (define-key map "n" (objed--call-and-switch next-line line))
-    (define-key map "N" 'objed-move-object-forward)
-    (define-key map "P" 'objed-move-object-backward)
+
+    (define-key map "P" 'objed-move-line-backward)
+    (define-key map "N" 'objed-move-line-forward)
+    
+    (define-key map (kbd "<C-left>") 'objed-indent-left)
+    (define-key map (kbd "<C-right>") 'objed-indent-right)
+    (define-key map (kbd "<M-right>") 'objed-indent-to-right-tab-stop)
+    (define-key map (kbd "<M-left>") 'objed-indent-to-left-tab-stop)
     
     (define-key map "`" 'objed-backward-symbol)
     (define-key map "´" 'objed-forward-symbol)
@@ -669,6 +675,10 @@ object as an argument."
     ;; context expansions
     (define-key map "t" 'objed-current-or-previous-context)
     (define-key map "h" 'objed-current-or-next-context)
+    (define-key map "T" 'objed-move-object-backward)
+    (define-key map "H" 'objed-move-object-forward)
+
+
     (define-key map "o" 'objed-expand-context)
     (define-key map "u" 'objed-upto-context)
 
@@ -2057,13 +2067,13 @@ ARG is passed to `yank'. On repreat `yank-pop'."
 
 (defvar objed--indent-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "F") 'objed-indent-right)
-    (define-key map (kbd "B") 'objed-indent-left)
+    (define-key map (kbd "<C-right>") 'objed-indent-right)
+    (define-key map (kbd "<C-left>") 'objed-indent-left)
     (define-key map (kbd "<left>") 'objed-indent-left)
     (define-key map (kbd "<right>") 'objed-indent-right)
     (define-key map (kbd "TAB") 'objed-indent)
-    (define-key map (kbd "R") 'objed-indent-to-left-tab-stop)
-    (define-key map (kbd "S") 'objed-indent-to-right-tab-stop)
+    (define-key map (kbd "<M-left>") 'objed-indent-to-left-tab-stop)
+    (define-key map (kbd "<M-right>") 'objed-indent-to-right-tab-stop)
     map)
   "Map used for indentation.")
 
@@ -2185,6 +2195,48 @@ Swaps the current object with the previous one."
     (objed--update-current-object
      (objed-make-object :beg pbeg :end (point)))
     (goto-char (objed--beg))))
+
+
+(defun objed--switch-and-move (o dir)
+  "Switch to object O and move it in direction DIR."
+  (interactive)
+  (unless (eq objed--object o)
+    (objed--switch-to o))
+  (cond ((eq dir 'forward)
+	 (objed-move-object-forward))
+	((eq dir 'backward)
+	 (objed-move-object-backward))))
+	 
+(defun objed-move-char-forward ()
+  "Switch to char object and move it forward."
+  (interactive)
+  (objed--switch-and-move 'char 'forward))
+
+(defun objed-move-char-backward ()
+  "Switch to char object and move it backward."
+  (interactive)
+  (objed--switch-and-move 'char 'backward))
+
+(defun objed-move-word-forward ()
+  "Switch to word object and move it forward."
+  (interactive)
+  (objed--switch-and-move 'word 'forward))
+
+(defun objed-move-word-backward ()
+  "Switch to word object and move it backward."
+  (interactive)
+  (objed--switch-and-move 'word 'backward))
+
+(defun objed-move-line-backward ()
+  "Switch to line object and move it backward."
+  (interactive)
+  (objed--switch-and-move 'line 'backward))
+
+(defun objed-move-line-forward ()
+  "Switch to line object and move it forward."
+  (interactive)
+  (objed--switch-and-move 'line 'forward))
+
 
 (defun objed-narrow (&optional arg)
   "Narrow to object.
