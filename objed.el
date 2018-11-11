@@ -1091,7 +1091,7 @@ SYM is a symbol (command or object symbol) used to initialize."
 
   ;; init cursor
   (setq objed--saved-cursor
-        (face-attribute 'cursor :background))
+        (face-attribute 'cursor :background nil 'default))
   (set-cursor-color objed-cursor-color)
 
   ;; init object
