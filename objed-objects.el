@@ -1902,6 +1902,64 @@ non-nil the indentation block can contain empty lines."
   :try-prev
   (search-backward ">" nil t))
 
+
+(defun objed--what-face (pos)
+  (let ((face (or (get-char-property (pos) 'read-face-name)
+                  (get-char-property (pos) 'face))))
+    (unless (keywordp (car-safe face)) (list face))))
+
+;; from `evil-textobj-syntax'
+(defun objed--get-syntax-range (&optional inclusive arg)
+  (let ((point-face (-what-face))
+        (backward-point (point)) ; last char when stop, including white space
+        (backward-none-space-point (point)) ; last none white space char
+        (forward-point (point)) ; last char when stop, including white space
+        (forward-none-space-point (point)) ; last none white space char
+        (start (point))
+        (end (point)))
+
+    ;; check chars backward,
+    ;; stop when char is not white space and has different face
+    (save-excursion
+      (let ((continue t))
+        (while (and continue (>= (- (point) 1) (point-min)))
+          (backward-char)
+          (let ((backward-point-face (-what-face)))
+            (if (= 32 (char-syntax (char-after)))
+                (setq backward-point (point))
+              (if (equal point-face backward-point-face)
+                  (progn (setq backward-point (point))
+                         (setq backward-none-space-point (point)))
+                (setq continue nil)))))))
+
+    ;; check chars forward,
+    ;; stop when char is not white space and has different face
+    (save-excursion
+      (let ((continue t))
+        (while (and continue (< (+ (point) 1) (point-max)))
+          (forward-char)
+          (let ((forward-point-face (-what-face)))
+            (if (= 32 (char-syntax (char-after)))
+                (setq forward-point (point))
+              (if (equal point-face forward-point-face)
+                  (progn (setq forward-point (point))
+                         (setq forward-none-space-point (point)))
+                (setq continue nil)))))))
+    ;; for inner object,
+    (objed-make-object
+     :obounds (progn (setq start backward-none-space-point)
+                     (setq end forward-none-space-point)
+                     (cons start (+ end 1))))))
+
+
+(objed-define-object nil syntax
+  :get-obj (objed--get-syntax-range)
+  :try-next
+  (re-search-forward "\\<" nil t)
+  :try-prev
+  (re-search-backward "\\>" nil t))
+
+
 (declare-function org-mark-element "ext:org")
 (with-eval-after-load 'org
   (objed-define-object nil section
