@@ -203,26 +203,26 @@ default ones when in this mode."
 Uses `objed--dispatch-alist' and defaults to
 update to given object."
   (let* ((cmd (key-binding
-	       (vector (aref (this-command-keys-vector) 0))))
-	 (binding (assq cmd objed--dispatch-alist)))
+               (vector (aref (this-command-keys-vector) 0))))
+         (binding (assq cmd objed--dispatch-alist)))
     (cond (binding
-	   (funcall (cdr binding) name))
-	  (t
-	   ;; object called as command via M-x
-	   (when (not objed--buffer)
-	      (objed--init name))
-	   ;; TODO: do something useful if called twice?
-	   ;; (eq name objed--object)
-	   (when (objed--switch-to name)
-	     (goto-char (objed--beg)))))))
+           (funcall (cdr binding) name))
+          (t
+           ;; object called as command via M-x
+           (when (not objed--buffer)
+              (objed--init name))
+           ;; TODO: do something useful if called twice?
+           ;; (eq name objed--object)
+           (when (objed--switch-to name)
+             (goto-char (objed--beg)))))))
 
 (defun objed--inside-object-p (obj)
   "Return non-nil if point point inside object OBJ."
   (let*  ((objed--object obj)
-	  (objed--obj-state 'whole)
-	  (obj (if (symbolp obj)
-		   (objed--get)
-		 obj)))
+          (objed--obj-state 'whole)
+          (obj (if (symbolp obj)
+                   (objed--get)
+                 obj)))
     (when (and obj (not (objed--distant-p obj)))
       obj)))
 
@@ -256,7 +256,7 @@ Either the symbol `whole' or `inner'.")
 OBJ defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (list (copy-sequence (car obj))
-	  (copy-sequence (cadr obj)))))
+          (copy-sequence (cadr obj)))))
 
 
 ;; * Get object positions
@@ -321,7 +321,7 @@ the head of object OBJ which defaults to `objed--current-obj'."
     (if (region-active-p)
         (cons (region-beginning) (region-end))
       (cons (objed--beg obj)
-	    (objed--end obj)))))
+            (objed--end obj)))))
 
 (defun objed--alt (&optional obj)
   "Get the current tail of `objed--current-obj'.
@@ -434,10 +434,10 @@ character of the string."
                     (setq le (line-end-position)))))
           ;; one object per line
           (when (and (or (not llb)
-			 (< lle lb)
-			 (not lle)
-			 (> llb le))
-		     (not (string= "" str)))
+                         (< lle lb)
+                         (not lle)
+                         (> llb le))
+                     (not (string= "" str)))
             (push (cons str (point)) lines)))))))
 
 
@@ -518,7 +518,7 @@ order depends on `objed--obj-state'."
 (defun objed--get-object (o &optional s)
   "Get object O with state S."
   (let ((objed--object o)
-	(objed--obj-state (or s 'whole)))
+        (objed--obj-state (or s 'whole)))
     (objed--get)))
 
 (defun objed--name2func (name &optional no-mode)
@@ -550,12 +550,12 @@ specific versions of object."
 (defun objed--handle-query (query objf)
   "Hand query QUERY for object function OBJF."
   (cond ((memq query '(:try-next :try-prev))
-	 (condition-case nil
-	     (funcall objf query)
-	   ((end-of-buffer beginning-of-buffer search-failed scan-error)
-	    (ignore))))
-	(t
-	 (funcall objf query))))
+         (condition-case nil
+             (funcall objf query)
+           ((end-of-buffer beginning-of-buffer search-failed scan-error)
+            (ignore))))
+        (t
+         (funcall objf query))))
 
 (defun objed--next-visible-point (&optional pos)
   "Get next visible position.
@@ -598,7 +598,7 @@ from end of object FROM."
       (when obj
         (if (integer-or-marker-p obj)
             (goto-char obj)
-	  (goto-char (objed--max obj))))
+          (goto-char (objed--max obj))))
       (objed--object :try-next)
       (objed--get))))
 
@@ -612,7 +612,7 @@ from beginning of object FROM."
       (when obj
         (if (integer-or-marker-p obj)
             (goto-char obj)
-	  (goto-char (objed--min obj))))
+          (goto-char (objed--min obj))))
       (objed--object :try-prev)
       (objed--get t))))
 
@@ -630,7 +630,7 @@ current object position data."
          (setq objed--current-obj (objed--get)))
         ((and (consp range)
               (not (consp (cdr range))))
-	 (error "Wrong format for object data"))
+         (error "Wrong format for object data"))
         (t
          (setq objed--current-obj range))))
 
@@ -655,32 +655,32 @@ END: the end position
 IBEG: the beginning position of the inner part
 IEND: the end position of the inner part"
   (cond ((eq objed--obj-state 'whole)
-	 (when beg
-	   (setf (car (car objed--current-obj)) beg))
-	 (when end
-	   (setf (car (cdar objed--current-obj)) end))
-	 (when ibeg
-	   (setf (car (cadr objed--current-obj)) ibeg))
-	 (when iend
-	   (setf (cadr (cadr objed--current-obj)) iend)))
-	((eq objed--obj-state 'inner)
-	 (when ibeg
-	   (setf (car (car objed--current-obj)) ibeg))
-	 (when iend
-	   (setf (car (cdar objed--current-obj)) iend))
-	 (when beg
-	   (setf (car (cadr objed--current-obj)) beg))
-	 (when end
-	   (setf (cadr (cadr objed--current-obj)) end)))
-	(t
-	 (error "No valid `objed--obj-state'"))))
+         (when beg
+           (setf (car (car objed--current-obj)) beg))
+         (when end
+           (setf (car (cdar objed--current-obj)) end))
+         (when ibeg
+           (setf (car (cadr objed--current-obj)) ibeg))
+         (when iend
+           (setf (cadr (cadr objed--current-obj)) iend)))
+        ((eq objed--obj-state 'inner)
+         (when ibeg
+           (setf (car (car objed--current-obj)) ibeg))
+         (when iend
+           (setf (car (cdar objed--current-obj)) iend))
+         (when beg
+           (setf (car (cadr objed--current-obj)) beg))
+         (when end
+           (setf (cadr (cadr objed--current-obj)) end)))
+        (t
+         (error "No valid `objed--obj-state'"))))
 
 
 (defun objed--distant-p (o)
   "Determine if point is outside object O."
   (and o
        (not (<= (objed--min o)
-		(point) (objed--max o)))))
+                (point) (objed--max o)))))
 
 (defun objed--do-all (f)
   "Apply function F to all accessible objects.
@@ -707,7 +707,7 @@ according to `objed--obj-state'."
     ;; FIXME
     (when objed--marked-ovs
       (setq objed--marked-ovs
-	    (nreverse objed--marked-ovs)))
+            (nreverse objed--marked-ovs)))
     ;; forward
     (goto-char (objed--max))
     (setq sobj objed--current-obj)
@@ -738,11 +738,11 @@ object data for inner state."
   (let ((o nil))
     (cl-dolist (cand c)
       (when (and (setq o (objed--object :get-obj cand))
-		 (if inner (setq o (nreverse o)) o)
-		 (<= (objed--beg o)
-		     (point)
-		     (objed--end o)))
-	(cl-return cand)))))
+                 (if inner (setq o (nreverse o)) o)
+                 (<= (objed--beg o)
+                     (point)
+                     (objed--end o)))
+        (cl-return cand)))))
 
 (defun objed--at-p (c)
   "Return object name at point.
@@ -825,7 +825,7 @@ object."
 OBJ is the object to use and defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (objed--make-mark-overlay (objed--beg obj)
-			      (objed--end obj))))
+                              (objed--end obj))))
 
 
 (defun objed--make-mark-overlay (beg end)
@@ -840,7 +840,7 @@ OBJ is the object to use and defaults to `objed--current-obj'."
 (defun objed--mark (beg end)
   "Mark region between BEG and END."
   (push (objed--make-mark-overlay beg end)
-	objed--marked-ovs))
+        objed--marked-ovs))
 
 (defun objed--mark-object (&optional obj append)
   "Mark current object.
@@ -849,11 +849,11 @@ If OBJ is given use it instead `objed--current-obj' If APPEND is
 non-nil append to the list of marked objects."
   (let ((obj (or obj objed--current-obj)))
     (if append
-      	(setq objed--marked-ovs
-	      (append objed--marked-ovs
-		      (list (objed--make-object-overlay obj))))
+        (setq objed--marked-ovs
+              (append objed--marked-ovs
+                      (list (objed--make-object-overlay obj))))
       (push (objed--make-object-overlay obj)
-	    objed--marked-ovs))))
+            objed--marked-ovs))))
 
 (defun objed--unmark-all ()
   "Remove all marked objects."
@@ -901,7 +901,7 @@ a cons cell."
   (let ((mark-active nil)
         (last-command nil)
         (inhibit-message t)
-	(objed--block-p t)
+        (objed--block-p t)
         (message-log-max nil)
         (current-prefix-arg nil))
     (save-mark-and-excursion
@@ -917,16 +917,16 @@ Tries to get inner positions by query current object
 for :get-inner. If that fails leading and trailing whitespace is
 skipped to determine the inner positions."
   (let ((inner (or (save-excursion
-		     (save-restriction
-		       (narrow-to-region
-			(objed--skip-forward beg 'ws)
-			(objed--skip-backward end 'ws))
-		       (goto-char (point-min))
-		       (objed--object :get-inner)))
-		   (list (objed--skip-forward beg 'ws)
-			 (objed--skip-backward end 'ws)))))
+                     (save-restriction
+                       (narrow-to-region
+                        (objed--skip-forward beg 'ws)
+                        (objed--skip-backward end 'ws))
+                       (goto-char (point-min))
+                       (objed--object :get-inner)))
+                   (list (objed--skip-forward beg 'ws)
+                         (objed--skip-backward end 'ws)))))
     (if (<= beg (car inner) (cadr inner) end)
-	inner
+        inner
       ;; fallback
       (list (point) (1+ (point))))))
 
@@ -965,9 +965,9 @@ a cons cell IBOUNDS. If inner positions are omitted
               (integer-or-marker-p end))
          (cond ((consp ibounds)
                 (objed-make-object :beg beg
-				   :end end
-				   :ibeg (car ibounds)
-				   :iend (cdr ibounds)))
+                                   :end end
+                                   :ibeg (car ibounds)
+                                   :iend (cdr ibounds)))
                ((or (functionp ibeg)
                     (functionp iend))
                 (objed-make-object :beg beg
@@ -1072,14 +1072,14 @@ If SYN is given use it instead of syntax at point."
   (let ((syn nil))
     (or (save-excursion
           (and (not (eobp))
-	       (char-after)
+               (char-after)
                (eq ?\< (char-syntax (char-after)))
                (skip-syntax-forward "<")
                (nth 4 (setq syn (syntax-ppss)))
                (nth 8 syn)))
         (save-excursion
           (and (not (bobp))
-	       (char-after)
+               (char-after)
                (eq ?\> (char-syntax (char-after)))
                (prog1 t (unless (bolp) (skip-syntax-backward ">")))
                (nth 4 (setq syn (syntax-ppss)))
@@ -1098,10 +1098,10 @@ If SYN is given use it instead of syntax at point."
 (defun objed--bounds-of-string-at-point ()
   "Return bounds of string at point."
   (let* ((beg (objed--in-string-p))
-	 (end (and beg (save-excursion
-			 (goto-char beg)
-			(when (ignore-errors (forward-sexp 1) t)
-			  (point))))))
+         (end (and beg (save-excursion
+                         (goto-char beg)
+                        (when (ignore-errors (forward-sexp 1) t)
+                          (point))))))
     (when (and beg end)
       (cons beg
             (save-excursion (goto-char beg)
@@ -1116,15 +1116,15 @@ If SYN is given use it instead of syntax at point."
         (goto-char start)
         (let ((beg (objed--skip-backward (point) nil 'comment))
               (end (objed--skip-forward (point) nil 'comment)))
-	  (goto-char end)
-	  (skip-chars-forward " \t\r\n" (line-beginning-position 2))
+          (goto-char end)
+          (skip-chars-forward " \t\r\n" (line-beginning-position 2))
           (cons beg (point)))))))
 
 (defun objed--inner-comment-block ()
   "Get range of inner comment."
   (let ((bounds (objed--comment-block)))
     (cons (objed--skip-forward (car bounds)'ws)
-	  (objed--skip-backward (cdr bounds)'ws))))
+          (objed--skip-backward (cdr bounds)'ws))))
 
 (defun objed--skip-ws (&optional back)
   "Skip whitspace.
@@ -1180,8 +1180,8 @@ comments."
 (defun objed--narrow-if-string-or-comment ()
   "In comment or string narrow to them."
   (let* ((bounds nil)
-	 (ibounds (cond ((setq bounds (objed--bounds-of-string-at-point))
-			 (objed--inner-string bounds))
+         (ibounds (cond ((setq bounds (objed--bounds-of-string-at-point))
+                         (objed--inner-string bounds))
                        ((setq bounds (objed--bounds-of-comment-at-point))
                         (objed--inner-comment-block)))))
     (when ibounds
@@ -1297,7 +1297,7 @@ property list where each key has an associated progn."
   :get-obj
   (objed-make-object
    :obounds (when (not (objed--in-string-or-comment-p))
-	      (bounds-of-thing-at-point 'symbol)))
+              (bounds-of-thing-at-point 'symbol)))
   :try-next
   (objed--next-symbol)
   :try-prev
@@ -1310,28 +1310,28 @@ property list where each key has an associated progn."
 
 Ignores simple structured expressions like words or symbols."
   (let ((opos (point))
-	(real-this-command 'forward-sexp))
+        (real-this-command 'forward-sexp))
     (cl-flet ((zigzag
-	       (arg)
-	       (ignore-errors
-		 (forward-sexp arg)
-		 (unless (eq opos (point))
-		   (prog1 (point)
-		     (forward-sexp (- arg)))))))
+               (arg)
+               (ignore-errors
+                 (forward-sexp arg)
+                 (unless (eq opos (point))
+                   (prog1 (point)
+                     (forward-sexp (- arg)))))))
       (let ((zigp nil)
-	    (wb (bounds-of-thing-at-point 'word))
-	    (sb (bounds-of-thing-at-point 'symbol)))
-	(when (or (and (not (eobp))
-		       (save-excursion
-			 (eq (point) (progn (setq zigp (zigzag 1)) (point))))
-		       (not (member (cons (point) zigp) (list wb sb))))
-		  (and (not (bobp))
-		       (save-excursion
-			 (eq (point) (progn (setq zigp (zigzag -1)) (point))))
-		       (not (member (cons (point) zigp)
-				    (list wb sb)))))
-	  (and zigp
-	       (cons (point) zigp)))))))
+            (wb (bounds-of-thing-at-point 'word))
+            (sb (bounds-of-thing-at-point 'symbol)))
+        (when (or (and (not (eobp))
+                       (save-excursion
+                         (eq (point) (progn (setq zigp (zigzag 1)) (point))))
+                       (not (member (cons (point) zigp) (list wb sb))))
+                  (and (not (bobp))
+                       (save-excursion
+                         (eq (point) (progn (setq zigp (zigzag -1)) (point))))
+                       (not (member (cons (point) zigp)
+                                    (list wb sb)))))
+          (and zigp
+               (cons (point) zigp)))))))
 
 (objed-define-object nil sexp
   :atp
@@ -1350,26 +1350,26 @@ Ignores simple structured expressions like words or symbols."
       'identifier))
   :get-obj
   (let* ((sexpb nil)
-	 (bounds (or (objed--at-sexp-p)
-		     (and (setq sexpb (save-excursion (forward-sexp -1)
-						      (objed--at-sexp-p)))
-			  (progn (forward-sexp -1)
-				 sexpb))
-		    (bounds-of-thing-at-point 'symbol)
-		    (bounds-of-thing-at-point 'word))))
+         (bounds (or (objed--at-sexp-p)
+                     (and (setq sexpb (save-excursion (forward-sexp -1)
+                                                      (objed--at-sexp-p)))
+                          (progn (forward-sexp -1)
+                                 sexpb))
+                    (bounds-of-thing-at-point 'symbol)
+                    (bounds-of-thing-at-point 'word))))
     (when bounds
       (objed-make-object
      :obounds bounds
      :ibounds (when bounds
-		(goto-char (car bounds))
-		;; include leading punctuation
-		(skip-syntax-forward ".'")
-		(let ((beg (point)))
-		  (goto-char (cdr bounds))
-		  (with-syntax-table text-mode-syntax-table
-		    (skip-syntax-backward "."))
-		  (skip-syntax-backward " .'")
-		  (cons beg (point)))))))
+                (goto-char (car bounds))
+                ;; include leading punctuation
+                (skip-syntax-forward ".'")
+                (let ((beg (point)))
+                  (goto-char (cdr bounds))
+                  (with-syntax-table text-mode-syntax-table
+                    (skip-syntax-backward "."))
+                  (skip-syntax-backward " .'")
+                  (cons beg (point)))))))
   :try-next
   (objed--with-narrow-for-text
    (forward-sexp 1)
@@ -1426,15 +1426,15 @@ Ignores simple structured expressions like words or symbols."
 (objed-define-object nil textblock
   :get-obj
   (when (or (not (derived-mode-p 'prog-mode))
-	    (derived-mode-p 'text-mode)
-	    (objed--in-comment-p)
-	    (objed--in-string-p))
+            (derived-mode-p 'text-mode)
+            (objed--in-comment-p)
+            (objed--in-string-p))
     (objed--with-narrow-for-text
      (let ((bounds (objed--get-textblock-bounds)))
        (when (and bounds
-		  (or (not (eq (car bounds) (point-min)))
-		      (not (eq (cdr bounds) (point-max)))))
-	 (objed-make-object :obounds bounds)))))
+                  (or (not (eq (car bounds) (point-min)))
+                      (not (eq (cdr bounds) (point-max)))))
+         (objed-make-object :obounds bounds)))))
 
   :try-next
   (forward-word 1)
@@ -1461,36 +1461,36 @@ Ignores simple structured expressions like words or symbols."
 If INNER is non-nil get the range for inner state. If BLOCK is
 non-nil the indentation block can contain empty lines."
   (let* ((oi (objed--indentation-position))
-	 (ic (objed--column oi))
-	 (pos nil)
-	 (opos nil)
-	 (beg (save-excursion
-	       (while (and (not (bobp))
-			   (progn
-			     (forward-line -1)
-			     (or  (and block (looking-at  "^ *$"))
-				  (and (= (objed--column (setq pos (objed--indentation-position)))
-					  ic)
-				       (or (not inner) (not (looking-at " *$")))
-				       ;; dont accept empty
-				       (or (not (eolp)) (not (bolp)))
-				       (setq opos pos))))))
-	       (prog1 (or opos oi)
-		 (setq opos nil))))
-	(end (save-excursion
-	       (save-excursion
-		 (while (and (not (eobp))
-			     (progn
-			       (forward-line 1)
-			       (or (and block (looking-at  "^ *$"))
-				   (and (= (objed--column (setq pos (objed--indentation-position)))
-					   ic)
-					(or (not inner) (not (looking-at " *$")))
-					(or (not (eolp)) (not (bolp)))
-					(setq opos pos)))))))
-	       (when opos
-		 (goto-char opos))
-	       (line-end-position))))
+         (ic (objed--column oi))
+         (pos nil)
+         (opos nil)
+         (beg (save-excursion
+               (while (and (not (bobp))
+                           (progn
+                             (forward-line -1)
+                             (or  (and block (looking-at  "^ *$"))
+                                  (and (= (objed--column (setq pos (objed--indentation-position)))
+                                          ic)
+                                       (or (not inner) (not (looking-at " *$")))
+                                       ;; dont accept empty
+                                       (or (not (eolp)) (not (bolp)))
+                                       (setq opos pos))))))
+               (prog1 (or opos oi)
+                 (setq opos nil))))
+        (end (save-excursion
+               (save-excursion
+                 (while (and (not (eobp))
+                             (progn
+                               (forward-line 1)
+                               (or (and block (looking-at  "^ *$"))
+                                   (and (= (objed--column (setq pos (objed--indentation-position)))
+                                           ic)
+                                        (or (not inner) (not (looking-at " *$")))
+                                        (or (not (eolp)) (not (bolp)))
+                                        (setq opos pos)))))))
+               (when opos
+                 (goto-char opos))
+               (line-end-position))))
     (when (and beg end)
       (cons beg end))))
 
@@ -1500,7 +1500,7 @@ non-nil the indentation block can contain empty lines."
   (let ((bounds (objed--get-indent-bounds 'inner)))
     (when bounds
       (objed-make-object :obounds (cons (car bounds)
-					(1+ (cdr bounds))))))
+                                        (1+ (cdr bounds))))))
   :try-next
   ;;(error "No next indent")
   (objed--skip-ws)
@@ -1514,7 +1514,7 @@ non-nil the indentation block can contain empty lines."
   (let ((bounds (objed--get-indent-bounds nil t)))
     (when bounds
       (objed-make-object :obounds (cons (car bounds)
-					(1+ (cdr bounds))))))
+                                        (1+ (cdr bounds))))))
   :try-next
   (objed--skip-ws)
   :try-prev
@@ -1524,44 +1524,44 @@ non-nil the indentation block can contain empty lines."
 (objed-define-object nil sentence
   :atp
   (when (or (derived-mode-p 'text-mode)
-	    (eq major-mode 'fundamental-mode)
-	    (objed--at-comment-p)
-	    (objed--in-string-or-comment-p))
+            (eq major-mode 'fundamental-mode)
+            (objed--at-comment-p)
+            (objed--in-string-or-comment-p))
     (let ((ip (ignore-errors
-		(save-excursion
-		  (forward-sentence)
-		  (backward-sentence)
-		  (point)))))
+                (save-excursion
+                  (forward-sentence)
+                  (backward-sentence)
+                  (point)))))
       (and ip (= (point) ip))))
   :get-obj
   (when (or (derived-mode-p 'text-mode)
-	    (eq major-mode 'fundamental-mode)
-	    (objed--at-comment-p)
-	    (objed--in-string-or-comment-p))
+            (eq major-mode 'fundamental-mode)
+            (objed--at-comment-p)
+            (objed--in-string-or-comment-p))
     (objed--with-narrow-for-text
      (let ((s (bounds-of-thing-at-point 'sentence)))
        (when s
-	 (goto-char (car s))
-	 (objed-make-object
-	  :beg (if (derived-mode-p 'text-mode)
-		   (car s)
-		 (while (or (< 0 (skip-syntax-forward "<"))
-			    (< 0 (skip-chars-forward "[:space:]\n"))))
-		 (point))
-	  :ibeg (point)
-	  :end (progn
-		 (goto-char (cdr s))
-		 ;; include trailing space
-		 (skip-chars-forward
-		  "\s-"
-		  (+ (point)
-		     (if sentence-end-double-space
-			 2
-		       1)))
-		 (point))
-	  :iend (with-syntax-table text-mode-syntax-table
-		  (skip-syntax-backward ".-" (car s))
-		  (point)))))))
+         (goto-char (car s))
+         (objed-make-object
+          :beg (if (derived-mode-p 'text-mode)
+                   (car s)
+                 (while (or (< 0 (skip-syntax-forward "<"))
+                            (< 0 (skip-chars-forward "[:space:]\n"))))
+                 (point))
+          :ibeg (point)
+          :end (progn
+                 (goto-char (cdr s))
+                 ;; include trailing space
+                 (skip-chars-forward
+                  "\s-"
+                  (+ (point)
+                     (if sentence-end-double-space
+                         2
+                       1)))
+                 (point))
+          :iend (with-syntax-table text-mode-syntax-table
+                  (skip-syntax-backward ".-" (car s))
+                  (point)))))))
   :try-next
   (objed--with-narrow-for-text
    ;; call twice if at start of sentence.
@@ -1603,9 +1603,9 @@ non-nil the indentation block can contain empty lines."
 (defun objed--bounds-within-comment-or-string-p (bounds)
   "Return non-nil if BOUNDS are inside comment or string."
   (let ((cbounds (cond ((objed--in-string-p)
-			(objed--bounds-of-string-at-point))
-		       ((objed--in-comment-p)
-			(objed--comment-block)))))
+                        (objed--bounds-of-string-at-point))
+                       ((objed--in-comment-p)
+                        (objed--comment-block)))))
     (when cbounds
       (objed--bounds-within-bounds-p bounds cbounds))))
 
@@ -1623,16 +1623,16 @@ non-nil the indentation block can contain empty lines."
     (cl-letf (((symbol-function 'fill-region-as-paragraph)
                (lambda (beg end &rest _)
                  (setq po (cons beg end))
-		 (throw 'done t))))
+                 (throw 'done t))))
       ;; let inner not move point in general?
       (catch 'done
-	(fill-paragraph))
+        (fill-paragraph))
       (when (consp po)
-	(goto-char (car po))
-	(objed--skip-ws)
-	(when (or (<= (point) opos (cdr po))
-		  (<= (cdr po) opos (point)))
-	  (cons (point) (cdr po))))))))
+        (goto-char (car po))
+        (objed--skip-ws)
+        (when (or (<= (point) opos (cdr po))
+                  (<= (cdr po) opos (point)))
+          (cons (point) (cdr po))))))))
 
 
 (objed-define-object nil buffer
@@ -1654,7 +1654,7 @@ non-nil the indentation block can contain empty lines."
   :atp
   (unless (objed--in-string-or-comment-p)
     (or (looking-at "(\\|\\[\\|{")
-	(looking-back ")\\|\\]\\|}" 1)))
+        (looking-back ")\\|\\]\\|}" 1)))
   :get-obj
   (unless (objed--in-string-or-comment-p)
     (cond ((and (not (bobp))
@@ -1662,25 +1662,25 @@ non-nil the indentation block can contain empty lines."
            (let ((end (point))
                  (beg (scan-sexps (point) -1)))
              (objed-make-object :beg beg
-				:end end
-				:ibeg #'1+
-				:iend #'1-)))
-	  ((and (not (eobp))
-		(eq (char-syntax (char-after)) ?\())
+                                :end end
+                                :ibeg #'1+
+                                :iend #'1-)))
+          ((and (not (eobp))
+                (eq (char-syntax (char-after)) ?\())
            (let ((beg (point))
                  (end (scan-sexps (point) 1)))
              (objed-make-object :beg beg
-				:end end
-				:ibeg #'1+
-				:iend #'1-)))
-	  (t
-	   ;; get bracket expression point is in
-	   (let* ((beg (cadr (syntax-ppss)))
-		  (end (when beg (scan-sexps beg 1))))
-	     (objed-make-object :beg beg
-				:end end
-				:ibeg #'1+
-				:iend #'1-)))))
+                                :end end
+                                :ibeg #'1+
+                                :iend #'1-)))
+          (t
+           ;; get bracket expression point is in
+           (let* ((beg (cadr (syntax-ppss)))
+                  (end (when beg (scan-sexps beg 1))))
+             (objed-make-object :beg beg
+                                :end end
+                                :ibeg #'1+
+                                :iend #'1-)))))
 
   :try-next
   (when (re-search-forward "(\\|\\[\\|{" nil t)
@@ -1725,14 +1725,14 @@ non-nil the indentation block can contain empty lines."
   :get-obj
   (let ((bounds (objed--comment-block)))
     (objed-make-object :obounds bounds
-		       ;; TODO: support multi char/multi line comments
-		       ;; act different for them?
-		       :ibounds (when bounds
-				  (goto-char (car bounds))
-				  (skip-chars-forward
-				   (format "%s \t" (or comment-start "")))
-				  (cons (point)
-					(objed--skip-backward (cdr bounds) 'ws)))))
+                       ;; TODO: support multi char/multi line comments
+                       ;; act different for them?
+                       :ibounds (when bounds
+                                  (goto-char (car bounds))
+                                  (skip-chars-forward
+                                   (format "%s \t" (or comment-start "")))
+                                  (cons (point)
+                                        (objed--skip-backward (cdr bounds) 'ws)))))
   :try-next
   (comment-search-forward (point-max) t)
   :try-prev
@@ -1750,8 +1750,8 @@ non-nil the indentation block can contain empty lines."
     (when objed--content-bounds
       (goto-char (cdr objed--content-bounds)))
     (if (search-forward curr nil t)
-	(setq objed--content-bounds
-	      (cons (match-beginning 0) (match-end 0)))
+        (setq objed--content-bounds
+              (cons (match-beginning 0) (match-end 0)))
       (setq objed--content-bounds nil))))
 
 
@@ -1796,8 +1796,8 @@ non-nil the indentation block can contain empty lines."
         (re-search-forward  "\\_<" nil t)
       (let ((sym (and (or bds (setq bds (bounds-of-thing-at-point 'symbol)))
                       (buffer-substring (car bds) (cdr bds)))))
-	(unless (looking-at "\\_<")
-	  (goto-char (cdr bds)))
+        (unless (looking-at "\\_<")
+          (goto-char (cdr bds)))
         (if (re-search-forward (format "\\_<%s\\_>" sym) nil t)
             (goto-char (match-beginning 0))
           (goto-char (car bds))
@@ -1813,8 +1813,8 @@ non-nil the indentation block can contain empty lines."
       (let ((sym (and (or bds (setq bds (bounds-of-thing-at-point 'symbol)))
                       (buffer-substring (car bds) (cdr bds)))))
         (when bds
-	  (unless (looking-back "\\_>" 1)
-	    (goto-char (car bds)))
+          (unless (looking-back "\\_>" 1)
+            (goto-char (car bds)))
           (if (re-search-backward (format "\\_<%s\\_>" sym) nil t)
               (goto-char (match-beginning 0))
             (goto-char (car bds))
@@ -1831,13 +1831,13 @@ non-nil the indentation block can contain empty lines."
        (looking-at (format "^%s" outline-regexp)))
   :get-obj
   (when (and (bound-and-true-p outline-minor-mode)
-	     (ignore-errors (outline-back-to-heading) t))
+             (ignore-errors (outline-back-to-heading) t))
     (objed-make-object :beg (point)
                        :ibeg (line-end-position)
                        :end (progn
                               (outline-next-heading)
-			      (or (eobp)
-				  (move-end-of-line 0))
+                              (or (eobp)
+                                  (move-end-of-line 0))
                               (point))
                        :iend (progn (skip-chars-backward " \t\r\n")
                                     (point))))
@@ -1880,23 +1880,23 @@ non-nil the indentation block can contain empty lines."
   :atp
   (and (derived-mode-p 'sgml-mode)
        (or (looking-at "<")
-	   (looking-back ">" 1)))
+           (looking-back ">" 1)))
   :get-obj
   ;; TODO: fix detection if point inside <..|..>
   (when (derived-mode-p 'sgml-mode)
     ;; like with bracket detect at boundary
     (objed-make-object
      :beg (progn (unless (looking-at "<")
-		   (sgml-skip-tag-backward 1))
-		 (point))
+                   (sgml-skip-tag-backward 1))
+                 (point))
      :ibeg (save-excursion (search-forward ">" nil t)
-			   (point))
+                           (point))
      :end (progn
-	    (unless (looking-back ">" 1)
-	      (sgml-skip-tag-forward 1))
-	    (point))
+            (unless (looking-back ">" 1)
+              (sgml-skip-tag-forward 1))
+            (point))
      :iend (progn (search-backward "<" nil t)
-		  (point))))
+                  (point))))
   :try-next
   (search-forward "<" nil t)
   :try-prev
