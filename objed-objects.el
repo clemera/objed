@@ -1945,7 +1945,6 @@ non-nil the indentation block can contain empty lines."
                   (progn (setq forward-point (point))
                          (setq forward-none-space-point (point)))
                 (setq continue nil)))))))
-    ;; for inner object,
     (objed-make-object
      :obounds (progn (setq start backward-none-space-point)
                      (setq end forward-none-space-point)
@@ -1957,7 +1956,7 @@ non-nil the indentation block can contain empty lines."
   :try-next
   (re-search-forward "\\<" nil t)
   :try-prev
-  (re-search-backward "\\>" nil t))
+  (re-search-backward "\\<" nil t))
 
 
 (declare-function org-mark-element "ext:org")
