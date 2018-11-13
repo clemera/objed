@@ -1910,7 +1910,7 @@ non-nil the indentation block can contain empty lines."
 
 ;; from `evil-textobj-syntax'
 (defun objed--get-syntax-range (&optional inclusive arg)
-  (let ((point-face (-what-face))
+  (let ((point-face (objed--what-face))
         (backward-point (point)) ; last char when stop, including white space
         (backward-none-space-point (point)) ; last none white space char
         (forward-point (point)) ; last char when stop, including white space
@@ -1924,7 +1924,7 @@ non-nil the indentation block can contain empty lines."
       (let ((continue t))
         (while (and continue (>= (- (point) 1) (point-min)))
           (backward-char)
-          (let ((backward-point-face (-what-face)))
+          (let ((backward-point-face (objed--what-face)))
             (if (= 32 (char-syntax (char-after)))
                 (setq backward-point (point))
               (if (equal point-face backward-point-face)
@@ -1938,7 +1938,7 @@ non-nil the indentation block can contain empty lines."
       (let ((continue t))
         (while (and continue (< (+ (point) 1) (point-max)))
           (forward-char)
-          (let ((forward-point-face (-what-face)))
+          (let ((forward-point-face (objed---what-face)))
             (if (= 32 (char-syntax (char-after)))
                 (setq forward-point (point))
               (if (equal point-face forward-point-face)
