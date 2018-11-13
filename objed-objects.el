@@ -1622,9 +1622,11 @@ non-nil the indentation block can contain empty lines."
         (opos (point)))
     (cl-letf (((symbol-function 'fill-region-as-paragraph)
                (lambda (beg end &rest _)
-                 (setq po (cons beg end)))))
+                 (setq po (cons beg end))
+		 (throw 'done t))))
       ;; let inner not move point in general?
-      (fill-paragraph)
+      (catch 'done
+	(fill-paragraph))
       (when (consp po)
 	(goto-char (car po))
 	(objed--skip-ws)
