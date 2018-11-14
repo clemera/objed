@@ -83,9 +83,10 @@ Code to run which returns object positions as a list of the form:
 The function `objed-make-object' can be used to create such a
 list. For convenience it is also possible that the code returns a
 cons cell of the bounds of object (like what the built-in
-`bounds-of-thing-at-point' return). If inner positions are
-omitted they are determined by `objed--inner-default'. If there
-is no object at point the code should return nil.
+`bounds-of-thing-at-point' variations return). If inner positions
+are omitted they are determined by `objed--inner-default'. If
+there is no object at point the code should return nil.
+
 
 :try-next (optional)
 
@@ -94,6 +95,7 @@ code can assume it runs after point is moved out to the end of
 the current one if any. This will called until :get-obj returns
 non-nil. To indicate that search needs to be stopped, throw an
 error.
+
 
 :try-prev (optional)
 
@@ -106,9 +108,10 @@ be stopped, throw an error.
 :mode (optional)
 
 Object defintions which don't use this keyword apply to all
-modes. If given it should be a symbol of a `major-mode'. The
-object defintion used for this object will then override the
-default one when in this mode."
+modes. If given it should be a symbol of a `major-mode'. Any
+keyword definitions used for this object will then override the
+default ones when in this mode. Keywords not used fallback to use
+the general definition."
   (declare (indent 2))
   (let* ((mode (plist-get args :mode))
          (fname (if mode
@@ -157,6 +160,7 @@ default one when in this mode."
             cbody))
 
     (cond (mode
+           ;; catch all return arg if not present
            (push `(t ,arg) cbody)
            `(defun ,fname (,arg)
               ,doc
@@ -532,6 +536,7 @@ specific versions of object."
          (overriding-terminal-local-map nil)
          (res (objed--handle-query query objf)))
     (if (keywordp res)
+        ;; basic inheritence...
         (objed--object res obj t)
       res)))
 
@@ -868,7 +873,7 @@ a cons cell."
      (cons (region-beginning) (region-end)))))
 
 (defun objed--inner-default (beg end)
-  "Return positions for inner range at runtime.
+  "Return positions for inner range.
 
 BEG and END are the positions of the whole object.
 
@@ -1377,9 +1382,6 @@ Ignores simple structured expressions like words or symbols."
   :get-obj
   (objed-bounds-from-region-cmd #'mark-defun)
   :try-next
-  ;; does not work for adjacent toplevel parens in lisp becaus try
-  ;; next is called after moving beyond the current one
-  ;; (beginning-of-defun -1)
   (beginning-of-defun -1)
   :try-prev
   (beginning-of-defun 1))
@@ -1838,9 +1840,9 @@ non-nil the indentation block can contain empty lines."
   (forward-symbol -1)
   'identifier
   :try-next
+  ;; (beginning-of-defun -1) does not work for adjacent toplevel
+  ;; parens in lisp becaus try next is called after moving beyond the
   (end-of-defun 1)
-  (beginning-of-defun 1)
-  :try-prev
   (beginning-of-defun 1)
   :get-obj
   (let ((bounds (objed-bounds-from-region-cmd #'mark-defun)))
