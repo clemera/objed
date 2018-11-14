@@ -645,6 +645,7 @@ object as an argument."
     (define-key map (kbd "C-g") 'objed-quit)
     (define-key map "g" 'objed-quit)
     (define-key map (kbd "?") 'objed-show-top-level)
+    (define-key map (kbd "C-h") 'objed-which-key-C-h-dispatch)
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
     (define-key map (kbd "C-SPC") 'set-mark-command)
@@ -1189,6 +1190,19 @@ non-nil which is the case when called interactively."
            interactive)
     (when interactive
       (objed--describe-bindings objed-map))))
+
+(defun objed-which-key-C-h-dispatch ()
+  "If which-key popup is howing act as paging prefix.
+
+Otherwise act as ususal help prefix."
+  (interactive)
+  (if (which-key--popup-showing-p)
+      (which-key-C-h-dispatch)
+    (objed--exit-objed)
+    (setq unread-command-events
+          (append unread-command-events
+                  (listify-key-sequence (kbd "C-h"))))))
+
 
 (defun objed-describe-dispatch-bindings ()
   "Describe `objed-dispatch-map' bindings."
