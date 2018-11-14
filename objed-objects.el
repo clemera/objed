@@ -82,26 +82,10 @@ Code to run which returns object positions as a list of the form:
 
 The function `objed-make-object' can be used to create such a
 list. For convenience it is also possible that the code returns a
-cons cell of the bounds of object. In this case the inner
-positions are determined by `objed--inner-default'. If there is
-on object at point the code should return nil.
-
-
-:get-inner (optional)
-
-Code to run to return the inner positions for the object as a
-list of the form:
-
-    (inner-start inner-end)
-
-When this code runs the buffer is narrowed to the object. Using
-this keyword makes it possible to determine the inner part of an
-object seperately. One use case of this is to provide mode
-specific versions for the inner part of some object type. In this
-case the :get-obj code must not determine the inner
-positions (for example by passing inner positions to
-`objed--make-object').
-
+cons cell of the bounds of object (like what the built-in
+`bounds-of-thing-at-point' return). If inner positions are
+omitted they are determined by `objed--inner-default'. If there
+is no object at point the code should return nil.
 
 :try-next (optional)
 
@@ -110,7 +94,6 @@ code can assume it runs after point is moved out to the end of
 the current one if any. This will called until :get-obj returns
 non-nil. To indicate that search needs to be stopped, throw an
 error.
-
 
 :try-prev (optional)
 
@@ -123,9 +106,9 @@ be stopped, throw an error.
 :mode (optional)
 
 Object defintions which don't use this keyword apply to all
-modes. If given it should be a symbol of a `major-mode'. Any
-keyword definitions used for this object will then override the
-default ones when in this mode."
+modes. If given it should be a symbol of a `major-mode'. The
+object defintion used for this object will then override the
+default one when in this mode."
   (declare (indent 2))
   (let* ((mode (plist-get args :mode))
          (fname (if mode
@@ -133,13 +116,12 @@ default ones when in this mode."
                   (intern (format "objed-%s-object" name))))
          (args (objed--get-arg-plist
                 args
-                '(:mode :atp :ref :get-obj :get-inner :try-next :try-prev)))
+                '(:mode :atp :ref :get-obj :try-next :try-prev)))
          (arg (make-symbol "arg"))
          (cbody nil)
          (doc (format "%s object." (capitalize (symbol-name name))))
          (atp (plist-get args :atp))
          (obj (plist-get args :get-obj))
-         (inner (plist-get args :get-inner))
          (next (plist-get args :try-next))
          (prev (plist-get args :try-prev))
          (ref  (plist-get args :ref)))
@@ -164,10 +146,6 @@ default ones when in this mode."
                          (not (consp (cdr pdata))))
                     (objed-make-object :obounds pdata)
                   pdata)))
-            cbody))
-    (when inner
-      (push `((eq ,arg :get-inner)
-              ,inner)
             cbody))
     (when next
       (push `((eq ,arg :try-next)
@@ -894,21 +872,13 @@ a cons cell."
 
 BEG and END are the positions of the whole object.
 
-Tries to get inner positions by query current object
-for :get-inner. If that fails leading and trailing whitespace is
-skipped to determine the inner positions."
-  (let ((inner (or (save-excursion
-                     (save-restriction
-                       (narrow-to-region
-                        (objed--skip-forward beg 'ws)
-                        (objed--skip-backward end 'ws))
-                       (goto-char (point-min))
-                       (objed--object :get-inner)))
-                   (list (objed--skip-forward beg 'ws)
-                         (objed--skip-backward end 'ws)))))
-    (if (<= beg (car inner) (cadr inner) end)
-        (list (objed--pos-or-marker (car inner))
-              (objed--pos-or-marker (cadr inner)))
+Leading and trailing whitespace is skipped to determine the inner
+positions."
+  (let ((ibeg (objed--skip-forward beg 'ws))
+        (iend (objed--skip-backward end 'ws)))
+    (if (<= beg ibeg iend end)
+        (list (objed--pos-or-marker ibeg)
+              (objed--pos-or-marker iend))
       ;; fallback
       (list (objed--pos-or-marker (point))
             (objed--pos-or-marker (1+ (point)))))))
@@ -1410,8 +1380,7 @@ Ignores simple structured expressions like words or symbols."
   ;; does not work for adjacent toplevel parens in lisp becaus try
   ;; next is called after moving beyond the current one
   ;; (beginning-of-defun -1)
-  (end-of-defun 1)
-  (beginning-of-defun 1)
+  (beginning-of-defun -1)
   :try-prev
   (beginning-of-defun 1))
 
@@ -1868,22 +1837,34 @@ non-nil the indentation block can contain empty lines."
   (forward-symbol 2)
   (forward-symbol -1)
   'identifier
-  :get-inner
-  ;; TODO: improve this, also improve
-  ;; inheritence like behaviour
-  (cond ((looking-at "(defun")
-         (down-list 2)
-         (up-list 1)
-         (list (point)
-               (progn (goto-char (point-max))
-                      (down-list -1)
-                      (point))))
-        (t
-         (list (progn (down-list 1)
-                      (point))
-               (progn (goto-char (point-max))
-                      (down-list -1)
-                      (point))))))
+  :try-next
+  (end-of-defun 1)
+  (beginning-of-defun 1)
+  :try-prev
+  (beginning-of-defun 1)
+  :get-obj
+  (let ((bounds (objed-bounds-from-region-cmd #'mark-defun)))
+    (when bounds
+      (objed-make-object
+       :obounds bounds
+       :ibounds
+       (save-restriction
+         (narrow-to-region (car bounds) (cdr bounds))
+         (goto-char (car bounds))
+         (objed--skip-ws)
+         (cond ((looking-at "(defun")
+                (down-list 2)
+                (up-list 1)
+                (cons (point)
+                      (progn (goto-char (point-max))
+                             (down-list -1)
+                             (point))))
+               (t
+                (cons (progn (down-list 1)
+                             (point))
+                      (progn (goto-char (point-max))
+                             (down-list -1)
+                             (point))))))))))
 
 (objed-define-object nil tag
   :atp
@@ -2003,19 +1984,24 @@ non-nil the indentation block can contain empty lines."
                        (point))))
   :get-obj
   (when  (derived-mode-p 'comint-mode)
-    (objed-make-object
-     :obounds (let ((pos (point)))
-                (comint-next-prompt 1)
-                (move-end-of-line 0)
-                (if (> (point) pos)
-                    (cons pos (point))
-                  (move-end-of-line 2)
-                  (cons
-                   (line-beginning-position)
-                   (point))))))
-  :get-inner
-  (forward-line 1)
-  (list (point) (point-max))
+    (let* ((pos (point))
+           (bounds (progn
+                     (comint-next-prompt 1)
+                     (move-end-of-line 0)
+                     (if (> (point) pos)
+                         (cons pos (point))
+                       (move-end-of-line 2)
+                       (cons
+                        (line-beginning-position)
+                        (point))))))
+      (objed-make-object
+       :obounds bounds
+       :ibounds (progn (goto-char (car bounds))
+                       (forward-line 1)
+                       (cons (point)
+                             (progn (goto-char (cdr bounds))
+                                    (objed--skip-ws t)
+                                    (point)))))))
   :try-next
   (comint-next-prompt 1)
   :try-prev
