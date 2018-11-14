@@ -1407,28 +1407,21 @@ Ignores simple structured expressions like words or symbols."
 
 (objed-define-object nil textblock
   :get-obj
-  (when (or (not (derived-mode-p 'prog-mode))
-            (derived-mode-p 'text-mode)
-            (objed--in-comment-p)
-            (objed--in-string-p))
+  (if (or (not (derived-mode-p 'prog-mode))
+          (derived-mode-p 'text-mode)
+          (objed--in-comment-p)
+          (objed--in-string-p))
     (objed--with-narrow-for-text
      (let ((bounds (objed--get-textblock-bounds)))
        (when (and bounds
                   (or (not (eq (car bounds) (point-min)))
                       (not (eq (cdr bounds) (point-max)))))
-         (objed-make-object :obounds bounds)))))
-
+         (objed-make-object :obounds bounds))))
+    (error "No textblock here"))
   :try-next
-  (forward-word 1)
-  (or (objed--in-string-or-comment-p)
-      (derived-mode-p 'text-mode)
-      (not (derived-mode-p 'prog-mode)))
-
+  (forward-sentence 1)
   :try-prev
-  (forward-word -1)
-  (or (objed--in-string-or-comment-p)
-      (derived-mode-p 'text-mode)
-      (not (derived-mode-p 'prog-mode))))
+  (forward-sentence -1))
 
 
 (defun objed--column (pos)
@@ -1897,13 +1890,15 @@ non-nil the indentation block can contain empty lines."
 
 
 (defun objed--what-face (&optional pos)
+  "Return face at POS."
   (let* ((pos (or pos (point)))
          (face (or (get-text-property pos 'face))))
      (unless (keywordp (car-safe face)) (list face))))
 
 
 ;; from `evil-textobj-syntax'
-(defun objed--get-syntax-range (&optional inclusive arg)
+(defun objed--get-syntax-range ()
+  "Return range of equal face before/after point."
   (let ((point-face (objed--what-face))
         (backward-point (point)) ; last char when stop, including white space
         (backward-none-space-point (point)) ; last none white space char

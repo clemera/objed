@@ -1252,7 +1252,7 @@ matches IREGEX is not displayed."
 
 ;; * Basic Movement, Block Objects (textblocks)
 
-(defvar objed--block-objects '(line buffer iblock section paragraph indent textblock)
+(defvar objed--block-objects '(line buffer iblock section textblock indent paragraph)
   "List of objects which are 'line based'.
 
 Objects which are built by lines of text.")
