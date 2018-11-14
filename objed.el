@@ -493,6 +493,18 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (declare-function avy--style-fn "ext:avy")
 (declare-function edit-indirect-region "ext:edit-indirect")
 
+
+;; * Support for other libs
+
+(with-eval-after-load 'multiple-cursors-core
+  (cl-pushnew 'objed--current-obj mc/cursor-specific-vars)
+  (cl-pushnew 'objed--obj-state mc/cursor-specific-vars)
+  (cl-pushnew 'objed--object mc/cursor-specific-vars)
+  (cl-pushnew 'objed--look-around mc/cursor-specific-vars)
+  (cl-pushnew 'objed--marked-ovs mc/cursor-specific-vars)
+  (cl-pushnew 'objed--last-states mc/cursor-specific-vars))
+
+
 ;; * Helper Macros
 
 (defvar objed--exit-alist nil
@@ -2554,8 +2566,7 @@ Marked object sequences are merged to built a single text object."
          ;; for possible repeats like default conf. (kill line...)
          (unless (eq op 'ignore)
            (objed--change-to :beg (point)
-                             :ibeg (point)))
-         )))
+                             :ibeg (point))))))
 
 (defun objed--ov-sequence-p (ovs)
   "Return non-nil if OVS build a sequence.
@@ -2604,7 +2615,8 @@ on."
     ;; (objed--update-current-object)
     (cond (exitf
            (funcall (cdr exitf) text))
-          ((eq op 'ignore))
+          ((or (eq op 'ignore)
+               (bound-and-true-p multiple-cursors-mode)))
           (t
            (if (and text (objed--line-p text))
                (objed--switch-to 'line)

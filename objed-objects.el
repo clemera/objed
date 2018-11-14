@@ -259,13 +259,6 @@ Either the symbol `whole' or `inner'.")
 (defvar objed--marked-ovs nil
   "List of overlays of marked objects.")
 
-(defun objed--copy-object (&optional obj)
-  "Make a deep copy of object OBJ.
-
-OBJ defaults to `objed--current-obj'."
-  (let ((obj (or obj objed--current-obj)))
-    (list (copy-sequence (car obj))
-          (copy-sequence (cadr obj)))))
 
 
 ;; * Get object positions
@@ -524,6 +517,14 @@ order depends on `objed--obj-state'."
           nobj)))))
 
 
+(defun objed--copy-object (&optional obj)
+  "Make a deep copy of object OBJ.
+
+OBJ defaults to `objed--current-obj'."
+  (let ((obj (or obj objed--current-obj)))
+    (list (copy-sequence (car obj))
+          (copy-sequence (cadr obj)))))
+
 (defun objed--get-object (o &optional s)
   "Get object O with state S."
   (let ((objed--object o)
@@ -654,35 +655,6 @@ calculate the data of the object at current position using
   (setq objed--object o)
   (setq objed--obj-state (or state 'whole))
   (setq objed--current-obj (or odata (objed--get))))
-
-
-(cl-defun objed--change-to (&key beg end ibeg iend)
-  "Change position data of current object.
-
-BEG: the beginning position
-END: the end position
-IBEG: the beginning position of the inner part
-IEND: the end position of the inner part"
-  (cond ((eq objed--obj-state 'whole)
-         (when beg
-           (setf (car (car objed--current-obj)) beg))
-         (when end
-           (setf (car (cdar objed--current-obj)) end))
-         (when ibeg
-           (setf (car (cadr objed--current-obj)) ibeg))
-         (when iend
-           (setf (cadr (cadr objed--current-obj)) iend)))
-        ((eq objed--obj-state 'inner)
-         (when ibeg
-           (setf (car (car objed--current-obj)) ibeg))
-         (when iend
-           (setf (car (cdar objed--current-obj)) iend))
-         (when beg
-           (setf (car (cadr objed--current-obj)) beg))
-         (when end
-           (setf (cadr (cadr objed--current-obj)) end)))
-        (t
-         (error "No valid `objed--obj-state'"))))
 
 
 (defun objed--distant-p (o)
@@ -935,10 +907,11 @@ skipped to determine the inner positions."
                    (list (objed--skip-forward beg 'ws)
                          (objed--skip-backward end 'ws)))))
     (if (<= beg (car inner) (cadr inner) end)
-        inner
+        (list (objed--pos-or-marker (car inner))
+              (objed--pos-or-marker (cadr inner)))
       ;; fallback
-      (list (point) (1+ (point))))))
-
+      (list (objed--pos-or-marker (point))
+            (objed--pos-or-marker (1+ (point)))))))
 
 (cl-defun objed-make-object (&key obounds beg end ibounds ibeg iend)
   "Helper to create internal used object format from positions.
@@ -955,59 +928,104 @@ a cons cell IBOUNDS. If inner positions are omitted
               (integer-or-marker-p end)
               (integer-or-marker-p ibeg)
               (integer-or-marker-p iend))
-         (list (list beg end)
-               (list ibeg iend)))
+         (list (list (objed--pos-or-marker beg)
+                     (objed--pos-or-marker end))
+               (list (objed--pos-or-marker ibeg)
+                     (objed--pos-or-marker iend))))
         ((and (integer-or-marker-p beg)
               (integer-or-marker-p end))
          (cond ((consp ibounds)
-                (objed-make-object :beg beg
-                                   :end end
-                                   :ibeg (car ibounds)
-                                   :iend (cdr ibounds)))
+                (list (list (objed--pos-or-marker beg)
+                            (objed--pos-or-marker end))
+                      (list (objed--pos-or-marker (car ibounds))
+                            (objed--pos-or-marker (cdr ibounds)))))
                ((or (functionp ibeg)
                     (functionp iend))
-                (objed-make-object :beg beg
-                                   :end end
-                                   :ibeg (or (and (functionp ibeg)
-                                                  (funcall ibeg beg))
-                                             ibeg)
-                                   :iend (or (and (functionp iend)
-                                                  (funcall iend end))
-                                             iend)))
-
+                (list (list (objed--pos-or-marker beg)
+                            (objed--pos-or-marker end))
+                      (list (objed--pos-or-marker
+                             (or (and (functionp ibeg)
+                                      (funcall ibeg beg))
+                                 ibeg))
+                            (objed--pos-or-marker
+                             (or (and (functionp iend)
+                                      (funcall iend end))
+                                 iend)))))
                (t
-                (list (list beg end)
+                (list (list (objed--pos-or-marker beg)
+                            (objed--pos-or-marker end))
                       (objed--inner-default beg end)))))
         ((consp obounds)
          (cond ((consp ibounds)
-                (objed-make-object :beg (car obounds)
-                                   :end (cdr obounds)
-                                   :ibeg (car ibounds)
-                                   :iend (cdr ibounds)))
+                (list (list (objed--pos-or-marker (car obounds))
+                            (objed--pos-or-marker (cdr obounds)))
+                      (list (objed--pos-or-marker (car ibounds))
+                            (objed--pos-or-marker (cdr ibounds)))))
                ((and (integer-or-marker-p ibeg)
                      (integer-or-marker-p iend))
-                (objed-make-object :beg (car obounds)
-                                   :end (cdr obounds)
-                                   :ibeg ibeg
-                                   :iend iend))
+                (list (list (objed--pos-or-marker (car obounds))
+                            (objed--pos-or-marker (cdr obounds)))
+                      (list (objed--pos-or-marker ibeg)
+                            (objed--pos-or-marker iend))))
                ((or (functionp ibeg)
                     (functionp iend))
-                (objed-make-object :beg (car obounds)
-                                   :end (cdr obounds)
-                                   :ibeg (or (and (functionp ibeg)
-                                                  (funcall ibeg beg))
-                                             ibeg)
-                                   :iend (or (and (functionp iend)
-                                                  (funcall iend end))
-                                             iend)))
-
+                (list (list (objed--pos-or-marker (car obounds))
+                            (objed--pos-or-marker (cdr obounds)))
+                      (list (objed--pos-or-marker
+                             (or (and (functionp ibeg)
+                                      (funcall ibeg beg))
+                                 ibeg))
+                            (objed--pos-or-marker
+                             (or (and (functionp iend)
+                                      (funcall iend end))
+                                 iend)))))
                (t
-                (list (list (car obounds)
-                            (cdr obounds))
-                      (objed--inner-default (car obounds)
-                                            (cdr obounds))))))))
+                (list (list (objed--pos-or-marker (car obounds))
+                            (objed--pos-or-marker (cdr obounds)))
+                      (objed--inner-default  (car obounds) (cdr obounds))))))))
 
 
+(cl-defun objed--change-to (&key beg end ibeg iend)
+  "Change position data of current object.
+
+BEG: the beginning position
+END: the end position
+IBEG: the beginning position of the inner part
+IEND: the end position of the inner part"
+  (let ((beg (and beg (objed--pos-or-marker beg)))
+        (end (and end (objed--pos-or-marker end)))
+        (ibeg (and ibeg (objed--pos-or-marker ibeg)))
+        (iend (and iend (objed--pos-or-marker iend))))
+    (cond ((eq objed--obj-state 'whole)
+           (when beg
+             (setf (car (car objed--current-obj)) beg))
+           (when end
+             (setf (car (cdar objed--current-obj)) end))
+           (when ibeg
+             (setf (car (cadr objed--current-obj)) ibeg))
+           (when iend
+             (setf (cadr (cadr objed--current-obj)) iend)))
+          ((eq objed--obj-state 'inner)
+           (when ibeg
+             (setf (car (car objed--current-obj)) ibeg))
+           (when iend
+             (setf (car (cdar objed--current-obj)) iend))
+           (when beg
+             (setf (car (cadr objed--current-obj)) beg))
+           (when end
+             (setf (cadr (cadr objed--current-obj)) end)))
+          (t
+           (error "No valid `objed--obj-state'")))))
+
+(defun objed--pos-or-marker (pos)
+  "Return marker or position POS.
+
+If `multiple-cursors-mode' is non-nil return marker for
+position POS, otherwise just return POS."
+  (if (and (bound-and-true-p multiple-cursors-mode)
+           (not (markerp pos)))
+      (set-marker (make-marker) pos)
+    pos))
 
 ;; * Object definition helpers
 
