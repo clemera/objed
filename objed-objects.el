@@ -1775,12 +1775,13 @@ non-nil the indentation block can contain empty lines."
         (re-search-forward  "\\_<" nil t)
       (let ((sym (and (or bds (setq bds (bounds-of-thing-at-point 'symbol)))
                       (buffer-substring (car bds) (cdr bds)))))
-        (unless (looking-at "\\_<")
+        (when bds
           (goto-char (cdr bds)))
         (if (re-search-forward (format "\\_<%s\\_>" sym) nil t)
             (goto-char (match-beginning 0))
           (goto-char (car bds))
-          (when (eq real-this-command #'objed-current-or-next-context)
+          (when (or (eq real-this-command #'objed-current-or-next-context)
+                    (eq real-this-command #'objed-next-identifier))
             (run-at-time 0 nil (apply-partially #'message "Last one!"))))))))
 
 (defun objed-prev-identifier ()
@@ -1792,14 +1793,14 @@ non-nil the indentation block can contain empty lines."
       (let ((sym (and (or bds (setq bds (bounds-of-thing-at-point 'symbol)))
                       (buffer-substring (car bds) (cdr bds)))))
         (when bds
-          (unless (looking-back "\\_>" 1)
+          (when (looking-back "\\_>" 1)
             (goto-char (car bds)))
           (if (re-search-backward (format "\\_<%s\\_>" sym) nil t)
               (goto-char (match-beginning 0))
             (goto-char (car bds))
-            (when (eq real-this-command #'objed-current-or-previous-context)
-              (run-at-time 0 nil
-                           (apply-partially #'message "First one!")))))))))
+            (when (or (eq real-this-command #'objed-current-or-previous-context)
+                      (eq real-this-command #'objed-prev-identifier))
+              (run-at-time 0 nil (apply-partially #'message "First one!")))))))))
 
 
 (objed-define-object nil section

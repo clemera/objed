@@ -362,6 +362,8 @@ See also `objed-disabled-p'"
     (org-previous-visible-heading . section)
     (comint-previous-prompt . output)
     (comint-next-prompt . output)
+    (objed-next-identifier . identifier)
+    (objed-prev-identifier . identifier)
     ;; editing entry commands
     (delete-char . char)
     (kill-line . char)
@@ -642,7 +644,7 @@ object as an argument."
     ;; common emacs keys
     (define-key map (kbd "C-g") 'objed-quit)
     (define-key map "g" 'objed-quit)
-    (define-key map (kbd "C-h") 'objed-show-top-level)
+    (define-key map (kbd "?") 'objed-show-top-level)
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
     (define-key map (kbd "C-SPC") 'set-mark-command)
