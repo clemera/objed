@@ -80,8 +80,11 @@ Code to run which returns object positions as a list of the form:
     ((object-start object-end)
      (inner-start inner-end))
 
-The function `objed-make-object' should be used to create such a
-list. If there is on object at point the code should return nil.
+The function `objed-make-object' can be used to create such a
+list. For convenience it is also possible that the code returns a
+cons cell of the bounds of object. In this case the inner
+positions are determined by `objed--inner-default'. If there is
+on object at point the code should return nil.
 
 
 :get-inner (optional)
@@ -91,11 +94,13 @@ list of the form:
 
     (inner-start inner-end)
 
-The function `objed-make-inner' should be used to create such a
-list. When this code runs the buffer is narrowed to the object.
-Using this keyword makes it possible to determine the inner part
-of an object seperately. One use case of this is to provide mode
-specific versions for the inner part of some object type.
+When this code runs the buffer is narrowed to the object. Using
+this keyword makes it possible to determine the inner part of an
+object seperately. One use case of this is to provide mode
+specific versions for the inner part of some object type. In this
+case the :get-obj code must not determine the inner
+positions (for example by passing inner positions to
+`objed--make-object').
 
 
 :try-next (optional)
@@ -154,7 +159,11 @@ default ones when in this mode."
             cbody))
     (when obj
       (push `((eq ,arg :get-obj)
-              ,obj)
+              (let ((pdata ,obj))
+                (if (and (consp pdata)
+                         (not (consp (cdr pdata))))
+                    (objed-make-object :obounds pdata)
+                  pdata)))
             cbody))
     (when inner
       (push `((eq ,arg :get-inner)
@@ -930,19 +939,6 @@ skipped to determine the inner positions."
       ;; fallback
       (list (point) (1+ (point))))))
 
-(cl-defun objed-make-inner (&key ibeg iend ibounds)
-  "Helper to create internal used format of inner object part from positions.
-
-Positions of the inner part of the object can be provided as
-positions IBEG, IEND or as a cons cell of positions IBOUNDS."
-  (cond ((and (integer-or-marker-p ibeg)
-              (integer-or-marker-p iend))
-         (list ibeg iend))
-        ((and (consp ibounds)
-              (not (consp (cdr ibounds))))
-         (list (car ibounds)
-               (cdr ibounds)))))
-
 
 (cl-defun objed-make-object (&key obounds beg end ibounds ibeg iend)
   "Helper to create internal used object format from positions.
@@ -1258,8 +1254,7 @@ property list where each key has an associated progn."
                (bounds-of-thing-at-point 'symbol))
     'identifier)
   :get-obj
-  (objed-make-object
-   :obounds (bounds-of-thing-at-point 'word))
+  (bounds-of-thing-at-point 'word)
   :try-next
   (re-search-forward  "\\<." nil t)
   :try-prev
@@ -1295,9 +1290,8 @@ property list where each key has an associated progn."
            (looking-back "\\_>" 1)))
   :ref 'identifier
   :get-obj
-  (objed-make-object
-   :obounds (when (not (objed--in-string-or-comment-p))
-              (bounds-of-thing-at-point 'symbol)))
+  (when (not (objed--in-string-or-comment-p))
+    (bounds-of-thing-at-point 'symbol))
   :try-next
   (objed--next-symbol)
   :try-prev
@@ -1385,7 +1379,7 @@ Ignores simple structured expressions like words or symbols."
   (looking-at "\\<")
   :get-obj
   ;; TODO: inner bounds without extension
-  (objed-make-object :obounds (bounds-of-thing-at-point 'filename))
+  (bounds-of-thing-at-point 'filename)
   :try-next
   (re-search-forward  "\\<." nil t)
   :try-prev
@@ -1393,8 +1387,7 @@ Ignores simple structured expressions like words or symbols."
 
 (objed-define-object nil defun
   :get-obj
-  (objed-make-object
-   :obounds (objed-bounds-from-region-cmd #'mark-defun))
+  (objed-bounds-from-region-cmd #'mark-defun)
   :try-next
   ;; does not work for adjacent toplevel parens in lisp becaus try
   ;; next is called after moving beyond the current one
@@ -1591,8 +1584,7 @@ non-nil the indentation block can contain empty lines."
                            (looking-at "^ *$")))
        (looking-back "^ *" (line-beginning-position)))
   :get-obj
-  (let ((bounds (objed-bounds-from-region-cmd #'mark-paragraph)))
-    (objed-make-object :obounds bounds))
+  (objed-bounds-from-region-cmd #'mark-paragraph)
   :try-next
   (skip-chars-forward " \t\r\n")
   :try-prev
@@ -1639,8 +1631,7 @@ non-nil the indentation block can contain empty lines."
   :atp
   (bobp)
   :get-obj
-  (objed-make-object
-   :obounds (objed-bounds-from-region-cmd #'mark-whole-buffer)))
+  (objed-bounds-from-region-cmd #'mark-whole-buffer))
 
 
 (objed-define-object nil region
@@ -1781,8 +1772,7 @@ non-nil the indentation block can contain empty lines."
 
 (objed-define-object nil identifier
   :get-obj
-  (objed-make-object
-   :obounds (bounds-of-thing-at-point 'symbol))
+  (bounds-of-thing-at-point 'symbol)
   :try-next
   (objed-next-identifier)
   :try-prev
@@ -1861,7 +1851,8 @@ non-nil the indentation block can contain empty lines."
   (forward-symbol -1)
   'identifier
   :get-inner
-  ;; TODO: improve this
+  ;; TODO: improve this, also improve
+  ;; inheritence like behaviour
   (cond ((looking-at "(defun")
          (down-list 2)
          (up-list 1)
@@ -1946,14 +1937,14 @@ non-nil the indentation block can contain empty lines."
                   (progn (setq forward-point (point))
                          (setq forward-none-space-point (point)))
                 (setq continue nil)))))))
-    (objed-make-object
-     :obounds (progn (setq start backward-none-space-point)
-                     (setq end forward-none-space-point)
-                     (cons start (+ end 1))))))
+    (progn (setq start backward-none-space-point)
+           (setq end forward-none-space-point)
+           (cons start (+ end 1)))))
 
 
 (objed-define-object nil syntax
-  :get-obj (objed--get-syntax-range)
+  :get-obj
+  (objed--get-syntax-range)
   ;; TODO: search for next same face as current...
   :try-next
   (re-search-forward "\\<" nil t)
@@ -2016,9 +2007,7 @@ non-nil the indentation block can contain empty lines."
   (objed-define-object nil defun
     :mode python-mode
     :get-obj
-    (end-of-line 1)
-    (objed-make-object
-     :obounds (objed-bounds-from-region-cmd #'mark-defun))))
+    (objed-bounds-from-region-cmd #'mark-defun)))
 
 (provide 'objed-objects)
 ;;; objed-objects.el ends here
