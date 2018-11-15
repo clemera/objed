@@ -90,20 +90,20 @@ there is no object at point the code should return nil.
 
 :try-next (optional)
 
-Code to run which moves point to the next available object. The
-code can assume it runs after point is moved out to the end of
-the current one if any. This will called until :get-obj returns
-non-nil. To indicate that search needs to be stopped, throw an
-error.
+Code to run which moves point to the next available object.
+If :no-skip is not set the code can assume it runs after point is
+moved out to the end of the current one if any. This will get
+called until :get-obj returns non-nil. To indicate that search
+needs to be stopped, throw an error.
 
 
 :try-prev (optional)
 
 Code to run which moves point to the previous available object.
-The code can assume it runs after point is moved out to the
-beginning of the current one if any. This will called
-until :get-obj returns non-nil. To indicate that search needs to
-be stopped, throw an error.
+The code can assume it runs after point is moved to the beginning
+of the current one if any. This will get called until :get-obj
+returns non-nil. To indicate that search needs to be stopped,
+throw an error.
 
 :mode (optional)
 
@@ -111,15 +111,21 @@ Object defintions which don't use this keyword apply to all
 modes. If given it should be a symbol of a `major-mode'. Any
 keyword definitions used for this object will then override the
 default ones when in this mode. Keywords not used fallback to use
-the general definition."
+the general definition.
+
+:no-skip (optional)
+
+If this keyword is provided with a non-nil value, the current object
+is not skipped before search for the next one via :try-next."
   (declare (indent 2))
   (let* ((mode (plist-get args :mode))
+         (noskip (plist-get args :no-skip))
          (fname (if mode
                     (intern (format "objed-%s-%s-object" name mode))
                   (intern (format "objed-%s-object" name))))
          (args (objed--get-arg-plist
                 args
-                '(:mode :atp :ref :get-obj :try-next :try-prev)))
+                '(:mode :no-skip :atp :ref :get-obj :try-next :try-prev)))
          (arg (make-symbol "arg"))
          (cbody nil)
          (doc (format "%s object." (capitalize (symbol-name name))))
@@ -160,12 +166,16 @@ the general definition."
             cbody))
 
     (cond (mode
+           (when noskip
+             (put `,fname 'objed-no-skip t))
            ;; catch all return arg if not present
            (push `(t ,arg) cbody)
            `(defun ,fname (,arg)
               ,doc
               (cond ,@(nreverse cbody))))
           (t
+           (when noskip
+             (put `,fname 'objed-no-skip t))
            (let ((res (list 'progn)))
              (when key
                (push `(define-key  objed-object-map
@@ -588,7 +598,9 @@ If FROM is a position search from there otherwise search starts
 from end of object FROM."
   (let ((obj (or from objed--current-obj)))
     (save-excursion
-      (when obj
+      (when (and obj
+                 (not (get (objed--name2func objed--object)
+                           'objed-no-skip)))
         (if (integer-or-marker-p obj)
             (goto-char obj)
           (goto-char (objed--max obj))))
@@ -1199,7 +1211,7 @@ property list where each key has an associated progn."
     (let* ((keyw (pop keylst))
            (vkeyw (and keyw (keywordp keyw) (memq keyw valid) keyw))
            forms)
-      (cond ((eq vkeyw :mode)
+      (cond ((memq vkeyw '(:mode :no-skip))
              ;; skip
              (objed--get-arg-plist (cdr keylst) valid wrapped))
             (vkeyw
@@ -2024,11 +2036,30 @@ non-nil the indentation block can contain empty lines."
   :try-prev
   (comint-previous-prompt 1))
 
+(objed-define-object nil block
+  :get-obj nil)
+
 (with-eval-after-load 'python
+  ;; TODO: add this to macro functionality
+  (objed--install-advices
+   '((python-nav-backward-block . block)
+     (python-nav-forward-block . block)))
   (objed-define-object nil defun
     :mode python-mode
     :get-obj
-    (objed-bounds-from-region-cmd #'mark-defun)))
+    (objed-bounds-from-region-cmd #'mark-defun))
+  (objed-define-object nil block
+    :mode python-mode
+    :commands
+    :no-skip t
+    :try-next
+    (python-nav-forward-block)
+    :try-prev
+    (python-nav-backward-block)
+    :get-obj
+    (let ((start (save-excursion (python-nav-beginning-of-block) (point)))
+            (end (save-excursion (python-nav-end-of-block))))
+        (cons start end))))
 
 (provide 'objed-objects)
 ;;; objed-objects.el ends here

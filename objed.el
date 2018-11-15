@@ -267,14 +267,30 @@ setting the user options `objed-use-which-key-if-available-p' and
                                          (require 'which-key nil t))
               objed--avy-avail-p (when objed-use-avy-if-available-p
                                    (require 'avy nil t)))
-        (dolist (cmd2obj objed-cmd-alist)
-          (advice-add (car cmd2obj) :after
-                      (apply-partially #'objed--activate (car cmd2obj)))
-          (advice-add (car cmd2obj) :before 'objed--save-start-position)))
-    (dolist (cmd2obj objed-cmd-alist)
-      (advice-remove (car cmd2obj)
-                     (apply-partially #'objed--activate (car cmd2obj)))
-      (advice-remove (car cmd2obj) 'objed--save-start-position))))
+        (objed--install-advices objed-cmd-alist t))
+    (objed--remove-advices objed-cmd-alist t)))
+
+
+(defun objed--install-advices (alist &optional do-not-save)
+  "Install advices according to ALIST.
+
+If DO-NOT-SAVE is non-nil don't store ALIST entries in
+`objed-cmd-alist'."
+  (dolist (cmd2obj alist)
+    (unless do-not-save (push cmd2obj objed-cmd-alist))
+    (advice-add (car cmd2obj) :after
+                (apply-partially #'objed--activate (car cmd2obj)))
+    (advice-add (car cmd2obj) :before 'objed--save-start-position)))
+
+(defun objed--remove-advices (alist)
+  "Remove advices accroding to ALIST.
+
+See `objed-cmd-alist'."
+  (dolist (cmd2obj alist)
+    (advice-remove (car cmd2obj)
+                   (apply-partially #'objed--activate (car cmd2obj)))
+    (advice-remove (car cmd2obj) 'objed--save-start-position)))
+
 
 ;; * Customization
 
@@ -722,6 +738,7 @@ object as an argument."
     (define-key map "w" 'objed-copy)
     (define-key map "d" 'objed-delete)
     (define-key map (kbd "DEL") 'objed-del-insert)
+    (define-key map (kbd "<backspace>") 'objed-del-insert)
 
     (define-key map "y" 'objed-yank)
 
