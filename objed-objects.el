@@ -592,8 +592,9 @@ from end of object FROM."
         (if (integer-or-marker-p obj)
             (goto-char obj)
           (goto-char (objed--max obj))))
-      (objed--object :try-next)
-      (objed--get))))
+      (unless (eobp)
+        (objed--object :try-next)
+        (objed--get)))))
 
 (defun objed--get-prev (&optional from)
   "Get previous object from position or object.
@@ -606,8 +607,9 @@ from beginning of object FROM."
         (if (integer-or-marker-p obj)
             (goto-char obj)
           (goto-char (objed--min obj))))
-      (objed--object :try-prev)
-      (objed--get t))))
+      (unless (bobp)
+        (objed--object :try-prev)
+        (objed--get t)))))
 
 ;; * Helpers to work with object format
 
