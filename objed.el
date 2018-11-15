@@ -1474,7 +1474,7 @@ Skips strings and comments."
 
 ;; * Context Objects (programming constructs)
 
-(defvar objed--context-objects '(string bracket tag textblock comment)
+(defvar objed--context-objects '(string bracket tag comment)
   "List of objects to be choosen by context.")
 
 (defun objed--basic-p ()
