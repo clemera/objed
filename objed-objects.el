@@ -1371,14 +1371,17 @@ Ignores simple structured expressions like words or symbols."
 
 (objed-define-object nil file
   :atp
-  (looking-at "\\<")
+  (looking-at "/\\|\\\\")
   :get-obj
   ;; TODO: inner bounds without extension
-  (bounds-of-thing-at-point 'filename)
+  (let* ((bounds (bounds-of-thing-at-point 'filename))
+         (file (and bounds (buffer-substring (car bounds) (cdr bounds)))))
+    (when (and file (string-match "/\\|\\\\" file))
+      bounds))
   :try-next
-  (re-search-forward  "\\<." nil t)
+  (re-search-forward  "/\\|\\\\" nil t)
   :try-prev
-  (re-search-backward  ".\\>" nil t))
+  (re-search-backward  "/\\|\\\\" nil t))
 
 (objed-define-object nil defun
   :get-obj
