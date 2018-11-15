@@ -1910,7 +1910,8 @@ non-nil the indentation block can contain empty lines."
         (start (point))
         (end (point)))
 
-    (when (eq real-this-command #'objed-face-object)
+    (when (or (eq real-this-command #'objed-face-object)
+              (eq 'face (cdr (assq real-this-command objed-cmd-alist))))
       (setq objed--last-face point-face))
 
     (when (equal objed--last-face
