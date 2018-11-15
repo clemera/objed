@@ -2332,8 +2332,7 @@ If REPLACE is non-nil replace evaluated code with result."
               (goto-char beg)
               (funcall 'objed--eval-func beg end replace)))))
     (apply 'objed--eval-func
-           (append (objed--current) (list replace))))
-  (objed--exit-objed))
+           (append (objed--current) (list replace)))))
 
 (defun objed-pipe-region (beg end cmd &optional variant)
   "Pipe region text between BEG and END through a shell CMD.
