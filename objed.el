@@ -721,6 +721,8 @@ object as an argument."
     (define-key map "k" 'objed-kill)
     (define-key map "w" 'objed-copy)
     (define-key map "d" 'objed-delete)
+    (define-key map (kbd "DEL") 'objed-del-insert)
+
     (define-key map "y" 'objed-yank)
 
     (define-key map (kbd "C-x TAB") 'objed-indent-rigidly)
@@ -2025,6 +2027,11 @@ append it to the `kill-ring'."
   (setq this-command 'kill-region)
   (message "Copied to `kill-ring.'"))
 
+(defun objed-del-insert ()
+  "Delete current object and exit to insert state."
+  (interactive)
+  (delete-region (objed--beg) (objed--end))
+  (objed--exit-objed))
 
 (defvar objed--electric-event nil
   "Saves the event used for `objed-electric'.")
