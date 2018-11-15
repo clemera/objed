@@ -1894,7 +1894,7 @@ non-nil the indentation block can contain empty lines."
 (defun objed--what-face (&optional pos)
   "Return face at POS."
   (let* ((pos (or pos (point)))
-         (face (or (get-text-property pos 'face))))
+         (face (get-text-property pos 'face)))
      (unless (keywordp (car-safe face)) (list face))))
 
 (defvar objed--last-face nil)

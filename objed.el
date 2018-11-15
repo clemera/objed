@@ -26,6 +26,8 @@
 ;; editing and composition of commands, too. It combines ideas of other Editors
 ;; like Vim or Kakoune and tries to align them with regular Emacs conventions.
 ;;
+;; For more information also check my blog https://www.with-emacs-com.
+;;
 ;; Text objects are textual patterns like a line, a top level definition, a
 ;; word, a sentence or any other unit of text. When `objed-mode' is enabled,
 ;; certain editing commands (configurable) will activate `objed' and enable its
@@ -308,7 +310,7 @@ setting the user options `objed-use-which-key-if-available-p' and
 ;; * User Settings and Variables
 
 (defcustom objed-disabled-modes
-  '(special-mode dired-mode Info-mode)
+  '(special-mode dired-mode)
   "List of modes for which objed should stay disabled.
 
 If the current `major-mode' is in the list or derives from a
@@ -365,6 +367,8 @@ See also `objed-disabled-p'"
     (indent-for-tab-command . char)
     (forward-button . face)
     (backward-button . face)
+    (Info-next-reference . face)
+    (Info-prev-reference . face)
     (objed-next-identifier . identifier)
     (objed-prev-identifier . identifier)
     ;; editing entry commands
