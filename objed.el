@@ -362,6 +362,9 @@ See also `objed-disabled-p'"
     (org-previous-visible-heading . section)
     (comint-previous-prompt . output)
     (comint-next-prompt . output)
+    (indent-for-tab-command . char)
+    (forward-button . face)
+    (backward-button . face)
     (objed-next-identifier . identifier)
     (objed-prev-identifier . identifier)
     ;; editing entry commands
@@ -715,11 +718,12 @@ object as an argument."
     (define-key map "w" 'objed-copy)
     (define-key map "d" 'objed-delete)
     (define-key map "y" 'objed-yank)
-    (define-key map (kbd "TAB")
-      ;; dont exit
-      (objed-define-op nil objed-indent ignore))
+
     (define-key map (kbd "C-x TAB") 'objed-indent-rigidly)
 
+    (define-key map (kbd "\\")
+      ;; dont exit
+      (objed-define-op nil objed-indent ignore))
     (define-key map ";"
       (objed-define-op nil objed-comment-or-uncomment-region))
     (define-key map ":"
