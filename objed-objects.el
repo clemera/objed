@@ -1897,9 +1897,10 @@ non-nil the indentation block can contain empty lines."
          (face (or (get-text-property pos 'face))))
      (unless (keywordp (car-safe face)) (list face))))
 
-
+(defvar objed--last-face nil)
 ;; from `evil-textobj-syntax'
-(defun objed--get-syntax-range ()
+
+(defun objed--get-face-range ()
   "Return range of equal face before/after point."
   (let ((point-face (objed--what-face))
         (backward-point (point)) ; last char when stop, including white space
@@ -1942,8 +1943,11 @@ non-nil the indentation block can contain empty lines."
 
 
 (objed-define-object nil syntax
+    (when (eq real-this-command #'objed-face-object)
+      (setq objed--last-face point-face))
+(objed-define-object nil face
   :get-obj
-  (objed--get-syntax-range)
+  (objed--get-face-range)
   ;; TODO: search for next same face as current...
   :try-next
   (re-search-forward "\\<" nil t)

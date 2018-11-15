@@ -845,7 +845,7 @@ To define new operations see `objed-define-op'.")
     (define-key map "d" 'objed-defun-object)
     (define-key map "s" 'objed-string-object)
     (define-key map ";" 'objed-comment-object)
-    (define-key map "y" 'objed-syntax-object)
+    (define-key map "y" 'objed-face-object)
 
     (define-key map "t" 'objed-tag-object)
     (define-key map "f" 'objed-file-object)
