@@ -1910,49 +1910,58 @@ non-nil the indentation block can contain empty lines."
         (start (point))
         (end (point)))
 
-    ;; check chars backward,
-    ;; stop when char is not white space and has different face
-    (save-excursion
-      (let ((continue t))
-        (while (and continue (>= (- (point) 1) (point-min)))
-          (backward-char)
-          (let ((backward-point-face (objed--what-face)))
-            (if (= 32 (char-syntax (char-after)))
-                (setq backward-point (point))
-              (if (equal point-face backward-point-face)
-                  (progn (setq backward-point (point))
-                         (setq backward-none-space-point (point)))
-                (setq continue nil)))))))
-
-    ;; check chars forward,
-    ;; stop when char is not white space and has different face
-    (save-excursion
-      (let ((continue t))
-        (while (and continue (< (+ (point) 1) (point-max)))
-          (forward-char)
-          (let ((forward-point-face (objed--what-face)))
-            (if (= 32 (char-syntax (char-after)))
-                (setq forward-point (point))
-              (if (equal point-face forward-point-face)
-                  (progn (setq forward-point (point))
-                         (setq forward-none-space-point (point)))
-                (setq continue nil)))))))
-    (progn (setq start backward-none-space-point)
-           (setq end forward-none-space-point)
-           (cons start (+ end 1)))))
-
-
-(objed-define-object nil syntax
     (when (eq real-this-command #'objed-face-object)
       (setq objed--last-face point-face))
+
+    (when (equal objed--last-face
+                 (objed--what-face))
+      ;; check chars backward,
+      ;; stop when char is not white space and has different face
+      (save-excursion
+        (let ((continue t))
+          (while (and continue (>= (- (point) 1) (point-min)))
+            (backward-char)
+            (let ((backward-point-face (objed--what-face)))
+              (if (= 32 (char-syntax (char-after)))
+                  (setq backward-point (point))
+                (if (equal point-face backward-point-face)
+                    (progn (setq backward-point (point))
+                           (setq backward-none-space-point (point)))
+                  (setq continue nil)))))))
+
+      ;; check chars forward,
+      ;; stop when char is not white space and has different face
+      (save-excursion
+        (let ((continue t))
+          (while (and continue (< (+ (point) 1) (point-max)))
+            (forward-char)
+            (let ((forward-point-face (objed--what-face)))
+              (if (= 32 (char-syntax (char-after)))
+                  (setq forward-point (point))
+                (if (equal point-face forward-point-face)
+                    (progn (setq forward-point (point))
+                           (setq forward-none-space-point (point)))
+                  (setq continue nil)))))))
+
+      (progn (setq start backward-none-space-point)
+             (setq end forward-none-space-point)
+             (cons start (+ end 1))))))
+
+
 (objed-define-object nil face
   :get-obj
   (objed--get-face-range)
   ;; TODO: search for next same face as current...
   :try-next
-  (re-search-forward "\\<" nil t)
+  (while (not (equal objed--last-face
+                     (objed--what-face)))
+    (forward-char 1))
   :try-prev
-  (re-search-backward "\\<" nil t))
+  ;; get out of current
+  (forward-char -1)
+  (while (not (equal objed--last-face
+                     (objed--what-face)))
+    (forward-char -1)))
 
 
 (declare-function org-mark-element "ext:org")
