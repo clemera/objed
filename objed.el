@@ -269,7 +269,7 @@ setting the user options `objed-use-which-key-if-available-p' and
               objed--avy-avail-p (when objed-use-avy-if-available-p
                                    (require 'avy nil t)))
         (objed--install-advices objed-cmd-alist t))
-    (objed--remove-advices objed-cmd-alist t)))
+    (objed--remove-advices objed-cmd-alist)))
 
 
 (defun objed--install-advices (alist &optional do-not-save)
