@@ -672,6 +672,8 @@ object as an argument."
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
     (define-key map (kbd "C-SPC") 'set-mark-command)
+    (define-key map (kbd "C-h k") 'describe-key)
+
     (define-key map (kbd "C-M-w") 'append-next-kill)
     ;; todo: restore object state, too?
     (define-key map (kbd "/") (objed--call-and-switch undo char))
