@@ -393,6 +393,9 @@ See also `objed-disabled-p'"
     (kill-line . char)
     (yank . region)
     (yank-pop . region)
+    ;; misc
+    ;; TODO: find a way that doesnt need to reinit each time
+    (which-key-C-h-dispatch . char)
     )
   "Entry commands and associated objects.
 
@@ -419,7 +422,9 @@ be used to restore previous states."
     read-only-mode
     undo
     undo-only
-    recenter-top-bottom)
+    recenter-top-bottom
+    delete-other-windows
+    )
   "Regular Emacs commands which should not exit modal edit state.
 
 When regular commands are executed `objed' will exit its editing
@@ -672,7 +677,12 @@ object as an argument."
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
     (define-key map (kbd "C-SPC") 'set-mark-command)
+
+    ;;(define-key map (kbd "C-h") which-key-C-h-map)
     (define-key map (kbd "C-h k") 'describe-key)
+    (when objed-use-which-key-if-available-p
+      (define-key map (kbd "C-h n") 'which-key-show-next-page-cycle)
+      (define-key map (kbd "C-h p") 'which-key-show-previous-page-cycle))
 
     (define-key map (kbd "C-M-w") 'append-next-kill)
     ;; todo: restore object state, too?
