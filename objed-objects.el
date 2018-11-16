@@ -2050,7 +2050,6 @@ non-nil the indentation block can contain empty lines."
     (objed-bounds-from-region-cmd #'mark-defun))
   (objed-define-object nil block
     :mode python-mode
-    :commands
     :no-skip t
     :try-next
     (python-nav-forward-block)
