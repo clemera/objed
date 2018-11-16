@@ -1,2 +1,4 @@
 # Compiled
 *.elc
+# deps
+.elpa/
