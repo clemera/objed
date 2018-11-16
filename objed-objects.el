@@ -1129,13 +1129,13 @@ If SYN is given use it instead of syntax at point."
     (cons (objed--skip-forward (car bounds)'ws)
           (objed--skip-backward (cdr bounds)'ws))))
 
-(defun objed--skip-ws (&optional back)
+(defun objed--skip-ws (&optional back limit)
   "Skip whitspace.
 
 Defaults to forward, if BACK is non-nil skip backwards."
   (if back
-      (skip-chars-backward " \r\n\t")
-    (skip-chars-forward " \r\n\t")))
+      (skip-chars-backward " \r\n\t" limit)
+    (skip-chars-forward " \r\n\t" limit)))
 
 
 (defun objed--skip-forward (from &optional ws comment)
@@ -2056,8 +2056,11 @@ non-nil the indentation block can contain empty lines."
     :try-prev
     (python-nav-backward-block)
     :get-obj
-    (let ((start (save-excursion (python-nav-beginning-of-block) (point)))
-            (end (save-excursion (python-nav-end-of-block))))
+    (let* ((objed--block-p t)
+           (end (save-excursion (python-nav-end-of-block) (forward-line 1) (point)))
+           (start (save-excursion (python-nav-beginning-of-block)
+                                  (objed--skip-ws t (line-beginning-position))
+                                  (point))))
         (cons start end))))
 
 (provide 'objed-objects)
