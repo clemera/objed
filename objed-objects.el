@@ -204,7 +204,8 @@ is not skipped before search for the next one via :try-next."
 Uses `objed--dispatch-alist' and defaults to
 update to given object."
   (let* ((cmd (key-binding
-               (vector (aref (this-command-keys-vector) 0))))
+               (vector ;; (aref (this-command-keys-vector) 0)
+                last-command-event)))
          (binding (assq cmd objed--dispatch-alist)))
     (cond (binding
            (funcall (cdr binding) name))
