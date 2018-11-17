@@ -1,11 +1,8 @@
 (require 'ert)
-(require 'objed)
-(require 'objed-objects)
 (require 'cl-lib)
+(require 'objed)
 
-
-;; from `lispy-with'
-
+;; adapted from  lispy-test.el
 
 (defun objed-decode-keysequence (str)
   "Decode STR from e.g. \"23ab5c\" to '(23 \"a\" \"b\" 5 \"c\")"
@@ -29,32 +26,37 @@
   (if (vectorp seq)
       (objed--unalias-key seq)
     (let ((lkeys (objed-decode-keysequence seq))
-          key)
+          (map nil)
+          (key nil))
       (while (setq key (pop lkeys))
         (if (numberp key)
             (let ((current-prefix-arg (list key)))
               (when lkeys
                 (objed--unalias-key (pop lkeys))))
-          (objed--unalias-key key))))))
+          (let ((cmd (key-binding key)))
+            (if (keymapp cmd)
+                (setq map cmd)
+              (objed--unalias-key key map)
+              (setq map nil))))))))
 
-(defun objed--unalias-key (key)
+(defun objed--unalias-key (key &optional map)
     "Call command that corresponds to KEY.
 Insert KEY if there's no command."
-    (let ((cmd (key-binding key)))
+    (let ((cmd (if map (lookup-key map key)
+                 (key-binding key))))
       (if (not cmd)
           (insert key)
         (setq last-command-event (aref key 0))
-        (call-interactively cmd)
-        (setq last-command cmd))))
+        (objed--call-object-interactively nil cmd))))
 
-
-(ert-deftest objed-decode-keysequence ()
-  (should (equal (objed-decode-keysequence "23ab50c")
-                 '(23 "a" "b" 50 "c")))
-  (should (equal (objed-decode-keysequence "3\C-d")
-                 '(3 "")))
-  (should (equal (objed-decode-keysequence "3\C-?")
-                 '(3 ""))))
+;;
+;; (ert-deftest objed-decode-keysequence ()
+;;   (should (equal (objed-decode-keysequence "23ab50c")
+;;                  '(23 "a" "b" 50 "c")))
+;;   (should (equal (objed-decode-keysequence "3\C-d")
+;;                  '(3 "")))
+;;   (should (equal (objed-decode-keysequence "3\C-?")
+;;                  '(3 ""))))
 
 ;; adapated from `lispy-with'
 (defmacro objed-with (in &rest body)
@@ -76,7 +78,7 @@ Insert KEY if there's no command."
              (goto-char (point-max))
              (search-backward "|")
              (delete-char 1)
-             (objed--init 'char)
+             ;; (objed--init 'char)
              (setq current-prefix-arg nil)
              ;; execute command
              ,@(mapcar (lambda (x)
@@ -108,35 +110,106 @@ Insert KEY if there's no command."
          (and (buffer-name temp-buffer)
               (kill-buffer temp-buffer))))))
 
+(defun objed--call-object-interactively (o &optional cmd)
+  (let* ((cmd (or cmd (objed--name2func o)))
+         (real-this-command cmd)
+         (inhibit-message t))
+    (setq this-command cmd)
+    (call-interactively cmd)
+    (setq last-command cmd)))
 
-(ert-deftest objed-next-line ()
-  (should (string= (objed-with ";; this is a| test\n;; this is the next line" "n")
-                   ";; this is a test\n<;; this is t|he next line>")))
+;; needs to come first initializes, for tests, too
+(ert-deftest objed-activate ()
+  (should (string= (objed-with "Testing line he|re" "\C-a")
+                   "|<Testing line here>"))
+  (should (string= (objed-with "Testing line he|re" (kbd "M-b"))
+                   "Testing line |<here>"))
+  (should (string= (objed-with "Testing line he|re" (kbd "M-f"))
+                   "Testing line <here>|"))
+  (should (string= (objed-with "Testing line he|re\nFollowing line here" "\C-n")
+                   "Testing line here\n<Following line |here>"))
+  (should (string= (objed-with "Testing line he|re" (objed--call-object-interactively 'line))
+                   "|<Testing line here>"))
+  (should (string= (objed-with "
+(defun objed--save-start-position (&rest _)
+  \"Save position of| point via `objed--opoint'.\"
+  (setq objed--opoint (point)))
+"  (kbd "C-M-a"))
+  "<
+|(defun objed--save-start-position (&rest _)
+  \"Save position of point via `objed--opoint'.\"
+  (setq objed--opoint (point)))
+>")))
 
-(ert-deftest objed-previous-line ()
-  (should (string= (objed-with ";; this is the previous line\n;; this is| the current line" "p")
-                   "<;; this is| the previous line\n>;; this is the current line")))
-
-(ert-deftest objed-forward-char ()
-  (should (string= (objed-with "Tes|ting line" "fff")
-                   "Testin|<g> line")))
-
-(ert-deftest objed-backward-char ()
-  (should (string= (objed-with "Tes|ting line" "bb")
-                   "T|<e>sting line")))
-
-(ert-deftest objed-forward-word ()
-  (should (string= (objed-with "Tes|ting line here" "ss")
-                   "Testing <line>| here")))
-
-
-(ert-deftest objed-backward-word ()
-  (should (string= (objed-with "Testing line he|re" "rr")
-                   "Testing |<line> here")))
 
 (ert-deftest objed-basic-movment ()
-  (should (string= (objed-with "Testing |line here\nFollowing line here" "npsrfb")
-                   "Testing |<l>ine here\nFollowing line here")))
+  (should (string= (objed-with "Testing line he|re" "rr")
+                   "Testing |<line> here"))
+  (should (string= (objed-with "Testing line he|re" "2r")
+                   "Testing |<line> here"))
+  (should (string= (objed-with "Tes|ting line here" "ss")
+                   "Testing <line>| here"))
+  (should (string= (objed-with "Tes|ting line here" "2s")
+                   "Testing <line>| here"))
+  (should (string= (objed-with "Tes|ting line" "bb")
+                   "T|<e>sting line"))
+  (should (string= (objed-with "Tes|ting line" "2b")
+                   "T|<e>sting line"))
+  (should (string= (objed-with "Tes|ting line" "fff")
+                   "Testin|<g> line"))
+  (should (string= (objed-with "Tes|ting line" "3f")
+                   "Testin|<g> line"))
+  (should (string= (objed-with ";; this is the previous line\n;; this is| the current line" "p")
+                   "<;; this is| the previous line\n>;; this is the current line"))
+  (should (string= (objed-with ";; this is a| test\n;; this is the next line" "n")
+                   ";; this is a test\n<;; this is t|he next line>"))
+ (should (string= (objed-with "Testing |line here\nFollowing line here" "npsrfb")
+                   "Testing |<l>ine here\nFollowing line here"))
+  (should (string= (objed-with "Testing |line here\nFollowing line here" "e")
+                   "Testing <line here>|\nFollowing line here"))
+  (should (string= (objed-with "Testing |line here\nFollowing line here" "a")
+                   "|<Testing >line here\nFollowing line here"))
+  (should (string= (objed-with "Testing |line here\nFollowing line here" "ae")
+                   "<Testing line here>|\nFollowing line here")))
+
+
+(ert-deftest objed-switch-to-object ()
+  (should (string= (objed-with "
+(defun objed--save-start-position (&rest _)
+  \"Save position of point via `objed--opoint'.\"
+  (setq objed--opoint (point)))
+
+(defun objed--|goto-start (&optional _)
+  \"Goto start of current object if there is one.\"
+  (when objed--current-obj
+    (goto-char (objed--beg))))
+
+(defun objed--object-trailing-line (pos)
+  \"Activate trailing part from POS.\"
+  (unless (eq objed--obj-state 'inner)
+    (objed--reverse))
+  (objed--change-to :beg pos :ibeg pos))"
+        "cdd")
+"
+(defun objed--save-start-position (&rest _)
+  \"Save position of point via `objed--opoint'.\"
+  (setq objed--opoint (point)))
+|<
+>(defun objed--object-trailing-line (pos)
+  \"Activate trailing part from POS.\"
+  (unless (eq objed--obj-state 'inner)
+    (objed--reverse))
+  (objed--change-to :beg pos :ibeg pos))")))
+
+(ert-deftest objed-delete-op ()
+  (should (string= (objed-with "
+(defun |objed--save-start-position (&rest _)
+  \"Save position of point via `objed--opoint'.\"
+  (setq objed--opoint (point)))"
+        "nd")
+"
+(defun objed--save-start-position (&rest _)
+|<  (setq objed--opoint (point)))>")))
 
 
 (provide 'tests)
