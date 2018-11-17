@@ -2012,7 +2012,8 @@ state is only restored correctly if the buffer was not modified."
           (when ovps
             (objed--mark-ovps ovps))))
     (prog1 nil
-      (message "No previous state to restore."))))
+      (when (called-interactively-p 'any)
+        (message "No previous state to restore.")))))
 
 
 ;; * Operation definitions
