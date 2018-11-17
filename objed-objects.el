@@ -40,11 +40,21 @@
 (declare-function outline-next-visible-heading "ext:outline")
 (declare-function outline-previous-visible-heading "ext:outline")
 
+(declare-function objed--object-dispatch "ext:objed")
+(declare-function objed-current-or-next-context "ext:objed")
+(declare-function objed-current-or-previous-context "ext:objed")
+(declare-function objed--install-advices "ext:objed")
+(declare-function objed--get-current-state "ext:objed")
+
 ;; dyn bindings
 (defvar avy-action nil)
 (defvar avy-all-windows nil)
 
 ;; * Macros
+
+(defvar objed--object nil
+  "The symbol of the current object.")
+
 
 (defmacro objed-define-object (key name &rest args)
   "Declare a text object for `objed'.
@@ -198,42 +208,10 @@ is not skipped before search for the next one via :try-next."
      ,@body))
 
 
-(defun objed--object-dispatch (name)
-  "Dispatch according to object NAME.
-
-Uses `objed--dispatch-alist' and defaults to
-update to given object."
-  (let* ((cmd (key-binding
-               (vector ;; (aref (this-command-keys-vector) 0)
-                last-command-event)))
-         (binding (assq cmd objed--dispatch-alist)))
-    (cond (binding
-           (funcall (cdr binding) name))
-          (t
-           ;; object called as command via M-x
-           (when (not objed--buffer)
-              (objed--init name))
-           ;; TODO: do something useful if called twice?
-           ;; (eq name objed--object)
-           (when (objed--switch-to name)
-             (goto-char (objed--beg)))))))
-
-(defun objed--inside-object-p (obj)
-  "Return non-nil if point point inside object OBJ."
-  (let*  ((objed--object obj)
-          (objed--obj-state 'whole)
-          (obj (if (symbolp obj)
-                   (objed--get)
-                 obj)))
-    (when (and obj (not (objed--distant-p obj)))
-      obj)))
-
-
 ;; * Global vars saving object information
 ;; TODO: use defstruct object instead
 
-(defvar objed--object nil
-  "The symbol of the current object.")
+
 
 (defvar objed--current-obj nil
   "The current object position data.
@@ -252,9 +230,18 @@ Either the symbol `whole' or `inner'.")
 (defvar objed--marked-ovs nil
   "List of overlays of marked objects.")
 
-
-
 ;; * Get object positions
+
+(defun objed--inside-object-p (obj)
+  "Return non-nil if point point inside object OBJ."
+  (let*  ((objed--object obj)
+          (objed--obj-state 'whole)
+          (obj (if (symbolp obj)
+                   (objed--get)
+                 obj)))
+    (when (and obj (not (objed--distant-p obj)))
+      obj)))
+
 
 (defun objed--beg (&optional obj)
   "Get beginning position of object.
@@ -340,6 +327,13 @@ OBJ is the object to use and defaults to `objed--current-obj'."
   (let* ((obj (or obj objed--current-obj))
          (posn (objed--alt obj)))
     (cadr posn)))
+
+(defun objed--goto-char (pos)
+  "Move to position POS possibly skipping leading whitespace."
+  (goto-char
+   (if (eq objed--object 'char)
+       pos
+     (objed--skip-forward pos 'ws))))
 
 (defun objed--collect-backward (pos min &optional ends)
   "Collect object positions in backward direction.
@@ -624,6 +618,115 @@ from beginning of object FROM."
         (objed--object :try-prev)
         (objed--get t)))))
 
+
+;; * Object creation/manipulation
+
+
+(cl-defun objed-make-object (&key obounds beg end ibounds ibeg iend)
+  "Helper to create internal used object format from positions.
+
+Positions of the whole object can be provided by BEG, END or a
+cons cell OBOUNDS.
+
+The positions of the inner part can be provided by IBEG, IEND or
+a cons cell IBOUNDS. If inner positions are omitted
+`objed--inner-default' is used to determine them."
+  (cl-assert (and (not (and obounds beg end))
+                  (not (and ibounds ibeg iend))))
+  (cond ((and (integer-or-marker-p beg)
+              (integer-or-marker-p end)
+              (integer-or-marker-p ibeg)
+              (integer-or-marker-p iend))
+         (list (list (objed--pos-or-marker beg)
+                     (objed--pos-or-marker end))
+               (list (objed--pos-or-marker ibeg)
+                     (objed--pos-or-marker iend))))
+        ((and (integer-or-marker-p beg)
+              (integer-or-marker-p end))
+         (cond ((consp ibounds)
+                (list (list (objed--pos-or-marker beg)
+                            (objed--pos-or-marker end))
+                      (list (objed--pos-or-marker (car ibounds))
+                            (objed--pos-or-marker (cdr ibounds)))))
+               ((or (functionp ibeg)
+                    (functionp iend))
+                (list (list (objed--pos-or-marker beg)
+                            (objed--pos-or-marker end))
+                      (list (objed--pos-or-marker
+                             (or (and (functionp ibeg)
+                                      (funcall ibeg beg))
+                                 ibeg))
+                            (objed--pos-or-marker
+                             (or (and (functionp iend)
+                                      (funcall iend end))
+                                 iend)))))
+               (t
+                (list (list (objed--pos-or-marker beg)
+                            (objed--pos-or-marker end))
+                      (objed--inner-default beg end)))))
+        ((consp obounds)
+         (cond ((consp ibounds)
+                (list (list (objed--pos-or-marker (car obounds))
+                            (objed--pos-or-marker (cdr obounds)))
+                      (list (objed--pos-or-marker (car ibounds))
+                            (objed--pos-or-marker (cdr ibounds)))))
+               ((and (integer-or-marker-p ibeg)
+                     (integer-or-marker-p iend))
+                (list (list (objed--pos-or-marker (car obounds))
+                            (objed--pos-or-marker (cdr obounds)))
+                      (list (objed--pos-or-marker ibeg)
+                            (objed--pos-or-marker iend))))
+               ((or (functionp ibeg)
+                    (functionp iend))
+                (list (list (objed--pos-or-marker (car obounds))
+                            (objed--pos-or-marker (cdr obounds)))
+                      (list (objed--pos-or-marker
+                             (or (and (functionp ibeg)
+                                      (funcall ibeg beg))
+                                 ibeg))
+                            (objed--pos-or-marker
+                             (or (and (functionp iend)
+                                      (funcall iend end))
+                                 iend)))))
+               (t
+                (list (list (objed--pos-or-marker (car obounds))
+                            (objed--pos-or-marker (cdr obounds)))
+                      (objed--inner-default  (car obounds) (cdr obounds))))))))
+
+
+(cl-defun objed--change-to (&key beg end ibeg iend)
+  "Change position data of current object.
+
+BEG: the beginning position
+END: the end position
+IBEG: the beginning position of the inner part
+IEND: the end position of the inner part"
+  (let ((beg (and beg (objed--pos-or-marker beg)))
+        (end (and end (objed--pos-or-marker end)))
+        (ibeg (and ibeg (objed--pos-or-marker ibeg)))
+        (iend (and iend (objed--pos-or-marker iend))))
+    (cond ((eq objed--obj-state 'whole)
+           (when beg
+             (setf (car (car objed--current-obj)) beg))
+           (when end
+             (setf (car (cdar objed--current-obj)) end))
+           (when ibeg
+             (setf (car (cadr objed--current-obj)) ibeg))
+           (when iend
+             (setf (cadr (cadr objed--current-obj)) iend)))
+          ((eq objed--obj-state 'inner)
+           (when ibeg
+             (setf (car (car objed--current-obj)) ibeg))
+           (when iend
+             (setf (car (cdar objed--current-obj)) iend))
+           (when beg
+             (setf (car (cadr objed--current-obj)) beg))
+           (when end
+             (setf (cadr (cadr objed--current-obj)) end)))
+          (t
+           (error "No valid `objed--obj-state'")))))
+
+
 ;; * Helpers to work with object format
 
 
@@ -700,15 +803,6 @@ according to `objed--obj-state'."
     n))
 
 
-(defun objed--get-object-for-cmd (cmd)
-  "Guess which object to use.
-
-CMD is the command for which object should be guessed. Returns
-the guessed object."
-  (let ((c (cdr (assq cmd objed-cmd-alist))))
-    (if (consp c) (objed--at-p c) c)))
-
-
 (defun objed--in-p (c &optional inner)
   "Return object name point is in.
 
@@ -731,16 +825,11 @@ C is a list of object names to test for."
     (when (objed--object :atp cand)
       (cl-return cand))))
 
-(defun objed--at-beg-p (c)
-  "Return object name at point.
-
-C is a list of object names to test for."
-  (let ((o (objed--at-p c)))
-    (when o
-      (objed--save-state
-       (objed--switch-to o)
-       (= (objed--beg) (point))))))
-
+(defun objed--indentation-position ()
+  "Get buffer position of indentation on current line."
+  (save-excursion
+    (back-to-indentation)
+    (point)))
 
 (defun objed--apply (func &optional obj)
   "Apply function FUNC on postions of object.
@@ -872,6 +961,11 @@ If OBJ is given use it instead `objed--current-obj'."
 
 ;; * Creating objects
 
+
+(defvar objed--block-p nil
+  "Block advices installed by `objed'.")
+
+
 (defun objed-bounds-from-region-cmd (cmd)
   "Return buffer positions of region created by command CMD.
 
@@ -903,109 +997,6 @@ positions."
       (list (objed--pos-or-marker (point))
             (objed--pos-or-marker (1+ (point)))))))
 
-(cl-defun objed-make-object (&key obounds beg end ibounds ibeg iend)
-  "Helper to create internal used object format from positions.
-
-Positions of the whole object can be provided by BEG, END or a
-cons cell OBOUNDS.
-
-The positions of the inner part can be provided by IBEG, IEND or
-a cons cell IBOUNDS. If inner positions are omitted
-`objed--inner-default' is used to determine them."
-  (cl-assert (and (not (and obounds beg end))
-                  (not (and ibounds ibeg iend))))
-  (cond ((and (integer-or-marker-p beg)
-              (integer-or-marker-p end)
-              (integer-or-marker-p ibeg)
-              (integer-or-marker-p iend))
-         (list (list (objed--pos-or-marker beg)
-                     (objed--pos-or-marker end))
-               (list (objed--pos-or-marker ibeg)
-                     (objed--pos-or-marker iend))))
-        ((and (integer-or-marker-p beg)
-              (integer-or-marker-p end))
-         (cond ((consp ibounds)
-                (list (list (objed--pos-or-marker beg)
-                            (objed--pos-or-marker end))
-                      (list (objed--pos-or-marker (car ibounds))
-                            (objed--pos-or-marker (cdr ibounds)))))
-               ((or (functionp ibeg)
-                    (functionp iend))
-                (list (list (objed--pos-or-marker beg)
-                            (objed--pos-or-marker end))
-                      (list (objed--pos-or-marker
-                             (or (and (functionp ibeg)
-                                      (funcall ibeg beg))
-                                 ibeg))
-                            (objed--pos-or-marker
-                             (or (and (functionp iend)
-                                      (funcall iend end))
-                                 iend)))))
-               (t
-                (list (list (objed--pos-or-marker beg)
-                            (objed--pos-or-marker end))
-                      (objed--inner-default beg end)))))
-        ((consp obounds)
-         (cond ((consp ibounds)
-                (list (list (objed--pos-or-marker (car obounds))
-                            (objed--pos-or-marker (cdr obounds)))
-                      (list (objed--pos-or-marker (car ibounds))
-                            (objed--pos-or-marker (cdr ibounds)))))
-               ((and (integer-or-marker-p ibeg)
-                     (integer-or-marker-p iend))
-                (list (list (objed--pos-or-marker (car obounds))
-                            (objed--pos-or-marker (cdr obounds)))
-                      (list (objed--pos-or-marker ibeg)
-                            (objed--pos-or-marker iend))))
-               ((or (functionp ibeg)
-                    (functionp iend))
-                (list (list (objed--pos-or-marker (car obounds))
-                            (objed--pos-or-marker (cdr obounds)))
-                      (list (objed--pos-or-marker
-                             (or (and (functionp ibeg)
-                                      (funcall ibeg beg))
-                                 ibeg))
-                            (objed--pos-or-marker
-                             (or (and (functionp iend)
-                                      (funcall iend end))
-                                 iend)))))
-               (t
-                (list (list (objed--pos-or-marker (car obounds))
-                            (objed--pos-or-marker (cdr obounds)))
-                      (objed--inner-default  (car obounds) (cdr obounds))))))))
-
-
-(cl-defun objed--change-to (&key beg end ibeg iend)
-  "Change position data of current object.
-
-BEG: the beginning position
-END: the end position
-IBEG: the beginning position of the inner part
-IEND: the end position of the inner part"
-  (let ((beg (and beg (objed--pos-or-marker beg)))
-        (end (and end (objed--pos-or-marker end)))
-        (ibeg (and ibeg (objed--pos-or-marker ibeg)))
-        (iend (and iend (objed--pos-or-marker iend))))
-    (cond ((eq objed--obj-state 'whole)
-           (when beg
-             (setf (car (car objed--current-obj)) beg))
-           (when end
-             (setf (car (cdar objed--current-obj)) end))
-           (when ibeg
-             (setf (car (cadr objed--current-obj)) ibeg))
-           (when iend
-             (setf (cadr (cadr objed--current-obj)) iend)))
-          ((eq objed--obj-state 'inner)
-           (when ibeg
-             (setf (car (car objed--current-obj)) ibeg))
-           (when iend
-             (setf (car (cdar objed--current-obj)) iend))
-           (when beg
-             (setf (car (cadr objed--current-obj)) beg))
-           (when end
-             (setf (cadr (cadr objed--current-obj)) end)))
-          (t
-           (error "No valid `objed--obj-state'")))))
 
 (defun objed--pos-or-marker (pos)
   "Return marker or position POS.
@@ -1919,9 +1910,9 @@ non-nil the indentation block can contain empty lines."
 (defun objed--get-face-range ()
   "Return range of equal face before/after point."
   (let ((point-face (objed--what-face))
-        (backward-point (point)) ; last char when stop, including white space
+        (objed-cmd-alist (and (bound-and-true-p objed-cmd-alist)
+                              objed-cmd-alist))
         (backward-none-space-point (point)) ; last none white space char
-        (forward-point (point)) ; last char when stop, including white space
         (forward-none-space-point (point)) ; last none white space char
         (start (point))
         (end (point)))
@@ -1940,10 +1931,9 @@ non-nil the indentation block can contain empty lines."
             (backward-char)
             (let ((backward-point-face (objed--what-face)))
               (if (= 32 (char-syntax (char-after)))
-                  (setq backward-point (point))
+                  (ignore)
                 (if (equal point-face backward-point-face)
-                    (progn (setq backward-point (point))
-                           (setq backward-none-space-point (point)))
+                    (setq backward-none-space-point (point))
                   (setq continue nil)))))))
 
       ;; check chars forward,
@@ -1954,10 +1944,9 @@ non-nil the indentation block can contain empty lines."
             (forward-char)
             (let ((forward-point-face (objed--what-face)))
               (if (= 32 (char-syntax (char-after)))
-                  (setq forward-point (point))
+                  (ignore)
                 (if (equal point-face forward-point-face)
-                    (progn (setq forward-point (point))
-                           (setq forward-none-space-point (point)))
+                    (setq forward-none-space-point (point))
                   (setq continue nil)))))))
 
       (progn (setq start backward-none-space-point)
@@ -1982,6 +1971,11 @@ non-nil the indentation block can contain empty lines."
 
 
 (declare-function org-mark-element "ext:org")
+(declare-function python-nav-end-of-block "ext:python")
+(declare-function python-nav-beginning-of-block "ext:python")
+(declare-function python-nav-forward-block "ext:python")
+(declare-function python-nav-backward-block "ext:python")
+
 (with-eval-after-load 'org
   (objed-define-object nil section
     :mode org-mode
@@ -2004,6 +1998,9 @@ non-nil the indentation block can contain empty lines."
     (objed-make-object
      :obounds (objed-bounds-from-region-cmd #'org-mark-element))))
 
+(defvar comint-prompt-regexp nil)
+(declare-function comint-next-prompt "ext:comint")
+(declare-function comint-previous-prompt "ext:comint")
 
 (objed-define-object nil output
   :atp

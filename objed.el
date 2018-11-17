@@ -228,71 +228,6 @@
 
 (require 'objed-objects)
 
-;; * Objed Mode
-
-(defvar objed-mode-map
-  (let ((map (make-sparse-keymap)))
-    ;; because objed is a "big" addition to the interface overriding M-SPC might
-    ;; be ok
-    (define-key map (kbd "M-SPC") 'objed-activate)
-    ;;(define-key map (kbd "C-.") 'objed-activate)
-    map)
-  "Keymap for /function`objed-mode'.")
-
-;;;###autoload
-(define-minor-mode objed-mode
-  "Enable objeds modal editing features after certain commands.
-
-With a prefix argument ARG, enable Objed mode if ARG is positive,
-and disable it otherwise. If called from Lisp, enable the mode if
-ARG is omitted or nil.
-
-Objed mode is a global minor mode. When enabled, any command
-configured in `objed-cmd-alist' will activate modal navigation
-and editing features on text objects. Available commands,
-operations and objects can be found in `objed-map',
-`objed-op-map' and `objed-object-map'.
-
-To define your own text objects and editing operations see
-`objed-define-object' and `objed-define-op'.
-
-Activating this mode loads the optional dependencies `which-key'
-and `avy' if they are available. This can be deactivated by
-setting the user options `objed-use-which-key-if-available-p' and
-`objed-use-avy-if-available-p' before loading."
-  :global t
-  :require 'objed
-  (if objed-mode
-      (progn
-        (setq objed--which-key-avail-p (when objed-use-which-key-if-available-p
-                                         (require 'which-key nil t))
-              objed--avy-avail-p (when objed-use-avy-if-available-p
-                                   (require 'avy nil t)))
-        (objed--install-advices objed-cmd-alist t))
-    (objed--remove-advices objed-cmd-alist)))
-
-
-(defun objed--install-advices (alist &optional do-not-save)
-  "Install advices according to ALIST.
-
-If DO-NOT-SAVE is non-nil don't store ALIST entries in
-`objed-cmd-alist'."
-  (dolist (cmd2obj alist)
-    (unless do-not-save (push cmd2obj objed-cmd-alist))
-    (advice-add (car cmd2obj) :after
-                (apply-partially #'objed--activate (car cmd2obj)))
-    (advice-add (car cmd2obj) :before 'objed--save-start-position)))
-
-(defun objed--remove-advices (alist)
-  "Remove advices accroding to ALIST.
-
-See `objed-cmd-alist'."
-  (dolist (cmd2obj alist)
-    (advice-remove (car cmd2obj)
-                   (apply-partially #'objed--activate (car cmd2obj)))
-    (advice-remove (car cmd2obj) 'objed--save-start-position)))
-
-
 ;; * Customization
 
 (defgroup objed nil
@@ -515,6 +450,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (defvar which-key--using-top-level nil)
 (defvar avy-all-windows nil)
 (defvar avy-action nil)
+(defvar mc/cursor-specific-vars nil)
 
 (declare-function objed--exit-objed "objed" nil t)
 (declare-function electric-pair-post-self-insert-function "ext:electric")
@@ -523,6 +459,9 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (declare-function avy--process "ext:avy")
 (declare-function avy--style-fn "ext:avy")
 (declare-function edit-indirect-region "ext:edit-indirect")
+(declare-function electric-pair-syntax-info "ext:elec-pair")
+
+
 
 
 ;; * Support for other libs
@@ -609,11 +548,6 @@ interferring with `objed'."
          (set-cursor-color objed-cursor-color)))))
 
 
-(defvar objed--dispatch-alist nil
-  "Maps prefix commands to functions.
-
-Don't modify this list manually, use `objed-define-dispatch'.")
-
 (defvar objed--dispatch-key-alist nil
   "Store keys for dispatch commands.")
 
@@ -639,11 +573,43 @@ object as an argument."
        ;; save for possible reinit of objed-map
        (push (cons ,key ',dp) objed--dispatch-key-alist))))
 
-(defmacro objed--save-state (&rest body)
-  "Preserve state during execution of BODY."
-  `(let ((state (objed--get-current-state)))
-     (unwind-protect (progn ,@body )
-       (prog1 nil (objed--restore-state state)))))
+(defvar objed-mode nil)
+(defvar objed--buffer nil
+  "Buffer where objed got initialized.")
+
+(defvar objed--dispatch-alist nil
+  "Maps prefix commands to functions.
+
+Don't modify this list manually, use `objed-define-dispatch'.")
+
+(defun objed--object-dispatch (name)
+  "Dispatch according to object NAME.
+
+Uses `objed--dispatch-alist' and defaults to
+update to given object."
+  (let* ((cmd (key-binding
+               (vector ;; (aref (this-command-keys-vector) 0)
+                last-command-event)))
+         (binding (assq cmd objed--dispatch-alist)))
+    (cond (binding
+           (funcall (cdr binding) name))
+          (t
+           ;; object called as command via M-x
+           (when (not objed--buffer)
+              (objed--init name))
+           ;; TODO: do something useful if called twice?
+           ;; (eq name objed--object)
+           (when (objed--switch-to name)
+             (goto-char (objed--beg)))))))
+
+
+(defun objed--get-object-for-cmd (cmd)
+  "Guess which object to use.
+
+CMD is the command for which object should be guessed. Returns
+the guessed object."
+  (let ((c (cdr (assq cmd objed-cmd-alist))))
+    (if (consp c) (objed--at-p c) c)))
 
 
 ;; * Keymaps
@@ -944,6 +910,12 @@ Use `objed-define-dispatch' to define a dispatch command.")
        :beg start
        :end (objed--max o))))))
 
+(defmacro objed--save-state (&rest body)
+  "Preserve state during execution of BODY."
+  `(let ((state (objed--get-current-state)))
+     (unwind-protect (progn ,@body )
+       (prog1 nil (objed--restore-state state)))))
+
 (defun objed--mark-all-inside (name)
   "Mark all objects of current type inside object NAME."
   (save-excursion
@@ -1034,12 +1006,6 @@ and end postion will be used for toggle."
 
 (defvar objed--saved-cursor nil
   "Cursor color before objed got initialized.")
-
-(defvar objed--buffer nil
-  "Buffer where objed got initialized.")
-
-(defvar objed--block-p nil
-  "Block advices installed by `objed'.")
 
 (defvar objed--hl-cookie nil
   "The remapping cookie for `hl-line' face.")
@@ -1675,14 +1641,6 @@ Uses `objed-initial-object' for initialization."
   (objed--init objed-initial-object))
 
 
-(defun objed--goto-char (pos)
-  "Move to position POS possibly skipping leading whitespace."
-  (goto-char
-   (if (eq objed--object 'char)
-       pos
-     (objed--skip-forward pos 'ws))))
-
-
 (defun objed-toggle-side ()
   "Move to other side of object.
 
@@ -1707,13 +1665,6 @@ Default to sexp at point."
                       (objed--beg))
                      (t
                       (objed--end))))))
-
-
-(defun objed--indentation-position ()
-  "Get buffer position of indentation on current line."
-  (save-excursion
-    (back-to-indentation)
-    (point)))
 
 
 (defun objed-select-object ()
@@ -2201,7 +2152,7 @@ Moves point over any whitespace afterwards."
   (interactive)
   (objed--indent #'indent-rigidly-right-to-tab-stop))
 
-(defun objed-indent-rigidly (beg end &optional arg)
+(defun objed-indent-rigidly (_beg _end &optional arg)
   "Similar to `indent-rigidly' but work on current object lines."
   (interactive "r\nP")
   (if arg
@@ -2715,6 +2666,70 @@ on."
       (remove-hook 'pre-command-hook 'objed--push-state t)
       (setq objed--buffer nil))))
 
+
+;; * Objed Mode
+
+(defvar objed-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; because objed is a "big" addition to the interface overriding M-SPC might
+    ;; be ok
+    (define-key map (kbd "M-SPC") 'objed-activate)
+    ;;(define-key map (kbd "C-.") 'objed-activate)
+    map)
+  "Keymap for /function`objed-mode'.")
+
+;;;###autoload
+(define-minor-mode objed-mode
+  "Enable objeds modal editing features after certain commands.
+
+With a prefix argument ARG, enable Objed mode if ARG is positive,
+and disable it otherwise. If called from Lisp, enable the mode if
+ARG is omitted or nil.
+
+Objed mode is a global minor mode. When enabled, any command
+configured in `objed-cmd-alist' will activate modal navigation
+and editing features on text objects. Available commands,
+operations and objects can be found in `objed-map',
+`objed-op-map' and `objed-object-map'.
+
+To define your own text objects and editing operations see
+`objed-define-object' and `objed-define-op'.
+
+Activating this mode loads the optional dependencies `which-key'
+and `avy' if they are available. This can be deactivated by
+setting the user options `objed-use-which-key-if-available-p' and
+`objed-use-avy-if-available-p' before loading."
+  :global t
+  :require 'objed
+  (if objed-mode
+      (progn
+        (setq objed--which-key-avail-p (when objed-use-which-key-if-available-p
+                                         (require 'which-key nil t))
+              objed--avy-avail-p (when objed-use-avy-if-available-p
+                                   (require 'avy nil t)))
+        (objed--install-advices objed-cmd-alist t))
+    (objed--remove-advices objed-cmd-alist)))
+
+
+(defun objed--install-advices (alist &optional do-not-save)
+  "Install advices according to ALIST.
+
+If DO-NOT-SAVE is non-nil don't store ALIST entries in
+`objed-cmd-alist'."
+  (dolist (cmd2obj alist)
+    (unless do-not-save (push cmd2obj objed-cmd-alist))
+    (advice-add (car cmd2obj) :after
+                (apply-partially #'objed--activate (car cmd2obj)))
+    (advice-add (car cmd2obj) :before 'objed--save-start-position)))
+
+(defun objed--remove-advices (alist)
+  "Remove advices accroding to ALIST.
+
+See `objed-cmd-alist'."
+  (dolist (cmd2obj alist)
+    (advice-remove (car cmd2obj)
+                   (apply-partially #'objed--activate (car cmd2obj)))
+    (advice-remove (car cmd2obj) 'objed--save-start-position)))
 
 
 (provide 'objed)
