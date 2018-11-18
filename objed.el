@@ -745,9 +745,11 @@ the guessed object."
         (objed-define-op nil objed-electric)))
 
     ;; quote op
-    (define-key map "~"
+    (define-key map "+"
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
+    (define-key map "~"
+      (objed-define-op nil objed-undo-op))
 
 
     ;; special commands
@@ -763,13 +765,13 @@ the guessed object."
 
     ;; direct acc objs
     ;; moved to S/R
-    ;; (define-key map "_" 'objed-symbol-object)
     ;; direct object switches
     (define-key map "." 'objed-identifier-object)
     (define-key map "%" 'objed-contents-object)
      ;; not regular objects, selection
     ;; (define-key map (kbd "M-SPC") 'objed-select-object)
     ;; used for direct quoting now...
+    ;; (define-key map "_" 'objed-symbol-object)
     ;; (define-key map "{" 'objed-paragraph-object)
     ;; (define-key map "[" 'objed-section-object)
     ;; (define-key map "(" 'objed-textblock-object)
@@ -815,8 +817,6 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "c"
        ;; upcase, downcase, capitalize, reformat
       (objed-define-op nil objed-case-op))
-    (define-key map "u"
-      (objed-define-op nil objed-undo-op))
     (define-key map "r"
       (objed-define-op nil objed-replace-op))
     (define-key map "p"
