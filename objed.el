@@ -681,8 +681,9 @@ the guessed object."
     (define-key map (kbd "<M-left>") 'objed-indent-to-left-tab-stop)
 
     (define-key map "`" 'objed-top-object);;'objed-backward-symbol)
-    (define-key map "´" 'objed-bottom-object);;'objed-forward-symbol)
-
+    (define-key map (kbd "<home>") 'objed-top-object)
+    (define-key map (kbd "´") 'objed-bottom-object);;'objed-forward-symbol)
+    (define-key map (kbd "<end>") 'objed-bottom-object)
     ;; block expansions
     (define-key map "l" 'objed-expand-block)
     (define-key map "a" 'objed-beg-of-block)
