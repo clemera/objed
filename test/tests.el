@@ -1,8 +1,10 @@
 (require 'ert)
 (require 'cl-lib)
 (require 'objed)
+;; activate on load
+(objed-mode 1)
 
-;; adapted from  lispy-test.el
+;; defuns adapted from  lispy-test.el
 
 (defun objed--call-object-interactively (o &optional cmd)
   (let* ((cmd (or cmd (objed--name2func o)))
@@ -78,8 +80,6 @@ Insert KEY if there's no command."
              (switch-to-buffer temp-buffer)
              (emacs-lisp-mode)
              (transient-mark-mode 1)
-             ;; activate objed
-             (objed-mode 1)
              (insert ,in)
              (goto-char (point-min))
              (when (search-forward "~" nil t)

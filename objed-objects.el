@@ -27,6 +27,7 @@
 ;; info for byte-comp
 (declare-function avy--process "ext:avy")
 (declare-function avy--style-fn "ext:avy")
+(declare-function avy-goto-char "ext:avy")
 
 (declare-function sgml-skip-tag-backward "ext:sgml-mode")
 (declare-function sgml-skip-tag-forward "ext:sgml-mode")
@@ -1243,6 +1244,15 @@ property list where each key has an associated progn."
   (forward-char 0)
   :try-prev
   (forward-char -1))
+
+(objed-define-object nil ace
+  :get-obj
+  (avy-goto-char (read-event "Ace to char: "))
+  (objed-make-object
+   :beg (point)
+   :ibeg (point)
+   :end (if (eobp) (point) (1+ (point)))
+   :iend (if (eobp) (point) (1+ (point)))))
 
 
 (objed-define-object nil word
