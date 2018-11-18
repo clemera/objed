@@ -591,7 +591,7 @@ Uses `objed--dispatch-alist' and defaults to
 update to given object."
   (let* ((cmd (key-binding
                (vector
-                (if (> (length (this-command-keys-vector)) 2)
+                (if (>= (length (this-command-keys-vector)) 2)
                     (aref (this-command-keys-vector) 0)
                   ;; for testing purposes...
                   last-command-event))))
