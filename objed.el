@@ -886,6 +886,7 @@ Use `objed-define-dispatch' to define a dispatch command.")
 (objed-define-dispatch "<" objed--backward-until)
 (objed-define-dispatch ">" objed--forward-until)
 (objed-define-dispatch "*" objed--mark-all-inside)
+(objed-define-dispatch "#" objed--ace-switch-object)
 
 (defun objed--backward-until (name)
   "Activate part from point backward until object NAME."
@@ -930,6 +931,10 @@ Use `objed-define-dispatch' to define a dispatch command.")
         ;; objed-mark-object
         (let ((n (objed--do-all 'objed--mark-object)))
           (message "Marked %s %ss in %s." n objed--object name))))))
+
+(defun objed--ace-switch-object (name)
+  (let ((objed--object name))
+    (objed-ace)))
 
 
 (defun objed--until (n &optional back)
