@@ -2053,7 +2053,11 @@ append it to the `kill-ring'."
 (defun objed-del-insert ()
   "Delete current object and exit to insert state."
   (interactive)
-  (delete-region (objed--beg) (objed--end))
+  ;; keep usual behaviour so there
+  ;; is no confusion
+  (if (eq objed--object 'char)
+      (delete-char -1)
+    (delete-region (objed--beg) (objed--end)))
   (objed--exit-objed))
 
 (defvar objed--electric-event nil
