@@ -9,6 +9,8 @@
          (real-this-command cmd)
          (inhibit-message t))
     (setq this-command cmd)
+    ;; pre command hook...
+    (funcall #'objed--push-state)
     (call-interactively cmd)
     (setq last-command cmd)))
 
@@ -115,8 +117,9 @@ Insert KEY if there's no command."
               (point-min)
               (point-max)))
          (objed--exit-objed)
-         ;; reset for next round
+         ;; reset for next test
          (setq last-command nil)
+         (setq objed--last-states nil)
          (and (buffer-name temp-buffer)
               (kill-buffer temp-buffer)))))))
 
@@ -173,6 +176,13 @@ Insert KEY if there's no command."
                    "|<Testing >line here\nFollowing line here"))
   (should (string= (objed-with "Testing |line here\nFollowing line here" "ae")
                    "<Testing line here>|\nFollowing line here")))
+
+(ert-deftest objed-pop-state ()
+  (should (string= (objed-with "Testing line he|re" "rr")
+                   (objed-with "Testing line he|re" "rrr,")))
+  (should (string= (objed-with "Testing |line here\nFollowing line here" "n")
+                   (objed-with "Testing |line here\nFollowing line here" "npsfsb,,,,,"))))
+
 
 
 (ert-deftest objed-choose-and-navigate-defun ()
@@ -413,6 +423,45 @@ Insert KEY if there's no command."
 ;; and more text>"))
 
 ))
-;; TODO: context expansion
+
+(ert-deftest objed-context-expansion ()
+  (let ((str "
+\(defun testing ()
+  (let ((a nil))
+    (message \"this is| a test\")))
+"))
+    (should (string= (objed-with str "o")
+                     "
+\(defun testing ()
+  (let ((a nil))
+    (message \"|<this is a test>\")))
+"))
+    (should (string= (objed-with str "oo")
+                     "
+\(defun testing ()
+  (let ((a nil))
+    (message |<\"this is a test\">)))
+"))
+    (should (string= (objed-with str "ooo")
+                     "
+\(defun testing ()
+  (let ((a nil))
+    |<(message \"this is a test\")>))
+"))
+    (should (string= (objed-with str "oooo")
+                     "
+\(defun testing ()
+  |<(let ((a nil))
+    (message \"this is a test\"))>)
+"))
+    (should (string= (objed-with str "ooooo")
+                     "
+|<\(defun testing ()
+  (let ((a nil))
+    (message \"this is a test\")))>
+"))))
+
+;; TODO: op tests, marking, remaining commands
+
 
 (provide 'tests)
