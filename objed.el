@@ -590,8 +590,11 @@ Don't modify this list manually, use `objed-define-dispatch'.")
 Uses `objed--dispatch-alist' and defaults to
 update to given object."
   (let* ((cmd (key-binding
-               (vector ;; (aref (this-command-keys-vector) 0)
-                last-command-event)))
+               (vector
+                (if (> (length (this-command-keys-vector)) 2)
+                    (aref (this-command-keys-vector) 0)
+                  ;; for testing purposes...
+                  last-command-event))))
          (binding (assq cmd objed--dispatch-alist)))
     (cond (binding
            (funcall (cdr binding) name))
@@ -758,9 +761,6 @@ the guessed object."
     (define-key map "x" 'objed-op-map)
     (define-key map "c" 'objed-object-map)
 
-    (dolist (k2d objed--dispatch-key-alist)
-      (define-key map (kbd (car k2d)) (cdr k2d)))
-
     ;; direct acc objs
     ;; moved to S/R
     ;; (define-key map "_" 'objed-symbol-object)
@@ -886,7 +886,6 @@ Use `objed-define-dispatch' to define a dispatch command.")
 (objed-define-dispatch "<" objed--backward-until)
 (objed-define-dispatch ">" objed--forward-until)
 (objed-define-dispatch "*" objed--mark-all-inside)
-
 
 (defun objed--backward-until (name)
   "Activate part from point backward until object NAME."
