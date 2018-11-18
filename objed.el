@@ -286,8 +286,8 @@ See also `objed-disabled-p'"
     (move-end-of-line . line)
     (previous-line . line)
     (next-line . line)
-    (beginning-of-buffer . line)
-    (end-of-buffer . char)
+    (beginning-of-buffer . buffer)
+    (end-of-buffer . buffer)
     (scroll-up-command . line)
     (scroll-down-command . line)
     (xref-find-definitions . line)
@@ -486,6 +486,8 @@ exit function is called after execution of the operation.")
 (defvar objed--after-init-alist
   '((move-end-of-line . objed--object-trailing-line)
     (org-end-of-line . objed--object-trailing-line)
+    (beginning-of-buffer . objed--until-start)
+    (end-of-buffer . objed--until-end)
     (backward-sentence . objed--goto-start))
   "Maps commands which need special initialization to init functions.
 
@@ -1072,6 +1074,18 @@ See `objed-cmd-alist'."
   (unless (eq objed--obj-state 'inner)
     (objed--reverse))
   (objed--change-to :beg pos :ibeg pos))
+
+(defun objed--until-start (pos)
+  "Activate from part from POS until start."
+  (objed--change-to :end pos :iend pos))
+
+(defun objed--until-end (pos)
+  "Activate part from POS until end."
+  ;; workaround: end-of-buffer behaves weird opoint is wrong
+  ;; use the mark instead
+  (if (eq this-command #'end-of-buffer)
+      (objed--change-to :beg (mark) :ibeg (mark))
+      (objed--change-to :beg pos :ibeg pos)))
 
 (defun objed--init (&optional sym)
   "Initialize `objed'.
