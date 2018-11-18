@@ -680,8 +680,8 @@ the guessed object."
     (define-key map (kbd "<M-right>") 'objed-indent-to-right-tab-stop)
     (define-key map (kbd "<M-left>") 'objed-indent-to-left-tab-stop)
 
-    (define-key map "`" 'objed-backward-symbol)
-    (define-key map "´" 'objed-forward-symbol)
+    (define-key map "`" 'objed-top-object);;'objed-backward-symbol)
+    (define-key map "´" 'objed-bottom-object);;'objed-forward-symbol)
 
     ;; block expansions
     (define-key map "l" 'objed-expand-block)
@@ -1578,7 +1578,29 @@ postitive prefix argument ARG move to the nth next object."
   (if (objed--basic-p)
       (progn (objed-context-object)
              (goto-char (objed--end)))
-  (objed--goto-next (or arg 1))))
+    (objed--goto-next (or arg 1))))
+
+(defun objed-top-object ()
+  "Go to first instance of current object type."
+  (interactive)
+  (objed--get-next (point))
+  (let ((o (car (objed--collect-backward
+                 (objed--min) (point-min)))))
+    (if (not o)
+        (message "Already at first instance")
+      (goto-char (car o))
+      (objed--update-current-object))))
+
+(defun objed-bottom-object ()
+  "Go to last instance of current object type."
+  (interactive)
+  (objed--get-next (point))
+  (let ((o (car (nreverse (objed--collect-forward
+                           (objed--max) (point-max))))))
+    (if (not o)
+        (message "Already at last instance")
+      (goto-char (car o))
+      (objed--update-current-object))))
 
 (defun objed-expand-context ()
   "Expand to objects based on context.
