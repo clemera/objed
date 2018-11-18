@@ -1483,8 +1483,13 @@ non-nil the indentation block can contain empty lines."
   :get-obj
   (let ((bounds (objed--get-indent-bounds 'inner)))
     (when bounds
-      (objed-make-object :obounds (cons (car bounds)
-                                        (1+ (cdr bounds))))))
+      (objed-make-object
+       :obounds
+       (cons (car bounds)
+             (if (eq (cdr bounds)
+                     (point-max))
+                 (cdr bounds)
+               (1+ (cdr bounds)))))))
   :try-next
   ;;(error "No next indent")
   (objed--skip-ws)
@@ -1497,8 +1502,13 @@ non-nil the indentation block can contain empty lines."
   :get-obj
   (let ((bounds (objed--get-indent-bounds nil t)))
     (when bounds
-      (objed-make-object :obounds (cons (car bounds)
-                                        (1+ (cdr bounds))))))
+      (objed-make-object
+       :obounds
+       (cons (car bounds)
+             (if (eq (cdr bounds)
+                     (point-max))
+                 (cdr bounds)
+               (1+ (cdr bounds)))))))
   :try-next
   (objed--skip-ws)
   :try-prev

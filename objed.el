@@ -1258,7 +1258,7 @@ matches IREGEX is not displayed."
 
 ;; * Basic Movement, Block Objects (textblocks)
 
-(defvar objed--block-objects '(line buffer iblock section textblock indent paragraph)
+(defvar objed--block-objects '(buffer iblock section paragraph textblock indent line)
   "List of objects which are 'line based'.
 
 Objects which are built by lines of text.")
@@ -1318,8 +1318,8 @@ order. ISTATE is the object state to use and defaults to whole."
     ;; TODO: use size of object for sorting
     (dolist (ps (sort states (lambda (a b)
                                ;; ensure line comes first
-                               (and (not (eq (cadr (cddr a)) 'line))
-                                    ;; TODO: fix state format
+                               (and t;(not (eq (cadr (cddr a)) 'line))
+                                    ;; TODO: when eq sort with opposite end
                                     (<= (car a) (car b)))))
                 nos)
       (push (cdr ps) nos)))))
@@ -1339,17 +1339,17 @@ See also `objed--block-objects'."
                          (list this-command
                                'objed-toggle-side)))))
     (when init
-      (setq blocks (cl-remove
-                    nil
-                    (objed--get-blocks
-                     ;; ignore current or allow toggle between
-                     ;; inner/whole here as well?
-                     objed--object
-                     #'objed--beg)
-                    :test (lambda (_ a)
-                            (let ((as (objed--beg (car (nthcdr 3 a)))))
-                              ;; make sure position is not below start
-                              (> as (objed--skip-forward (point) 'ws)))))))
+      (setq blocks
+            (cl-remove-duplicates
+             (objed--get-blocks
+              ;; ignore current or allow toggle between
+              ;; inner/whole here as well?
+              objed--object
+              #'objed--beg)
+             :test (lambda (a b)
+                     (let ((as (car (nthcdr 3 a)))
+                           (bs (car (nthcdr 3 b))))
+                       (equal as bs))))))
   (when blocks
      (let ((sdiff (abs (- (point) (objed--beg))))
            (ediff (abs (- (point) (objed--end)))))
