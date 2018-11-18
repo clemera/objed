@@ -748,7 +748,7 @@ the guessed object."
     (define-key map "+"
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
-    (define-key map "~"
+    (define-key map "="
       (objed-define-op nil objed-undo-op))
 
 
