@@ -1214,10 +1214,11 @@ property list where each key has an associated progn."
              (push keyw wrapped)
              ;; allowed to move point
              (if (memq vkeyw '(:try-next :try-prev :ref))
-                 (push `(progn ,@(nreverse forms))
+                 (push `(let ((objed--block-p t)) ,@(nreverse forms))
                        wrapped)
-               (push `(save-mark-and-excursion
-                       ,@(nreverse forms))
+               (push `(let ((objed--block-p t))
+                        (save-mark-and-excursion
+                         ,@(nreverse forms)))
                      wrapped))
              (objed--get-arg-plist keylst valid wrapped))
             (keylst
@@ -2106,8 +2107,7 @@ non-nil the indentation block can contain empty lines."
     :try-prev
     (python-nav-backward-block)
     :get-obj
-    (let* ((objed--block-p t)
-           (end (save-excursion (python-nav-end-of-block) (forward-line 1) (point)))
+    (let* ((end (save-excursion (python-nav-end-of-block) (forward-line 1) (point)))
            (start (save-excursion (python-nav-beginning-of-block)
                                   (objed--skip-ws t (line-beginning-position))
                                   (point))))
