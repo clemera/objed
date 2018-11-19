@@ -1536,21 +1536,23 @@ Ignores simple structured expressions like words or symbols."
 
 (objed-define-object nil textblock
   :get-obj
-  (if (or (not (derived-mode-p 'prog-mode))
-          (derived-mode-p 'text-mode)
-          (objed--in-comment-p)
-          (objed--in-string-p))
+  (when (or (not (derived-mode-p 'prog-mode))
+            (derived-mode-p 'text-mode)
+            (objed--in-comment-p)
+            (objed--in-string-p))
     (objed--with-narrow-for-text
      (let ((bounds (objed--get-textblock-bounds)))
        (when (and bounds
                   (or (not (eq (car bounds) (point-min)))
                       (not (eq (cdr bounds) (point-max)))))
-         (objed-make-object :obounds bounds))))
-    (error "No textblock here"))
+         (objed-make-object :obounds bounds)))))
+  ;; TODO: narrow for current string/object
   :try-next
-  (forward-sentence 1)
+  (objed--with-narrow-for-text
+   (forward-sentence 1))
   :try-prev
-  (forward-sentence -1))
+  (objed--with-narrow-for-text
+   (forward-sentence -1)))
 
 
 (defun objed--column (pos)
