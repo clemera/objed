@@ -203,6 +203,11 @@ Code to run which returns an object symbol which can be used to
 navigate references of an object. This defaults to the textual
 content of an object.
 
+:max-search-forward (optional)
+
+Code to run which returns the maximal position an object of this type
+is searched for (in forward direction).
+
 :no-skip (optional)
 
 If this keyword is provided with a non-nil value, the current object
@@ -223,7 +228,7 @@ defined."
          ;; wrap code chunks
          (args (objed--get-arg-plist
                 args
-                '(:mode :no-skip :commands :atp :ref :get-obj :try-next :try-prev
+                '(:mode :no-skip :max-search-forward :commands :atp :ref :get-obj :try-next :try-prev
                         :beg :ibeg :iend :end)))
          ;; transform to final form if necessary
          (args (if (plist-get args :get-obj) args
@@ -232,6 +237,7 @@ defined."
          (cbody nil)
          (doc (format "%s object." (capitalize (symbol-name name))))
          (atp (plist-get args :atp))
+         (max (plist-get args :max-search-forward))
          (obj (plist-get args :get-obj))
          (next (plist-get args :try-next))
          (prev (plist-get args :try-prev))
@@ -246,6 +252,12 @@ defined."
       (push `((eq ,arg :atp)
               ,atp)
             cbody))
+
+    (when max
+      (push `((eq ,arg :max-search-forward)
+              ,max)
+            cbody))
+
     (when ref
       (push `((eq ,arg :ref)
               ,ref)
@@ -574,9 +586,11 @@ to search backwards.
 
 POS defaults to point. When no object is found at current
 position returns the next accessible one in DIR. Object position
-order depends on `objed--obj-state'."
+order depends on `objed--obj-state'. To exit early from search objects
+can throw an error."
   (save-excursion
     (let ((darg (if dir :try-prev :try-next))
+          (max (objed--object :max-search-forward))
           (stop (if dir #'bobp #'eobp)))
       (when pos
          (goto-char pos))
@@ -584,6 +598,8 @@ order depends on `objed--obj-state'."
         ;; while there is no new object found which is visible
         ;; and the buffer boundary is not reached
         (while (and (not break)
+                    (or (not max)
+                        (< (point) max))
                     (or (not (and (setq nobj (objed--object :get-obj))
                                   (and nobj (not (equal obj nobj)))))
                         (and nobj
@@ -1534,6 +1550,11 @@ Ignores simple structured expressions like words or symbols."
 
 
 (objed-define-object nil textblock
+  :max-search-forward
+  (save-excursion
+    (objed--with-narrow-for-text
+     (forward-paragraph 1)
+     (point)))
   :get-obj
   (when (or (not (derived-mode-p 'prog-mode))
             (derived-mode-p 'text-mode)
@@ -1545,7 +1566,6 @@ Ignores simple structured expressions like words or symbols."
                   (or (not (eq (car bounds) (point-min)))
                       (not (eq (cdr bounds) (point-max)))))
          (objed-make-object :obounds bounds)))))
-  ;; TODO: narrow for current string/object
   :try-next
   (objed--with-narrow-for-text
    (forward-sentence 1))
