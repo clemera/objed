@@ -767,11 +767,12 @@ the guessed object."
     ;; moved to S/R
     ;; direct object switches
     (define-key map "." 'objed-identifier-object)
-    (define-key map "%" 'objed-contents-object)
+    (define-key map "_" 'objed-symbol-object)
+    ;;(define-key map "%" 'objed-contents-object)
      ;; not regular objects, selection
     ;; (define-key map (kbd "M-SPC") 'objed-select-object)
     ;; used for direct quoting now...
-    ;; (define-key map "_" 'objed-symbol-object)
+    ;;
     ;; (define-key map "{" 'objed-paragraph-object)
     ;; (define-key map "[" 'objed-section-object)
     ;; (define-key map "(" 'objed-textblock-object)
@@ -1539,7 +1540,7 @@ Skips strings and comments."
   "Return non-nil if current object is a basic object.
 
 From basic objects `objed' starts expanding to context objects."
-  (memq objed--object '(line word char symbol region buffer)))
+  (memq objed--object '(line word char region buffer)))
 
 (defun objed--get-context-state (from)
   "Get state to be used by expand commands.
