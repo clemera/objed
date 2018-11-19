@@ -839,28 +839,30 @@ To define new operations see `objed-define-op'.")
     (define-key map (kbd "SPC") 'objed-region-object)
     ;; default objects
     (define-key map "c" 'objed-char-object)
+    (define-key map "r" 'objed-word-object)
+    (define-key map "l" 'objed-line-object)
+
     ;; sexp at point
+    (define-key map "a" 'objed-sentence-object)
+    (define-key map "p" 'objed-paragraph-object)
+    (define-key map "q" 'objed-textblock-object)
     (define-key map "o" 'objed-sexp-object)
 
-    (define-key map "a" 'objed-sentence-object)
-    (define-key map "k" 'objed-textblock-object)
-    (define-key map "q" 'objed-paragraph-object)
     (define-key map "i" 'objed-indent-object)
     ;; meg
     (define-key map "m" 'objed-iblock-object)
-
 
     (define-key map "b" 'objed-bracket-object)
     (define-key map "d" 'objed-defun-object)
     (define-key map "s" 'objed-string-object)
     (define-key map ";" 'objed-comment-object)
-    (define-key map "y" 'objed-face-object)
+    (define-key map "=" 'objed-face-object)
 
     (define-key map "t" 'objed-tag-object)
     (define-key map "f" 'objed-file-object)
 
-    (define-key map "p" 'objed-section-object)
-    (define-key map "l" 'objed-output-object)
+    (define-key map "[" 'objed-section-object)
+    (define-key map "j" 'objed-output-object)
     (define-key map "h" 'objed-buffer-object)
 
     (define-key map "z" 'objed-ace-object)
@@ -869,8 +871,7 @@ To define new operations see `objed-define-op'.")
     (define-key map "-" 'objed-leading-object)
 
     ;;  handled by basic movement..
-    ;; (define-key map "w" 'objed-word-object)
-    ;; (define-key map "l" 'objed-line-object)
+
     ;; (define-key map "s" 'objed-symbol-object)
 
     map)
