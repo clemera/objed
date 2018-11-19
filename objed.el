@@ -2642,7 +2642,9 @@ Marked object sequences are merged to built a single text object."
          ;; no marked objects
          (objed--ob-apply op cmd (objed--current))
          ;; for possible repeats like default conf. (kill line...)
-         (unless (eq op 'ignore)
+         (unless (or (eq op 'ignore)
+                     ;; object gone
+                     (not objed--current-obj))
            (objed--change-to :beg (point)
                              :ibeg (point))))))
 

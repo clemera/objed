@@ -586,8 +586,8 @@ to search backwards.
 
 POS defaults to point. When no object is found at current
 position returns the next accessible one in DIR. Object position
-order depends on `objed--obj-state'. To exit early from search objects
-can throw an error."
+order depends on `objed--obj-state'. To exit early from search
+objects can throw an error."
   (save-excursion
     (let ((darg (if dir :try-prev :try-next))
           (max (if dir nil (objed--object :max-search-forward)))
