@@ -130,17 +130,17 @@ property list where each key has an associated progn."
              (nreverse wrapped))))))
 
 
-(defmacro objed-define-object (key name &rest args)
+(defmacro objed-define-object (package name &rest args)
   "Declare a text object for `objed'.
 
 Usage:
 
-  (objed-define-object key name
-     [:keyword [code]]...)
+  (objed-define-object package name
+     [:keyword [code-form]...]...)
 
-KEY is a string to be interpreted as spelled-out keystrokes,
-using same format as for `kbd'. See documentation of
-‘edmacro-mode’ for details.
+PACKAGE is the name of the package the object should be loaded
+for. If nil you are defining a default object and need to add a
+binding in `objed-object-map' for the object command.
 
 NAME is a symbol which defines the name which will be used to
 refer to this object. ARGS is a list of keyword arguments and
@@ -268,7 +268,9 @@ defined."
             cbody))
 
     (cond (mode
-           (let ((res (list 'progn)))
+           (let ((res (if package
+                          (list `',package 'with-eval-after-load)
+                        (list 'progn))))
              (when noskip
                (push `(put ',fname 'objed-no-skip t)
                      res))
@@ -284,10 +286,7 @@ defined."
              (nreverse res)))
           (t
            (let ((res (list 'progn)))
-             (when key
-               (push `(define-key  objed-object-map
-                        (kbd ,key) ',fname)
-                     res))
+
              (when noskip
                (push `(put ',fname 'objed-no-skip t)
                      res))
@@ -1965,7 +1964,7 @@ non-nil the indentation block can contain empty lines."
 
 ;; * Mode specific objects
 
-(objed-define-object nil defun
+(objed-define-object elisp-mode defun
   :mode emacs-lisp-mode
   :atp
   (looking-at "^(")
@@ -2103,27 +2102,28 @@ non-nil the indentation block can contain empty lines."
 
 
 (declare-function org-mark-element "ext:org")
-(with-eval-after-load 'org
-  (objed-define-object nil section
-    :mode org-mode
-    :atp
-    (org-at-heading-p)
-    :get-obj
-    (objed-make-object
-     :obounds (when (ignore-errors (org-back-to-heading) t)
-                (cons (point)
-                      (progn (outline-next-visible-heading 1)
-                             (or (eobp) (move-end-of-line 0))
-                             (point)))))
-    :try-next
-    (outline-next-visible-heading 1)
-    :try-prev
-    (outline-previous-visible-heading 1))
-  (objed-define-object nil paragraph
-    :mode org-mode
-    :get-obj
-    (objed-make-object
-     :obounds (objed-bounds-from-region-cmd #'org-mark-element))))
+
+(objed-define-object org section
+  :mode org-mode
+  :atp
+  (org-at-heading-p)
+  :get-obj
+  (objed-make-object
+   :obounds (when (ignore-errors (org-back-to-heading) t)
+              (cons (point)
+                    (progn (outline-next-visible-heading 1)
+                           (or (eobp) (move-end-of-line 0))
+                           (point)))))
+  :try-next
+  (outline-next-visible-heading 1)
+  :try-prev
+  (outline-previous-visible-heading 1))
+
+(objed-define-object org paragraph
+  :mode org-mode
+  :get-obj
+  (objed-make-object
+   :obounds (objed-bounds-from-region-cmd #'org-mark-element)))
 
 (defvar comint-prompt-regexp nil)
 (declare-function comint-next-prompt "ext:comint")
@@ -2164,12 +2164,19 @@ non-nil the indentation block can contain empty lines."
 (declare-function python-nav-beginning-of-block "ext:python")
 (declare-function python-nav-forward-block "ext:python")
 (declare-function python-nav-backward-block "ext:python")
-(with-eval-after-load 'python
-  (objed-define-object nil defun
-    :mode python-mode
-    :get-obj
-    (objed-bounds-from-region-cmd #'mark-defun))
-  (objed-define-object nil block
+(declare-function python-mark-defun "ext:python")
+
+(objed-define-object python defun
+  :mode python-mode
+  :no-skip t
+  :get-obj
+  (objed-bounds-from-region-cmd #'python-mark-defun)
+  :try-next
+  (beginning-of-defun -1)
+  :try-prev
+  (beginning-of-defun 1))
+
+(objed-define-object python block
     :mode python-mode
     :commands (python-nav-backward-block python-nav-forward-block)
     ;; don't skip current object on navigation because
@@ -2192,7 +2199,7 @@ non-nil the indentation block can contain empty lines."
     (point)
     :end
     (forward-line 1)
-    (point)))
+    (point))
 
 
 
