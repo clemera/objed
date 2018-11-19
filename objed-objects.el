@@ -1620,7 +1620,7 @@ non-nil the indentation block can contain empty lines."
 
 
 
-(objed-define-object nil iblock
+(objed-define-object nil block
   :get-obj
   (let ((bounds (objed--get-indent-bounds nil t)))
     (when bounds
@@ -2159,11 +2159,6 @@ non-nil the indentation block can contain empty lines."
   (comint-next-prompt 1)
   :try-prev
   (comint-previous-prompt 1))
-
-;; dummy object for python version...
-;; otherwise there is no command
-(objed-define-object nil block
-  :get-obj nil)
 
 (declare-function python-nav-end-of-block "ext:python")
 (declare-function python-nav-beginning-of-block "ext:python")

@@ -843,14 +843,14 @@ To define new operations see `objed-define-op'.")
     (define-key map "l" 'objed-line-object)
 
     ;; sexp at point
-    (define-key map "a" 'objed-sentence-object)
+    (define-key map "." 'objed-sentence-object)
     (define-key map "p" 'objed-paragraph-object)
     (define-key map "q" 'objed-textblock-object)
     (define-key map "o" 'objed-sexp-object)
 
     (define-key map "i" 'objed-indent-object)
     ;; meg
-    (define-key map "m" 'objed-iblock-object)
+    (define-key map "a" 'objed-block-object)
 
     (define-key map "b" 'objed-bracket-object)
     (define-key map "d" 'objed-defun-object)
@@ -1310,7 +1310,7 @@ matches IREGEX is not displayed."
 
 ;; * Basic Movement, Block Objects (textblocks)
 
-(defvar objed--block-objects '(buffer iblock section paragraph textblock indent line)
+(defvar objed--block-objects '(buffer section paragraph textblock block indent line)
   "List of objects which are 'line based'.
 
 Objects which are built by lines of text.")
@@ -1326,7 +1326,7 @@ If IGNORE is non-nil it should be an object of
                    (let ((os nil))
                      ;; TODO: sort by object size?
                      (dolist (o objed--block-objects (nreverse os))
-                       (unless (memq o '(indent textblock iblock))
+                       (unless (memq o '(indent textblock block))
                          (push o os)))))
                   (t
                    ;; performance is poor on slow
