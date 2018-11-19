@@ -935,15 +935,15 @@ Use `objed-define-dispatch' to define a dispatch command.")
 
 (defun objed--extend-forward (name)
   "Activate part from point backward until object NAME."
-  (let* ((start (objed--beg))
-         (o (objed--until name)))
-    (objed--switch-to
-     name nil
-      (objed-make-object
-       :ibeg start
-       :beg start
-       :iend (point)
-       :end (point)))))
+  (let* ((start (objed--beg)))
+    (when (objed--until name)
+      (objed--switch-to
+       name nil
+       (objed-make-object
+        :ibeg start
+        :beg start
+        :iend (point)
+        :end (point))))))
 
 (defmacro objed--save-state (&rest body)
  " Preserve state during execution of BODY."
