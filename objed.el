@@ -524,7 +524,7 @@ operation."
       (push `(define-key objed-map (kbd ,key) ',name) res))
     (when exit
       (push `(setq objed--exit-alist
-                   (cons (cons ',name #',exit) objed--exit-alist))
+                   (cons (cons ',name ',exit) objed--exit-alist))
             res))
     (push `(defun ,name (arg)
              "Objed operation."
@@ -749,7 +749,7 @@ the guessed object."
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
     (define-key map "~"
-      (objed-define-op nil objed-undo-op ignore))
+      (objed-define-op nil objed-undo-op current))
 
 
     ;; special commands
@@ -2582,9 +2582,11 @@ positions of the text object range.
 
 RANGE is a list of the beginning and and position of
 the text object to act on."
-  (let ((text (apply #'buffer-substring range)))
+  (let ((text (apply #'buffer-substring range))
+        (range (list (set-marker (make-marker) (car range))
+                     (set-marker (make-marker) (cadr range)))))
     (apply action range)
-    (objed-exit-op name text)))
+    (objed-exit-op name text range)))
 
 (defun objed--ov-apply (name action ovs)
   "Apply and operation to marked objects.
@@ -2679,24 +2681,35 @@ multiple ones."
     (insert text)
     (not (= -1  (forward-line -1)))))
 
-(defun objed-exit-op (op &optional text)
+(defun objed-exit-op (op &optional text range)
   "Handle exit of an operation.
 
 OP is the operation (ignored for now). If TEXT is given it
 carries the textual content of the object the operation acted
 on."
   ;; TODO: improve exit behaviour for default operations
-  (let ((exitf (assq op objed--exit-alist)))
+  (let ((exitf (cdr (assq op objed--exit-alist))))
     ;; (objed--update-current-object)
     (cond (exitf
-           (funcall (cdr exitf) text))
+           (if (functionp exitf)
+               (funcall exitf text)
+             (if (eq 'current exitf)
+                 (objed--update-current-object
+                  (objed-make-object :beg (car range)
+                                     :end (cadr range)))
+               (objed--switch-to exitf))))
           ((or (eq op 'ignore)
                (bound-and-true-p multiple-cursors-mode)))
           (t
            (if (and text (objed--line-p text))
                (objed--switch-to 'line)
              (objed--switch-to 'char)
-             (goto-char (objed--beg)))))))
+             (goto-char (objed--beg)))))
+    (when (and range
+               (not (eq exitf 'current)))
+      (set-marker (car range) nil)
+      (set-marker (cadr range) nil))))
+
 
 (defun objed-quit ()
   "Quit and deactivate `objed-map'."
