@@ -745,10 +745,10 @@ the guessed object."
         (objed-define-op nil objed-electric)))
 
     ;; quote op
-    (define-key map "+"
+    (define-key map "="
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
-    (define-key map "="
+    (define-key map "~"
       (objed-define-op nil objed-undo-op))
 
 
@@ -867,7 +867,7 @@ To define new operations see `objed-define-op'.")
 
     (define-key map "+" 'objed-trailing-object)
     (define-key map "-" 'objed-leading-object)
-    
+
     ;;  handled by basic movement..
     ;; (define-key map "w" 'objed-word-object)
     ;; (define-key map "l" 'objed-line-object)
