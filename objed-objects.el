@@ -599,7 +599,7 @@ objects can throw an error."
         ;; and the buffer boundary is not reached
         (while (and (not break)
                     (or (not max)
-                        (< (point) max))
+                        (<= (point) max))
                     (or (not (and (setq nobj (objed--object :get-obj))
                                   (and nobj (not (equal obj nobj)))))
                         (and nobj
