@@ -749,7 +749,7 @@ the guessed object."
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
     (define-key map "~"
-      (objed-define-op nil objed-undo-op))
+      (objed-define-op nil objed-undo-op ignore))
 
 
     ;; special commands
