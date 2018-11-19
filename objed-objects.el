@@ -482,11 +482,17 @@ and the current window."
                   (setq obj (objed--get-next (point)))
                   (not (equal obj sobj)))
         (setq sobj obj)
-        (goto-char (setq pos (objed--end obj)))
+        (if (objed--no-skipper-p)
+            (goto-char (setq pos (objed--beg obj)))
+        (goto-char (setq pos (objed--end obj))))
         (push (cons (objed--skip-forward (objed--beg obj) 'ws)
                     cw)
               posns)))
     (setq posns (nreverse posns))))
+
+(defun objed--no-skipper-p ()
+  (get (objed--name2func objed--object)
+       'objed-no-skip))
 
 (defun objed--collect-object-positions (beg end &optional fromp)
   "Collect object positions.
@@ -502,7 +508,8 @@ the objects and the current window."
            (or fromp (objed--min))
            beg)
           (objed--collect-forward
-           (or fromp (objed--max))
+           (or fromp (if (objed--no-skipper-p)
+                         (objed--min) (objed--max)))
            end)))
 
 
@@ -696,9 +703,7 @@ If FROM is a position search from there otherwise search starts
 from end of object FROM."
   (let ((obj (or from objed--current-obj)))
     (save-excursion
-      (when (and obj
-                 (not (get (objed--name2func objed--object)
-                           'objed-no-skip)))
+      (when (and obj (not (objed--no-skipper-p)))
         (if (integer-or-marker-p obj)
             (goto-char obj)
           (goto-char (objed--max obj))))
