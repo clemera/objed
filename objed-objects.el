@@ -1254,6 +1254,38 @@ property list where each key has an associated progn."
    :end (if (eobp) (point) (1+ (point)))
    :iend (if (eobp) (point) (1+ (point)))))
 
+(objed-define-object nil trailing
+  :atp
+  (looking-at " ")
+  :get-obj
+  (objed-make-object
+   :beg (point)
+   :ibeg (point)
+   :end (progn (goto-char (objed--end))
+               (objed--skip-ws) (point))
+   :iend (point))
+  :try-next
+  (when (search-forward " " nil t)
+    (forward-char -1))
+  :try-prev
+  (search-backward " " nil t))
+
+
+(objed-define-object nil leading
+  :atp
+  (looking-back " " (1- (point)))
+  :get-obj
+  (objed-make-object
+   :end  (point)
+   :iend (point)
+   :beg (progn (goto-char (objed--beg))
+               (objed--skip-ws t) (point))
+   :ibeg (point))
+  :try-next
+  (when (search-forward " " nil t)
+    (forward-char -1))
+  :try-prev
+  (search-backward " " nil t))
 
 (objed-define-object nil word
   :atp

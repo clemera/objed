@@ -864,6 +864,10 @@ To define new operations see `objed-define-op'.")
     (define-key map "h" 'objed-buffer-object)
 
     (define-key map "z" 'objed-ace-object)
+
+    (define-key map "+" 'objed-trailing-object)
+    (define-key map "-" 'objed-leading-object)
+    
     ;;  handled by basic movement..
     ;; (define-key map "w" 'objed-word-object)
     ;; (define-key map "l" 'objed-line-object)
