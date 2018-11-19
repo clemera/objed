@@ -44,8 +44,11 @@
 (declare-function objed--object-dispatch "ext:objed")
 (declare-function objed-current-or-next-context "ext:objed")
 (declare-function objed-current-or-previous-context "ext:objed")
-(declare-function objed--install-advices "ext:objed")
 (declare-function objed--get-current-state "ext:objed")
+
+(declare-function objed--install-advices "ext:objed")
+(declare-function objed--install-advices-for "ext:objed")
+
 
 ;; dyn bindings
 (defvar avy-action nil)
@@ -55,6 +58,76 @@
 
 (defvar objed--object nil
   "The symbol of the current object.")
+
+
+(eval-and-compile
+  (defun objed--transform-pos-data (plist)
+  (let ((np nil)
+        (alt nil)
+        (make nil)
+        (skip nil))
+    (unless (and (plist-get plist :beg)
+                 (plist-get plist :end))
+      (user-error "Malformed macro"))
+    (dolist (item plist)
+      (if (memq item '(:beg :ibeg :end :iend))
+          (progn (push item alt)
+                 (setq skip t))
+        (if (and skip
+                 (not (keywordp item)))
+            (push item alt)
+          (push item np)
+          (setq skip nil))))
+
+    (setq np (nreverse np))
+    (setq alt (nreverse alt))
+    (dolist (el alt)
+      (when (keywordp el)
+        (progn
+          (push el make)
+          (push (plist-get alt el) make))))
+    (setq make (nreverse make))
+    (push 'objed-make-object make)
+    (append np (list :get-obj)
+            ;; TODO:save-mark-and-excursion still needed?
+            ;; is wrapped already?
+            (list (append (list 'save-mark-and-excursion)
+                          (list make))))))
+
+  (defun objed--get-arg-plist (keylst valid &optional wrapped)
+    "Wraps any forms of keys in keylst in `progn' and returns property list.
+KEYLST is the list of keys and forms for object creation. VALID
+is a list of valid keyword for the returned list whic is a
+property list where each key has an associated progn."
+    (let* ((keyw (pop keylst))
+           (vkeyw (and keyw (keywordp keyw) (memq keyw valid) keyw))
+           forms)
+      (cond ((memq vkeyw '(:mode :no-skip :commands))
+             ;; skip
+             (objed--get-arg-plist (cdr keylst) valid wrapped))
+            (vkeyw
+             (while (and (not (keywordp (car keylst)))
+                         keylst)
+               (push (pop keylst) forms))
+             (push keyw wrapped)
+             ;; allowed to move point
+             (if (memq vkeyw '(:try-next :try-prev :ref))
+                 (push `(let ((objed--block-p t)) ,@(nreverse forms))
+                       wrapped)
+               (if (memq vkeyw '(:beg :end :ibeg :iend))
+                   (push `(let ((objed--block-p t))
+                            ,@(nreverse forms))
+                         wrapped)
+                 ;; objed--block-p: dont run objeds advices here...
+                 (push `(let ((objed--block-p t))
+                          (save-mark-and-excursion
+                           ,@(nreverse forms)))
+                       wrapped)))
+             (objed--get-arg-plist keylst valid wrapped))
+            (keylst
+             (error "Malformed Object. Keyword %s not recognized" keyw))
+            (t
+             (nreverse wrapped))))))
 
 
 (defmacro objed-define-object (key name &rest args)
@@ -73,17 +146,6 @@ NAME is a symbol which defines the name which will be used to
 refer to this object. ARGS is a list of keyword arguments and
 corresponding values according to the following descriptions:
 
-:atp
-
-Code to run which returns non-nil if point is right before the
-object.
-
-:ref
-
-Code to run which returns an object symbol which can be used to
-navigate references of an object. This defaults to the textual
-content of an object.
-
 :get-obj
 
 Code to run which returns object positions as a list of the form:
@@ -98,6 +160,12 @@ cons cell of the bounds of object (like what the built-in
 are omitted they are determined by `objed--inner-default'. If
 there is no object at point the code should return nil.
 
+:beg, :ibeg, :end, :iend
+
+These keywords can be used instead of :get-obj above. The value
+for each is the code to run which should return point position
+for corresponding keyword. Point is allword to move. The code
+runs in the same order the keywords are provided.
 
 :try-next (optional)
 
@@ -124,19 +192,42 @@ keyword definitions used for this object will then override the
 default ones when in this mode. Keywords not used fallback to use
 the general definition.
 
+:atp (optional)
+
+Code to run which returns non-nil if point is right before the
+object.
+
+:ref (optional)
+
+Code to run which returns an object symbol which can be used to
+navigate references of an object. This defaults to the textual
+content of an object.
+
 :no-skip (optional)
 
 If this keyword is provided with a non-nil value, the current object
-is not skipped before search for the next one via :try-next."
+is not skipped before search for the next one via :try-next.
+
+:commands (optional)
+
+If given the value should be a list of commands for which objed
+should activate (when `objed-mode' is on) with the object beeing
+defined."
   (declare (indent 2))
   (let* ((mode (plist-get args :mode))
          (noskip (plist-get args :no-skip))
+         (commands (plist-get args :commands))
          (fname (if mode
                     (intern (format "objed-%s-%s-object" name mode))
                   (intern (format "objed-%s-object" name))))
+         ;; wrap code chunks
          (args (objed--get-arg-plist
                 args
-                '(:mode :no-skip :atp :ref :get-obj :try-next :try-prev)))
+                '(:mode :no-skip :commands :atp :ref :get-obj :try-next :try-prev
+                        :beg :ibeg :iend :end)))
+         ;; transform to final form if necessary
+         (args (if (plist-get args :get-obj) args
+                 (objed--transform-pos-data args)))
          (arg (make-symbol "arg"))
          (cbody nil)
          (doc (format "%s object." (capitalize (symbol-name name))))
@@ -177,20 +268,31 @@ is not skipped before search for the next one via :try-next."
             cbody))
 
     (cond (mode
-           (when noskip
-             (put `,fname 'objed-no-skip t))
-           ;; catch all return arg if not present
-           (push `(t ,arg) cbody)
-           `(defun ,fname (,arg)
-              ,doc
-              (cond ,@(nreverse cbody))))
+           (let ((res (list 'progn)))
+             (when noskip
+               (push `(put ',fname 'objed-no-skip t)
+                     res))
+             (when commands
+               (push `(objed--install-advices-for ',commands ',name)
+                     res))
+             ;; catch all return arg if not present
+             (push `(t ,arg) cbody)
+             (push `(defun ,fname (,arg)
+                      ,doc
+                      (cond ,@(nreverse cbody)))
+                   res)
+             (nreverse res)))
           (t
-           (when noskip
-             (put `,fname 'objed-no-skip t))
            (let ((res (list 'progn)))
              (when key
                (push `(define-key  objed-object-map
                         (kbd ,key) ',fname)
+                     res))
+             (when noskip
+               (push `(put ',fname 'objed-no-skip t)
+                     res))
+             (when commands
+               (push `(objed--install-advices-for ',commands ',name)
                      res))
              (push `(defun ,fname (,arg)
                       ,doc
@@ -634,65 +736,69 @@ a cons cell IBOUNDS. If inner positions are omitted
 `objed--inner-default' is used to determine them."
   (cl-assert (and (not (and obounds beg end))
                   (not (and ibounds ibeg iend))))
-  (cond ((and (integer-or-marker-p beg)
-              (integer-or-marker-p end)
-              (integer-or-marker-p ibeg)
-              (integer-or-marker-p iend))
-         (list (list (objed--pos-or-marker beg)
-                     (objed--pos-or-marker end))
-               (list (objed--pos-or-marker ibeg)
-                     (objed--pos-or-marker iend))))
-        ((and (integer-or-marker-p beg)
-              (integer-or-marker-p end))
-         (cond ((consp ibounds)
-                (list (list (objed--pos-or-marker beg)
-                            (objed--pos-or-marker end))
-                      (list (objed--pos-or-marker (car ibounds))
-                            (objed--pos-or-marker (cdr ibounds)))))
-               ((or (functionp ibeg)
-                    (functionp iend))
-                (list (list (objed--pos-or-marker beg)
-                            (objed--pos-or-marker end))
-                      (list (objed--pos-or-marker
-                             (or (and (functionp ibeg)
-                                      (funcall ibeg beg))
-                                 ibeg))
-                            (objed--pos-or-marker
-                             (or (and (functionp iend)
-                                      (funcall iend end))
-                                 iend)))))
-               (t
-                (list (list (objed--pos-or-marker beg)
-                            (objed--pos-or-marker end))
-                      (objed--inner-default beg end)))))
-        ((consp obounds)
-         (cond ((consp ibounds)
-                (list (list (objed--pos-or-marker (car obounds))
-                            (objed--pos-or-marker (cdr obounds)))
-                      (list (objed--pos-or-marker (car ibounds))
-                            (objed--pos-or-marker (cdr ibounds)))))
-               ((and (integer-or-marker-p ibeg)
-                     (integer-or-marker-p iend))
-                (list (list (objed--pos-or-marker (car obounds))
-                            (objed--pos-or-marker (cdr obounds)))
-                      (list (objed--pos-or-marker ibeg)
-                            (objed--pos-or-marker iend))))
-               ((or (functionp ibeg)
-                    (functionp iend))
-                (list (list (objed--pos-or-marker (car obounds))
-                            (objed--pos-or-marker (cdr obounds)))
-                      (list (objed--pos-or-marker
-                             (or (and (functionp ibeg)
-                                      (funcall ibeg beg))
-                                 ibeg))
-                            (objed--pos-or-marker
-                             (or (and (functionp iend)
-                                      (funcall iend end))
-                                 iend)))))
-               (t
-                (list (list (objed--pos-or-marker (car obounds))
-                            (objed--pos-or-marker (cdr obounds)))
-                      (objed--inner-default  (car obounds) (cdr obounds))))))))
+  ;; return nil
+  (when (or obounds
+            (and beg end
+                 (not (= beg end))))
+    (cond ((and (integer-or-marker-p beg)
+                (integer-or-marker-p end)
+                (integer-or-marker-p ibeg)
+                (integer-or-marker-p iend))
+           (list (list (objed--pos-or-marker beg)
+                       (objed--pos-or-marker end))
+                 (list (objed--pos-or-marker ibeg)
+                       (objed--pos-or-marker iend))))
+          ((and (integer-or-marker-p beg)
+                (integer-or-marker-p end))
+           (cond ((consp ibounds)
+                  (list (list (objed--pos-or-marker beg)
+                              (objed--pos-or-marker end))
+                        (list (objed--pos-or-marker (car ibounds))
+                              (objed--pos-or-marker (cdr ibounds)))))
+                 ((or (functionp ibeg)
+                      (functionp iend))
+                  (list (list (objed--pos-or-marker beg)
+                              (objed--pos-or-marker end))
+                        (list (objed--pos-or-marker
+                               (or (and (functionp ibeg)
+                                        (funcall ibeg beg))
+                                   ibeg))
+                              (objed--pos-or-marker
+                               (or (and (functionp iend)
+                                        (funcall iend end))
+                                   iend)))))
+                 (t
+                  (list (list (objed--pos-or-marker beg)
+                              (objed--pos-or-marker end))
+                        (objed--inner-default beg end)))))
+          ((consp obounds)
+           (cond ((consp ibounds)
+                  (list (list (objed--pos-or-marker (car obounds))
+                              (objed--pos-or-marker (cdr obounds)))
+                        (list (objed--pos-or-marker (car ibounds))
+                              (objed--pos-or-marker (cdr ibounds)))))
+                 ((and (integer-or-marker-p ibeg)
+                       (integer-or-marker-p iend))
+                  (list (list (objed--pos-or-marker (car obounds))
+                              (objed--pos-or-marker (cdr obounds)))
+                        (list (objed--pos-or-marker ibeg)
+                              (objed--pos-or-marker iend))))
+                 ((or (functionp ibeg)
+                      (functionp iend))
+                  (list (list (objed--pos-or-marker (car obounds))
+                              (objed--pos-or-marker (cdr obounds)))
+                        (list (objed--pos-or-marker
+                               (or (and (functionp ibeg)
+                                        (funcall ibeg beg))
+                                   ibeg))
+                              (objed--pos-or-marker
+                               (or (and (functionp iend)
+                                        (funcall iend end))
+                                   iend)))))
+                 (t
+                  (list (list (objed--pos-or-marker (car obounds))
+                              (objed--pos-or-marker (cdr obounds)))
+                        (objed--inner-default  (car obounds) (cdr obounds)))))))))
 
 
 (cl-defun objed--change-to (&key beg end ibeg iend)
@@ -1191,40 +1297,6 @@ comments."
     (when (or (eq (char-after begin) ?\")
               (nth 4 sp))
       begin)))
-
-
-;; * Creation of objects
-
-(eval-and-compile
-  (defun objed--get-arg-plist (keylst valid &optional wrapped)
-    "Wraps any forms of keys in keylst in `progn' and returns property list.
-KEYLST is the list of keys and forms for object creation. VALID
-is a list of valid keyword for the returned list whic is a
-property list where each key has an associated progn."
-    (let* ((keyw (pop keylst))
-           (vkeyw (and keyw (keywordp keyw) (memq keyw valid) keyw))
-           forms)
-      (cond ((memq vkeyw '(:mode :no-skip))
-             ;; skip
-             (objed--get-arg-plist (cdr keylst) valid wrapped))
-            (vkeyw
-             (while (and (not (keywordp (car keylst)))
-                         keylst)
-               (push (pop keylst) forms))
-             (push keyw wrapped)
-             ;; allowed to move point
-             (if (memq vkeyw '(:try-next :try-prev :ref))
-                 (push `(let ((objed--block-p t)) ,@(nreverse forms))
-                       wrapped)
-               (push `(let ((objed--block-p t))
-                        (save-mark-and-excursion
-                         ,@(nreverse forms)))
-                     wrapped))
-             (objed--get-arg-plist keylst valid wrapped))
-            (keylst
-             (error "Malformed Object. Keyword %s not recognized" keyw))
-            (t
-             (nreverse wrapped))))))
 
 
 ;; * Object definitions
@@ -2024,11 +2096,6 @@ non-nil the indentation block can contain empty lines."
 
 
 (declare-function org-mark-element "ext:org")
-(declare-function python-nav-end-of-block "ext:python")
-(declare-function python-nav-beginning-of-block "ext:python")
-(declare-function python-nav-forward-block "ext:python")
-(declare-function python-nav-backward-block "ext:python")
-
 (with-eval-after-load 'org
   (objed-define-object nil section
     :mode org-mode
@@ -2054,7 +2121,6 @@ non-nil the indentation block can contain empty lines."
 (defvar comint-prompt-regexp nil)
 (declare-function comint-next-prompt "ext:comint")
 (declare-function comint-previous-prompt "ext:comint")
-
 (objed-define-object nil output
   :atp
   (and (derived-mode-p 'comint-mode)
@@ -2087,31 +2153,46 @@ non-nil the indentation block can contain empty lines."
   :try-prev
   (comint-previous-prompt 1))
 
+;; dummy object for python version...
+;; otherwise there is no command
 (objed-define-object nil block
   :get-obj nil)
 
+(declare-function python-nav-end-of-block "ext:python")
+(declare-function python-nav-beginning-of-block "ext:python")
+(declare-function python-nav-forward-block "ext:python")
+(declare-function python-nav-backward-block "ext:python")
 (with-eval-after-load 'python
-  ;; TODO: add this to macro functionality
-  (objed--install-advices
-   '((python-nav-backward-block . block)
-     (python-nav-forward-block . block)))
   (objed-define-object nil defun
     :mode python-mode
     :get-obj
     (objed-bounds-from-region-cmd #'mark-defun))
   (objed-define-object nil block
     :mode python-mode
+    :commands (python-nav-backward-block python-nav-forward-block)
+    ;; don't skip current object on navigation because
+    ;; python blocks can contain other python blocks...
     :no-skip t
     :try-next
     (python-nav-forward-block)
     :try-prev
     (python-nav-backward-block)
-    :get-obj
-    (let* ((end (save-excursion (python-nav-end-of-block) (forward-line 1) (point)))
-           (start (save-excursion (python-nav-beginning-of-block)
-                                  (objed--skip-ws t (line-beginning-position))
-                                  (point))))
-        (cons start end))))
+    :beg
+    (python-nav-beginning-of-block)
+    (objed--skip-ws t (line-beginning-position))
+    (point)
+    :ibeg
+    (forward-line 1)
+    (objed--skip-ws)
+    (point)
+    :iend
+    (python-nav-end-of-block)
+    (point)
+    :end
+    (forward-line 1)
+    (point)))
+
+
 
 (provide 'objed-objects)
 ;;; objed-objects.el ends here
