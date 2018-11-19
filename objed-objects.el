@@ -590,7 +590,7 @@ order depends on `objed--obj-state'. To exit early from search objects
 can throw an error."
   (save-excursion
     (let ((darg (if dir :try-prev :try-next))
-          (max (objed--object :max-search-forward))
+          (max (if dir nil (objed--object :max-search-forward)))
           (stop (if dir #'bobp #'eobp)))
       (when pos
          (goto-char pos))
