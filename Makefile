@@ -4,7 +4,7 @@ update:
 compile: clean
 	emacs -Q -batch -l test/elpa.el -l test/make-compile.el
 
-test:
+test: compile
 	emacs -Q -batch -l test/elpa.el -l test/make-test.el
 
 clean:
