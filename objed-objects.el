@@ -723,6 +723,8 @@ from end of object FROM."
             (goto-char obj)
           (goto-char (objed--max obj))))
       (unless (eobp)
+        ;; TODO: always skip?
+        (objed--skip-ws)
         (objed--object :try-next)
         (objed--get)))))
 
