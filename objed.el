@@ -2259,8 +2259,7 @@ Swaps the current object with the next one."
     (insert next)
 
     (goto-char (- nend (length current)))
-    (objed--update-current-object
-     (objed-make-object :beg (point) :end nend))))
+    (objed--update-current-object)))
 
 
 (defun objed-move-object-backward ()
@@ -2283,10 +2282,9 @@ Swaps the current object with the previous one."
     (apply #'delete-region (objed--current prevo))
     (goto-char (objed--beg prevo))
     (insert current)
+    (goto-char pbeg)
+    (objed--update-current-object)))
 
-    (objed--update-current-object
-     (objed-make-object :beg pbeg :end (point)))
-    (goto-char (objed--beg))))
 
 
 (defun objed--switch-and-move (o dir)
