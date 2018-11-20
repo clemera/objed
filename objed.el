@@ -450,7 +450,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (defvar which-key--using-top-level nil)
 (defvar avy-all-windows nil)
 (defvar avy-action nil)
-(defvar mc/cursor-specific-vars nil)
+
 
 (declare-function objed--exit-objed "objed" nil t)
 (declare-function electric-pair-post-self-insert-function "ext:electric")
@@ -467,12 +467,13 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 ;; * Support for other libs
 
 (with-eval-after-load 'multiple-cursors-core
-  (cl-pushnew 'objed--current-obj mc/cursor-specific-vars)
-  (cl-pushnew 'objed--obj-state mc/cursor-specific-vars)
-  (cl-pushnew 'objed--object mc/cursor-specific-vars)
-  (cl-pushnew 'objed--look-around mc/cursor-specific-vars)
-  (cl-pushnew 'objed--marked-ovs mc/cursor-specific-vars)
-  (cl-pushnew 'objed--last-states mc/cursor-specific-vars))
+  (when (bound-and-true-p mc/cursor-specific-vars)
+    (push 'objed--current-obj mc/cursor-specific-vars)
+    (push 'objed--obj-state mc/cursor-specific-vars)
+    (push 'objed--object mc/cursor-specific-vars)
+    (push 'objed--look-around mc/cursor-specific-vars)
+    (push 'objed--marked-ovs mc/cursor-specific-vars)
+    (push 'objed--last-states mc/cursor-specific-vars)))
 
 
 ;; * Helper Macros
