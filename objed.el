@@ -301,7 +301,9 @@ See also `objed-disabled-p'"
     (backward-sexp sexp defun bracket string symbol word)
     (indent-pp-sexp bracket sexp)
     ;; just use inner line?
-    (back-to-indentation section defun bracket string line)
+    ;; TODO: on second press check all these:
+    ;;section defun bracket string line)
+    (back-to-indentation . (line . inner))
     (org-beginning-of-line . line)
     (org-end-of-line . line)
     (backward-sentence . sentence)
@@ -335,8 +337,10 @@ See also `objed-disabled-p'"
   "Entry commands and associated objects.
 
 If the `cdr' of an entry is a list, each of the objects in this
-list is tried and the first that matches will be used for
-initialization."
+list is tried and the first that matches (:atp returns non-nil)
+will be used for initialization. If the `cdr' is a cons cell use
+the `cdr' of it as initial object state which defaults to `whole'
+otherwise."
   :group 'objed
   :type '(alist :key-type sexp
                 :value-type (choice sexp
@@ -488,6 +492,7 @@ exit function is called after execution of the operation.")
 (defvar objed--after-init-alist
   '((move-end-of-line . objed--object-trailing-line)
     (org-end-of-line . objed--object-trailing-line)
+    (back-to-indentation . objed--until-start)
     (beginning-of-buffer . objed--until-start)
     (end-of-buffer . objed--until-end)
     (backward-sentence . objed--goto-start))
@@ -614,9 +619,16 @@ update to given object."
   "Guess which object to use.
 
 CMD is the command for which object should be guessed. Returns
-the guessed object."
-  (let ((c (cdr (assq cmd objed-cmd-alist))))
-    (if (consp c) (objed--at-p c) c)))
+cons of guessed object and its state."
+  (let ((c (cdr (assq cmd objed-cmd-alist)))
+        (o nil))
+    (cond ((consp c)
+           (if (symbolp (cdr c))
+               c
+             (when (setq o (objed--at-p c))
+               (cons o 'whole))))
+          (c
+           (cons c 'whole)))))
 
 
 ;; * Keymaps
@@ -1175,9 +1187,9 @@ SYM is a symbol (command or object symbol) used to initialize."
   (if (commandp sym)
       (let* ((objed--block-p t)
              (initf (cdr (assq sym objed--after-init-alist)))
-             (o (objed--get-object-for-cmd sym)))
-        (when o
-          (objed--switch-to o))
+             (os (objed--get-object-for-cmd sym)))
+        (when os
+          (objed--switch-to (car os) (cdr os)))
         (when initf (funcall initf objed--opoint)))
     (objed--switch-to sym))
 
