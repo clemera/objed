@@ -458,6 +458,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (declare-function which-key--create-buffer-and-show "ext:which-key")
 (declare-function avy--process "ext:avy")
 (declare-function avy--style-fn "ext:avy")
+(declare-function avy-goto-char "ext:avy")
 (declare-function edit-indirect-region "ext:edit-indirect")
 (declare-function electric-pair-syntax-info "ext:elec-pair")
 
@@ -1768,22 +1769,25 @@ textual content of an object via the content object."
 (defun objed-ace ()
   "Jump to an object with `avy'."
   (interactive)
-  (unless (and objed--avy-avail-p
-               objed-use-avy-if-available-p)
-    (user-error objed--avy-err-msg))
-  (let* ((avy-action #'goto-char)
-         (avy-style 'at-full)
-         (avy-all-windows t)
-         (posns (objed--collect-object-positions
-                 (window-start) (window-end))))
-    (cond (posns
-           (if (> (length posns) 1)
-               (avy--process
-                posns (avy--style-fn avy-style))
-             (goto-char (caar posns)))
-           (objed--update-current-object))
-          (t
-           (message "No objects found.")))))
+  (if (eq objed--object 'char)
+      (progn (call-interactively #'avy-goto-char)
+             (objed--update-current-object))
+    (unless (and objed--avy-avail-p
+                 objed-use-avy-if-available-p)
+      (user-error objed--avy-err-msg))
+    (let* ((avy-action #'goto-char)
+           (avy-style 'at-full)
+           (avy-all-windows t)
+           (posns (objed--collect-object-positions
+                   (window-start) (window-end))))
+      (cond (posns
+             (if (> (length posns) 1)
+                 (avy--process
+                  posns (avy--style-fn avy-style))
+               (goto-char (caar posns)))
+             (objed--update-current-object))
+            (t
+             (message "No objects found."))))))
 
 (defun objed-occur ()
   "Complete initial lines and jump to object."
