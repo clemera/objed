@@ -1670,6 +1670,11 @@ non-nil the indentation block can contain empty lines."
                   (backward-sentence)
                   (point)))))
       (and ip (= (point) ip))))
+  :max-search-forward
+  (save-excursion
+    (objed--with-narrow-for-text
+     (forward-paragraph 1)
+     (point)))
   :get-obj
   (when (or (derived-mode-p 'text-mode)
             (eq major-mode 'fundamental-mode)
