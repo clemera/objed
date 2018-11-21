@@ -336,7 +336,6 @@ See also `objed-disabled-p'"
     (yank-pop . region)
     ;; misc
     (which-key-C-h-dispatch . char)
-    (recenter-top-bottom . line)
     )
   "Entry commands and associated objects."
   :group 'objed
@@ -361,6 +360,7 @@ be used to restore previous states."
     undo-only
     delete-other-windows
     reposition-window
+    recenter-top-bottom
     )
   "Regular Emacs commands which should not exit modal edit state.
 
@@ -463,6 +463,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (declare-function avy-goto-char "ext:avy")
 (declare-function edit-indirect-region "ext:edit-indirect")
 (declare-function electric-pair-syntax-info "ext:elec-pair")
+(declare-function hl-line-unhighlight "ext:hl-line")
 
 
 
@@ -766,6 +767,9 @@ cons of guessed object and its state."
     (define-key map "z" 'objed-ace)
     ;; swiper like object search
     (define-key map "j" 'objed-occur)
+    ;; TODO: start query replace in current object,
+    ;; or for all
+    (define-key map "%" (objed-define-op nil objed-replace current))
 
     ;; prefix keys
     (define-key map "x" 'objed-op-map)
@@ -776,6 +780,7 @@ cons of guessed object and its state."
     ;; direct object switches
     (define-key map "." 'objed-identifier-object)
     (define-key map "_" 'objed-symbol-object)
+
     ;;(define-key map "%" 'objed-contents-object)
      ;; not regular objects, selection
     ;; (define-key map (kbd "M-SPC") 'objed-select-object)
@@ -2581,6 +2586,17 @@ c: capitalize."
   (if (fboundp 'undo-tree-undo)
       (undo-tree-undo '(4))
     (undo '(4))))
+
+(defun objed-replace (beg end)
+  "Query replace narrowed to region BEG, END."
+  (interactive "r")
+  (save-excursion
+    (save-restriction
+      (narrow-to-region beg end)
+      (goto-char (point-min))
+      (hl-line-unhighlight)
+      (deactivate-mark)
+      (call-interactively 'query-replace-regexp))))
 
 
 ;; * OP execution
