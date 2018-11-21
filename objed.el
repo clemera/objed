@@ -290,6 +290,7 @@ See also `objed-disabled-p'"
     (end-of-buffer . buffer)
     (scroll-up-command . line)
     (scroll-down-command . line)
+    (move-to-window-line-top-bottom . line)
     (xref-find-definitions . line)
     (xref-pop-marker-stack . line)
     (imenu . line)
