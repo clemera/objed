@@ -336,6 +336,7 @@ See also `objed-disabled-p'"
     (yank-pop . region)
     ;; misc
     (which-key-C-h-dispatch . char)
+    (recenter-top-bottom . line)
     )
   "Entry commands and associated objects."
   :group 'objed
@@ -358,8 +359,8 @@ be used to restore previous states."
     read-only-mode
     undo
     undo-only
-    recenter-top-bottom
     delete-other-windows
+    reposition-window
     )
   "Regular Emacs commands which should not exit modal edit state.
 
@@ -612,20 +613,16 @@ update to given object."
              (goto-char (objed--beg)))))))
 
 
-(defun objed--get-object-for-cmd (cmd)
+(defun objed--switch-to-object-for-cmd (cmd)
   "Guess which object to use.
 
 CMD is the command for which object should be guessed. Returns
 cons of guessed object and its state."
-  (let ((c (cdr (assq cmd objed-cmd-alist)))
-        (o nil))
-    (cond ((consp c)
-           (if (symbolp (cdr c))
-               c
-             (when (setq o (objed--at-p c))
-               (cons o 'whole))))
-          (c
-           (cons c 'whole)))))
+  (let ((o (cdr (assq cmd objed-cmd-alist))))
+    (if o
+        (objed--switch-to o (if (eq cmd #'back-to-indentation)
+                                'inner 'whole))
+      (objed--update-current-object))))
 
 
 ;; * Keymaps
@@ -1185,10 +1182,8 @@ SYM is a symbol (command or object symbol) used to initialize."
   ;; init object
   (if (commandp sym)
       (let* ((objed--block-p t)
-             (initf (cdr (assq sym objed--after-init-alist)))
-             (os (objed--get-object-for-cmd sym)))
-        (when os
-          (objed--switch-to (car os) (cdr os)))
+             (initf (cdr (assq sym objed--after-init-alist))))
+        (objed--switch-to-object-for-cmd sym)
         (when initf (funcall initf objed--opoint)))
     (objed--switch-to sym))
 
@@ -1223,13 +1218,11 @@ mode line hint is removed again."
 
 Reinitializes the current object in case the current command is
 one of `objed-keeper-commands'."
-  (let ((ocmd (lookup-key objed-map (this-command-keys-vector)))
-        (o nil))
+  (let ((ocmd (lookup-key objed-map (this-command-keys-vector))))
     (or (commandp ocmd)
-        (and (or (memq this-command objed-keeper-commands)
-                 (and (setq o (cdr (assq this-command objed-cmd-alist)))
-                      (symbolp o)
-                      (setq objed--object o)))
+        (and this-command
+             (or (memq this-command objed-keeper-commands)
+                 (assq this-command objed-cmd-alist))
              (prog1 #'ignore
                (add-hook 'post-command-hook 'objed--reinit-object-one-time nil t))))))
 
@@ -1238,10 +1231,11 @@ one of `objed-keeper-commands'."
   "To be used with `post-command-hook'.
 
 Reinitializes current object and removes itself from the hook."
-  (when objed--buffer
+  (when (and objed--buffer
+             this-command)
     (with-current-buffer objed--buffer
       (remove-hook 'post-command-hook 'objed--reinit-object-one-time t)
-      (objed--update-current-object))))
+      (objed--switch-to-object-for-cmd this-command))))
 
 
 (defun objed-hl-function ()
