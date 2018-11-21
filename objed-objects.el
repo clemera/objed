@@ -1107,6 +1107,8 @@ a cons cell."
         (message-log-max nil)
         (current-prefix-arg nil))
     (save-mark-and-excursion
+     (goto-char (line-beginning-position))
+     (objed--skip-ws)
      (funcall-interactively cmd)
      (cons (region-beginning) (region-end)))))
 
