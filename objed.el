@@ -297,21 +297,24 @@ See also `objed-disabled-p'"
     (backward-paragraph . paragraph)
     (forward-paragraph . paragraph)
     (fill-paragraph . textblock)
-    (down-list string symbol word)
-    (forward-sexp sexp defun bracket string symbol word)
-    (backward-sexp sexp defun bracket string symbol word)
-    (indent-pp-sexp bracket sexp)
+    ;; TODO: add list object
+    ;; or recognize sexp type
+    ;; improve sexp nav...
+    (down-list . sexp)
+    (backward-up-list . sexp)
+    (up-list . sexp)
+    (forward-sexp . sexp)
+    (backward-sexp . sexp)
+    (indent-pp-sexp . bracket)
     ;; just use inner line?
     ;; TODO: on second press check all these:
     ;;section defun bracket string line)
-    (back-to-indentation . (line . inner))
+    (back-to-indentation . line)
     (org-beginning-of-line . line)
     (org-end-of-line . line)
     (backward-sentence . sentence)
     (org-backward-sentence . sentence)
     (org-backward-element . paragraph)
-    (backward-up-list bracket string)
-    (up-list bracket string)
     (beginning-of-defun . defun)
     (end-of-defun . defun)
     (outline-previous-visible-heading . section)
@@ -332,16 +335,9 @@ See also `objed-disabled-p'"
     (yank . region)
     (yank-pop . region)
     ;; misc
-    ;; TODO: find a way that doesnt need to reinit each time
     (which-key-C-h-dispatch . char)
     )
-  "Entry commands and associated objects.
-
-If the `cdr' of an entry is a list, each of the objects in this
-list is tried and the first that matches (:atp returns non-nil)
-will be used for initialization. If the `cdr' is a cons cell use
-the `cdr' of it as initial object state which defaults to `whole'
-otherwise."
+  "Entry commands and associated objects."
   :group 'objed
   :type '(alist :key-type sexp
                 :value-type (choice sexp
@@ -1104,6 +1100,8 @@ See `objed-cmd-alist'."
              (not objed--block-p)
              (eq real-this-command cmd)
              (not objed-disabled-p)
+             (not (eq (cadr overriding-terminal-local-map)
+                      objed-map))
              ;; (memq (key-binding "q")
              ;;            '(self-insert-command
              ;;              outshine-self-insert-command
@@ -1225,11 +1223,15 @@ mode line hint is removed again."
 
 Reinitializes the current object in case the current command is
 one of `objed-keeper-commands'."
-  (or (commandp (lookup-key objed-map (this-command-keys-vector)))
-       (and (memq (key-binding (this-command-keys-vector))
-                  objed-keeper-commands)
-            (prog1 #'ignore
-              (add-hook 'post-command-hook 'objed--reinit-object-one-time nil t)))))
+  (let ((ocmd (lookup-key objed-map (this-command-keys-vector)))
+        (o nil))
+    (or (commandp ocmd)
+        (and (or (memq this-command objed-keeper-commands)
+                 (and (setq o (cdr (assq this-command objed-cmd-alist)))
+                      (symbolp o)
+                      (setq objed--object o)))
+             (prog1 #'ignore
+               (add-hook 'post-command-hook 'objed--reinit-object-one-time nil t))))))
 
 
 (defun objed--reinit-object-one-time ()

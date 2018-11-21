@@ -13,7 +13,12 @@
     (setq this-command cmd)
     ;; pre command hook...
     (funcall #'objed--push-state)
+    (objed--keep-transient-p)
     (call-interactively cmd)
+    ;; post command hook
+    (when (memq 'objed--reinit-object-one-time
+                post-command-hook)
+      (objed--reinit-object-one-time))
     (setq last-command cmd)))
 
 (defun objed-decode-keysequence (str)
