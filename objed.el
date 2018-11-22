@@ -605,12 +605,18 @@ update to given object."
     (cond (binding
            (funcall (cdr binding) name))
           (t
-           ;; object called as command via M-x
-           (when (not objed--buffer)
-              (objed--init name))
-           ;; TODO: do something useful if called twice?
-           ;; (eq name objed--object)
-           (when (objed--switch-to name)
+           (let ((current objed--object))
+             ;; object called as command via M-x
+             (when (not objed--buffer)
+               (objed--init name))
+             ;; if called twice mark instances in
+             ;; buffer/defun
+             (cond ((eq name current)
+                    (if (and (eq name 'identifier)
+                             (not objed--marked-ovs))
+                        (objed--mark-all-inside 'defun)
+                      (objed--mark-all-inside 'buffer)))
+                   (t (objed--switch-to name)))
              (goto-char (objed--beg)))))))
 
 
@@ -970,6 +976,7 @@ Use `objed-define-dispatch' to define a dispatch command.")
 
 (defun objed--mark-all-inside (name)
   "Mark all objects of current type inside object NAME."
+  (objed--unmark-all)
   (save-excursion
     (save-restriction
       ;; narrow to object we search for objects in
