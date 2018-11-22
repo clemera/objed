@@ -732,8 +732,9 @@ cons of guessed object and its state."
 
     ;; marking/unmarking
     (define-key map "m" 'objed-mark)
-    ;; jump back and  mark, unmark if necessary
+    ;; mark upwards
     (define-key map "M" 'objed-toggle-mark-backward)
+    (define-key map "U" 'objed-unmark-all)
 
 
     ;; basic edit ops
@@ -976,7 +977,7 @@ Use `objed-define-dispatch' to define a dispatch command.")
 
 (defun objed--mark-all-inside (name)
   "Mark all objects of current type inside object NAME."
-  (objed--unmark-all)
+  (objed-unmark-all)
   (save-excursion
     (save-restriction
       ;; narrow to object we search for objects in
@@ -2060,7 +2061,7 @@ state is only restored correctly if the buffer was not modified."
         (prog1 (objed--switch-to obj os range)
           (goto-char pos)
           ;; FIXME
-          (objed--unmark-all)
+          (objed-unmark-all)
           (when ovps
             (objed--mark-ovps ovps))))
     (prog1 nil

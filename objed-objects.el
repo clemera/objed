@@ -1052,8 +1052,9 @@ non-nil append to the list of marked objects."
       (push (objed--make-object-overlay obj)
             objed--marked-ovs))))
 
-(defun objed--unmark-all ()
+(defun objed-unmark-all ()
   "Remove all marked objects."
+  (interactive)
   (while objed--marked-ovs
     (delete-overlay (pop objed--marked-ovs))))
 
