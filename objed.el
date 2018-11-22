@@ -619,11 +619,14 @@ update to given object."
 
 CMD is the command for which object should be guessed. Returns
 cons of guessed object and its state."
-  (let ((o (cdr (assq cmd objed-cmd-alist))))
+  (let ((objed--block-p t)
+        (o (cdr (assq cmd objed-cmd-alist)))
+        (initf (cdr (assq cmd objed--after-init-alist))))
     (if o
         (objed--switch-to o (if (eq cmd #'back-to-indentation)
                                 'inner 'whole))
-      (objed--update-current-object))))
+      (objed--update-current-object))
+    (when initf (funcall initf objed--opoint))))
 
 
 ;; * Keymaps
@@ -1186,10 +1189,7 @@ SYM is a symbol (command or object symbol) used to initialize."
 
   ;; init object
   (if (commandp sym)
-      (let* ((objed--block-p t)
-             (initf (cdr (assq sym objed--after-init-alist))))
-        (objed--switch-to-object-for-cmd sym)
-        (when initf (funcall initf objed--opoint)))
+      (objed--switch-to-object-for-cmd sym)
     (objed--switch-to sym))
 
   ;; transient map
