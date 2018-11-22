@@ -779,6 +779,10 @@ cons of guessed object and its state."
     ;; TODO: start query replace in current object,
     ;; or for all
     (define-key map "%" (objed-define-op nil objed-replace current))
+    (define-key map "&"
+      (objed-define-op nil objed-pipe-region))
+    (define-key map "!"
+      (objed-define-op nil objed-replace-op))
 
     ;; prefix keys
     (define-key map "x" 'objed-op-map)
@@ -840,10 +844,6 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "c"
        ;; upcase, downcase, capitalize, reformat
       (objed-define-op nil objed-case-op))
-    (define-key map "r"
-      (objed-define-op nil objed-replace-op))
-    (define-key map "p"
-      (objed-define-op nil objed-pipe-region))
 
     ;; experimental
     (define-key map "e" 'objed-eval)
