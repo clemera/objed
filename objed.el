@@ -982,7 +982,9 @@ Use `objed-define-dispatch' to define a dispatch command.")
     (save-restriction
       ;; narrow to object we search for objects in
       (when (objed--save-state
-             (when (objed--switch-to name)
+             (when (and (objed--switch-to name)
+                        ;; make sure we found one sourrounding point
+                        (< (objed--min) (point) (objed--max)))
                (narrow-to-region (objed--min) (objed--max))
                (goto-char (point-min))))
         ;; objed-mark-object
