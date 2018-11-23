@@ -606,18 +606,18 @@ update to given object."
            (funcall (cdr binding) name))
           (t
            (let ((current objed--object))
-             ;; object called as command via M-x
+             ;; object called as command via M-x,
+             ;; objed need to initialize first
              (when (not objed--buffer)
                (objed--init name))
-             ;; if called twice mark instances in
-             ;; buffer/defun
-             (cond ((eq name current)
-                    (if (and (eq name 'identifier)
-                             (not objed--marked-ovs))
-                        (objed--mark-all-inside 'defun)
-                      (objed--mark-all-inside 'buffer)))
-                   (t (objed--switch-to name)))
-             (goto-char (objed--beg)))))))
+             (cond  ((and (eq name current)
+                          objed--marked-ovs)
+                     (objed--mark-all-inside 'buffer))
+                    ((eq name current)
+                     (or (objed--mark-all-inside 'defun)
+                         (objed--mark-all-inside 'buffer)))
+                     (t (objed--switch-to name)
+                        (goto-char (objed--beg)))))))))
 
 
 (defun objed--switch-to-object-for-cmd (cmd)
@@ -987,7 +987,8 @@ Use `objed-define-dispatch' to define a dispatch command.")
                (goto-char (point-min))))
         ;; objed-mark-object
         (let ((n (objed--do-all 'objed--mark-object)))
-          (message "Marked %s %ss in %s." n objed--object name))))))
+          (prog1 (and (> n 1) n)
+            (message "Marked %s %ss in %s." n objed--object name)))))))
 
 (defun objed--ace-switch-object (name)
   (let ((objed--object name))
