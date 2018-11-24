@@ -255,7 +255,7 @@
   :group 'objed-faces)
 
 (defface objed-mode-line
-  '((t (:inherit objed-hl)))
+  '((t (:inherit mode-line-inactive)))
   "Face used for the mode line hint."
   :group 'objed-faces)
 
