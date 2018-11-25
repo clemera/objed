@@ -287,7 +287,8 @@ defined."
                (push `(put ',fname 'objed-no-skip t)
                      res))
              (when commands
-               (push `(objed--install-advices-for ',commands ',name)
+               (push `(with-eval-after-load 'objed
+                        (objed--install-advices-for ',commands ',name))
                      res))
              ;; catch all return arg if not present
              (push `(t ,arg) cbody)
