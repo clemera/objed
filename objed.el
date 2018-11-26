@@ -259,6 +259,8 @@ be used to restore previous states."
     delete-other-windows
     reposition-window
     recenter-top-bottom
+    eval-defun
+    eval-last-sexp
     )
   "Regular Emacs commands which should not exit modal edit state.
 
