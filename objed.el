@@ -91,7 +91,7 @@
 ;; `objed-define-object'.
 ;;
 ;; Although some features are still experimental the basic user interface will
-;; stay the same. 
+;; stay the same.
 ;;
 ;;
 ;; CONTRIBUTE:
@@ -155,9 +155,8 @@
 
 ;; * User Settings and Variables
 
-(defcustom objed-disabled-modes
-  '(special-mode dired-mode)
-  "List of modes for which objed should stay disabled.
+(defcustom objed-disabled-modes '()
+    "List of modes for which objed should stay disabled.
 
 If the current `major-mode' is in the list or derives from a
 member of it `objed' will not activate.
@@ -165,6 +164,11 @@ member of it `objed' will not activate.
 See also `objed-disabled-p'"
   :group 'objed
   :type '(repeat symbol))
+
+(defcustom objed-init-p-function #'objed-init-p
+  "Function which test if objed is allowd to initialize.
+
+The function should return nil if objed should not initialize.")
 
 
 (defcustom objed-cmd-alist
@@ -305,7 +309,6 @@ removed."
   "Object to use for inititalization with `objed-activate'."
   :group 'objed
   :type 'symbol)
-
 
 
 ;; optional dep options
@@ -1012,11 +1015,8 @@ See `objed-cmd-alist'."
              (not objed-disabled-p)
              (not (eq (cadr overriding-terminal-local-map)
                       objed-map))
-             ;; (memq (key-binding "q")
-             ;;            '(self-insert-command
-             ;;              outshine-self-insert-command
-             ;;              org-self-insert-command))
-             (or (memq major-mode '(messages-buffer-mode help-mode))
+             (funcall objed-init-p-function)
+             (or (not objed-disabled-modes)
                  (not (apply 'derived-mode-p objed-disabled-modes))))
       (objed--init cmd)))
 
@@ -1045,7 +1045,15 @@ See `objed-cmd-alist'."
   ;; use the mark instead
   (if (eq this-command #'end-of-buffer)
       (objed--change-to :beg (mark) :ibeg (mark))
-      (objed--change-to :beg pos :ibeg pos)))
+    (objed--change-to :beg pos :ibeg pos)))
+
+(defun objed-init-p ()
+  "Default for `objed-init-p-function'."
+  (memq (key-binding "n")
+        '(self-insert-command
+          outshine-self-insert-command
+          org-self-insert-command
+          undefined)))
 
 (defun objed--init (&optional sym)
   "Initialize `objed'.
