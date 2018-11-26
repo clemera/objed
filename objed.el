@@ -558,6 +558,7 @@ cons of guessed object and its state."
       (define-key map (kbd (format "C-%c" n)) 'digit-argument))
     ;; common emacs keys
     (define-key map (kbd "C-g") 'objed-quit)
+    ;; TODO: switch with q, so quit window is qq?
     (define-key map "g" 'objed-quit)
     (define-key map (kbd "?") 'objed-show-top-level)
     ;; TODO: support repeated invokation
@@ -1049,11 +1050,8 @@ See `objed-cmd-alist'."
 
 (defun objed-init-p ()
   "Default for `objed-init-p-function'."
-  (memq (key-binding "n")
-        '(self-insert-command
-          outshine-self-insert-command
-          org-self-insert-command
-          undefined)))
+  (eq (key-binding (kbd "C-n"))
+      #'next-line))
 
 (defun objed--init (&optional sym)
   "Initialize `objed'.
