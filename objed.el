@@ -585,8 +585,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; TODO: birdview mode/scroll mode
     (define-key map (kbd "C-v") 'scroll-up-command)
     (define-key map "\ev" 'scroll-down-command)
-    ;; "visual"
-    (define-key map "v" 'objed-extend)
+
 
     ;;(define-key map (kbd "C-h") which-key-C-h-map)
     (define-key map (kbd "C-h k") 'describe-key)
@@ -656,6 +655,10 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "M" 'objed-toggle-mark-backward)
     (define-key map "U" 'objed-unmark-all)
 
+    ;; "visual"
+    (define-key map "v" 'objed-extend)
+    (define-key map "+" 'objed-include-trailing-ws)
+    (define-key map "-" 'objed-include-leading-ws)
 
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
@@ -810,14 +813,6 @@ To define new operations see `objed-define-op'.")
     (define-key map "h" 'objed-buffer-object)
 
     (define-key map "z" 'objed-ace-object)
-
-    (define-key map "+" 'objed-trailing-object)
-    (define-key map "-" 'objed-leading-object)
-
-    ;;  handled by basic movement..
-
-    ;; (define-key map "s" 'objed-symbol-object)
-
     map)
   "Keymap used for additional text-objects by `objed'.
 
@@ -837,8 +832,7 @@ Use `objed-define-dispatch' to define a dispatch command.")
 (objed-define-dispatch ">" objed--forward-until)
 (objed-define-dispatch "*" objed--mark-all-inside)
 (objed-define-dispatch "#" objed--ace-switch-object)
-(objed-define-dispatch "+" objed--extend-forward)
-(objed-define-dispatch "-" objed--extend-backward)
+
 
 (defun objed--backward-until (name)
   "Activate part from point backward until object NAME."
@@ -852,17 +846,6 @@ Use `objed-define-dispatch' to define a dispatch command.")
       :ibeg (objed--min o)
       :iend start))))
 
-(defun objed--extend-backward (name)
-  "Activate part from point backward until object NAME."
-  (let* ((start (objed--end))
-         (o (objed--until name t)))
-    (objed--switch-to
-     name nil
-     (objed-make-object
-      :beg  (point)
-      :end start
-      :ibeg (objed--min o)
-      :iend start))))
 
 (defun objed--forward-until (name)
   "Activate part from point forward until object NAME."
@@ -877,17 +860,6 @@ Use `objed-define-dispatch' to define a dispatch command.")
        :beg start
        :end (objed--max o))))))
 
-(defun objed--extend-forward (name)
-  "Activate part from point backward until object NAME."
-  (let* ((start (objed--beg)))
-    (when (objed--until name)
-      (objed--switch-to
-       name nil
-       (objed-make-object
-        :ibeg start
-        :beg start
-        :iend (point)
-        :end (point))))))
 
 (defmacro objed--save-state (&rest body)
  " Preserve state during execution of BODY."
@@ -1730,6 +1702,19 @@ movement commands."
                  (objed--beg)
                (objed--end))
              t t))
+
+(defun objed-include-trailing-ws ()
+  "Include trailing ws for current object."
+  (interactive)
+  (objed--change-to
+   :end (objed--skip-forward (objed--end) 'ws)))
+
+(defun objed-include-leading-ws ()
+  "Include leading ws for current object."
+  (interactive)
+  (objed--change-to
+   :beg
+   (objed--skip-backward (objed--beg) 'ws)))
 
 (defun objed-contents-object ()
   "Switch to reference of an object.
