@@ -1682,7 +1682,8 @@ Default to sexp at point."
   "Extend current object."
   (interactive)
   (when objed--extend-ov
-    (delete-overlay objed--extend-ov))
+    (delete-overlay objed--extend-ov)
+    (face-remap-remove-relative objed--extend-cookie))
   ;; the region should look like extend object.
   (setq objed--extend-cookie
         (face-remap-add-relative 'region 'objed-extend))
@@ -2667,6 +2668,11 @@ on."
                (objed--switch-to 'line)
              (objed--switch-to 'char)
              (goto-char (objed--beg)))))
+    ;; cleanup
+    (when objed--extend-ov
+      (delete-overlay objed--extend-ov)
+      (setq objed--extend-ov nil)
+      (face-remap-remove-relative objed--extend-cookie))
     (when (and range
                (not (eq exitf 'current)))
       (set-marker (car range) nil)
