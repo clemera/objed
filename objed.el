@@ -547,13 +547,17 @@ cons of guessed object and its state."
 
 ;; * Keymaps
 
-(defmacro objed--call-and-switch (cmd obj)
-  "Create objed command which will invoke CMD and switch to OBJ."
+(defmacro objed--call-and-switch (cmd obj &optional before after)
+  "Create objed command which will invoke CMD and switch to OBJ.
+
+BEFORE and AFTER are forms to execute before/after calling the command."
   `(defun ,(intern (format "objed-%s" (symbol-name cmd))) ()
      ,(format "Call `%s' and switch to object %s"
               (symbol-name cmd) (symbol-name obj))
      (interactive)
+     ,before
      (call-interactively ',cmd)
+     ,after
      (objed--switch-to ',obj)))
 
 
@@ -610,7 +614,11 @@ cons of guessed object and its state."
     (define-key map "R" 'objed-move-word-backward)
 
     (define-key map "p" (objed--call-and-switch previous-line line))
-    (define-key map "n" (objed--call-and-switch next-line line))
+    (define-key map "n" (objed--call-and-switch
+                         next-line line
+                         (when (eq last-command 'objed-extend)
+                           (objed-exchange-point-and-mark)
+                           (goto-char (line-beginning-position)))))
 
     (define-key map "P" 'objed-move-line-backward)
     (define-key map "N" 'objed-move-line-forward)
@@ -1559,9 +1567,9 @@ postitive prefix argument ARG move to the nth previous object."
   (interactive "p")
   (if (objed--basic-p)
       (objed-context-object)
-    (setq deactivate-mark nil)
     ;; toggle side if coming from next?
     (objed--goto-previous (or arg 1))))
+
 
 (defun objed-current-or-next-context (&optional arg)
   "Move to beginning of object at point and activate it.
@@ -1572,12 +1580,10 @@ postitive prefix argument ARG move to the nth next object."
   (if (objed--basic-p)
       (progn (objed-context-object)
              (goto-char (objed--end)))
+    ;; on init skip current
     (when (and (region-active-p)
-               (<= (objed--beg) (region-beginning))
-               (>= (objed--end) (region-end))
-               (< (point) (objed--end)))
+               (eq last-command 'objed-extend))
       (exchange-point-and-mark))
-    (setq deactivate-mark nil)
     (objed--goto-next (or arg 1))))
 
 (defun objed-top-object ()
@@ -1713,6 +1719,10 @@ Update to object at current side."
     (setq objed--extend-cookie
           (face-remap-add-relative 'objed-hl
                                    'objed-extend)))
+  ;; TODO:reinit oly for line, toggle state othewise..?
+  (objed--switch-to objed--object 'whole)
+  (unless (= (point) (objed--end))
+    (goto-char (objed--beg)))
   (push-mark (if (or (>= (point) (objed--end))
                      (eq objed--object 'char))
                  (objed--beg)
@@ -2593,12 +2603,10 @@ on."
     (when objed--extend-cookie
       (face-remap-remove-relative objed--extend-cookie)
       (setq objed--extend-cookie nil))
-
     (when (and range
                (not (eq exitf 'current)))
       (set-marker (car range) nil)
       (set-marker (cadr range) nil))))
-
 
 (defun objed-quit ()
   "Quit and deactivate `objed-map'."
