@@ -1713,14 +1713,16 @@ Update to object at current side."
 (defvar objed--extend-cookie nil)
 
 (defun objed-extend ()
-  "Extend current object."
+  "Extend current object.
+
+This activate the whole object point is currently in and allows
+extending/shrinking the region by moving around using objed
+movement commands."
   (interactive)
   (unless objed--extend-cookie
     (setq objed--extend-cookie
           (face-remap-add-relative 'objed-hl
                                    'objed-extend)))
-  ;; TODO:reinit oly for line, toggle state othewise..?
-  (objed--switch-to objed--object 'whole)
   (unless (= (point) (objed--end))
     (goto-char (objed--beg)))
   (push-mark (if (or (>= (point) (objed--end))
