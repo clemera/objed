@@ -26,8 +26,11 @@
 ;; editing and composition of commands, too. It combines ideas of other Editors
 ;; like Vim or Kakoune and tries to align them with regular Emacs conventions.
 ;;
-;; For more information also check my blog
-;; https://www.with-emacs.com/categories/objed/.
+;; For more information also see:
+;;
+;; - My Blog: https://www.with-emacs.com/categories/objed/
+;; - Project Readme: https://github.com/clemera/objed/blob/master/README.asc
+;; - Project News: https://github.com/clemera/objed/blob/master/News.asc.
 ;;
 ;; Text objects are textual patterns like a line, a top level definition, a
 ;; word, a sentence or any other unit of text. When `objed-mode' is enabled,
