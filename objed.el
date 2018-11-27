@@ -168,7 +168,8 @@ See also `objed-disabled-p'"
 (defcustom objed-init-p-function #'objed-init-p
   "Function which test if objed is allowd to initialize.
 
-The function should return nil if objed should not initialize.")
+The function should return nil if objed should not initialize."
+  :type 'function)
 
 
 (defcustom objed-cmd-alist
@@ -279,7 +280,8 @@ state. Commands added to this list wont do that."
 
 (defcustom objed-modeline-hint-p t
   "Whether to show hint for current object in mode line."
-  :group 'objed)
+  :group 'objed
+  :type 'boolean)
 
 (defcustom objed-mode-line-format
   '(:eval (propertize
