@@ -2533,6 +2533,104 @@ c: capitalize."
       (call-interactively 'query-replace-regexp))))
 
 
+;; * Exit active state
+
+(defun objed--line-p (text)
+  "Determine how TEXT spans over lines.
+
+Return non-nil if text spans over an entire single line or
+multiple ones."
+  (with-temp-buffer
+    (insert text)
+    (not (= -1  (forward-line -1)))))
+
+(defun objed-exit-op (op &optional text range)
+  "Handle exit of an operation.
+
+OP is the operation (ignored for now). If TEXT is given it
+carries the textual content of the object the operation acted
+on."
+  ;; TODO: improve exit behaviour for default operations
+  (let ((exitf (cdr (assq op objed--exit-alist))))
+    ;; (objed--update-current-object)
+    (cond (exitf
+           (if (functionp exitf)
+               (funcall exitf text)
+             (if (eq 'current exitf)
+                 (objed--update-current-object
+                  (objed-make-object :beg (car range)
+                                     :end (cadr range)))
+               (objed--switch-to exitf))))
+          ((or (eq op 'ignore)
+               (bound-and-true-p multiple-cursors-mode)))
+          (t
+           (if (and text (objed--line-p text))
+               (objed--switch-to 'line)
+             (objed--switch-to 'char)
+             (goto-char (objed--beg)))))
+    ;; cleanup
+    (when objed--extend-ov
+      (delete-overlay objed--extend-ov)
+      (setq objed--extend-ov nil)
+      (face-remap-remove-relative objed--extend-cookie))
+    (when (and range
+               (not (eq exitf 'current)))
+      (set-marker (car range) nil)
+      (set-marker (cadr range) nil))))
+
+
+(defun objed-quit ()
+  "Quit and deactivate `objed-map'."
+  (interactive)
+  (setq mark-active nil)
+  (objed--exit-objed))
+
+(defun objed--reset ()
+  "Reset variables and state information."
+  (when objed--buffer
+    (with-current-buffer objed--buffer
+
+      (setq objed--opoint nil)
+      (setq objed--electric-event nil)
+
+      (when objed--marked-ovs
+        (dolist (ov objed--marked-ovs)
+          (delete-overlay ov))
+        (setq objed--marked-ovs nil))
+
+      (when objed--extend-ov
+        (delete-overlay objed--extend-ov)
+        (setq objed--extend-ov nil)
+        (face-remap-remove-relative objed--extend-cookie))
+
+      (while objed--saved-vars
+        (let ((setting (pop objed--saved-vars)))
+          (if (consp setting)
+              (set (car setting) (cdr setting))
+            (kill-local-variable setting))))
+
+      (when objed--saved-cursor
+        (set-cursor-color objed--saved-cursor))
+
+      (when objed--hl-cookie
+        (face-remap-remove-relative objed--hl-cookie))
+
+      (when objed-modeline-hint-p
+        (funcall objed-modeline-setup-func objed-mode-line-format 'reset))
+
+      (unless objed--hl-line-keep-p
+        (hl-line-mode -1))
+
+      (when (> (length objed--last-states) objed-states-max)
+        (setq objed--last-states
+              (cl-subseq objed--last-states 0 objed-states-max)))
+
+      (setq objed--block-p nil)
+      (remove-hook 'pre-command-hook 'objed--push-state t)
+      (setq objed--buffer nil))))
+
+
+
 ;; * OP execution
 
 
@@ -2634,103 +2732,6 @@ whitespace they build a sequence."
         (= (overlay-start ov)
            (pop posns)))
       ovs))))
-
-
-;; * Exit active state
-
-(defun objed--line-p (text)
-  "Determine how TEXT spans over lines.
-
-Return non-nil if text spans over an entire single line or
-multiple ones."
-  (with-temp-buffer
-    (insert text)
-    (not (= -1  (forward-line -1)))))
-
-(defun objed-exit-op (op &optional text range)
-  "Handle exit of an operation.
-
-OP is the operation (ignored for now). If TEXT is given it
-carries the textual content of the object the operation acted
-on."
-  ;; TODO: improve exit behaviour for default operations
-  (let ((exitf (cdr (assq op objed--exit-alist))))
-    ;; (objed--update-current-object)
-    (cond (exitf
-           (if (functionp exitf)
-               (funcall exitf text)
-             (if (eq 'current exitf)
-                 (objed--update-current-object
-                  (objed-make-object :beg (car range)
-                                     :end (cadr range)))
-               (objed--switch-to exitf))))
-          ((or (eq op 'ignore)
-               (bound-and-true-p multiple-cursors-mode)))
-          (t
-           (if (and text (objed--line-p text))
-               (objed--switch-to 'line)
-             (objed--switch-to 'char)
-             (goto-char (objed--beg)))))
-    ;; cleanup
-    (when objed--extend-ov
-      (delete-overlay objed--extend-ov)
-      (setq objed--extend-ov nil)
-      (face-remap-remove-relative objed--extend-cookie))
-    (when (and range
-               (not (eq exitf 'current)))
-      (set-marker (car range) nil)
-      (set-marker (cadr range) nil))))
-
-
-(defun objed-quit ()
-  "Quit and deactivate `objed-map'."
-  (interactive)
-  (setq mark-active nil)
-  (objed--exit-objed))
-
-(defun objed--reset ()
-  "Reset variables and state information."
-  (when objed--buffer
-    (with-current-buffer objed--buffer
-
-      (setq objed--opoint nil)
-      (setq objed--electric-event nil)
-
-      (when objed--marked-ovs
-        (dolist (ov objed--marked-ovs)
-          (delete-overlay ov))
-        (setq objed--marked-ovs nil))
-
-      (when objed--extend-ov
-        (delete-overlay objed--extend-ov)
-        (setq objed--extend-ov nil)
-        (face-remap-remove-relative objed--extend-cookie))
-
-      (while objed--saved-vars
-        (let ((setting (pop objed--saved-vars)))
-          (if (consp setting)
-              (set (car setting) (cdr setting))
-            (kill-local-variable setting))))
-
-      (when objed--saved-cursor
-        (set-cursor-color objed--saved-cursor))
-
-      (when objed--hl-cookie
-        (face-remap-remove-relative objed--hl-cookie))
-
-      (when objed-modeline-hint-p
-        (funcall objed-modeline-setup-func objed-mode-line-format 'reset))
-
-      (unless objed--hl-line-keep-p
-        (hl-line-mode -1))
-
-      (when (> (length objed--last-states) objed-states-max)
-        (setq objed--last-states
-              (cl-subseq objed--last-states 0 objed-states-max)))
-
-      (setq objed--block-p nil)
-      (remove-hook 'pre-command-hook 'objed--push-state t)
-      (setq objed--buffer nil))))
 
 
 ;; * Objed Mode
