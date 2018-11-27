@@ -1678,9 +1678,19 @@ Default to sexp at point."
            (objed--skip-ws)))))
 
 (defun objed-exchange-point-and-mark ()
+  "Exchange point and mark.
+
+Update to object at current side."
   (interactive)
-  (exchange-point-and-mark)
-  (objed--update-current-object))
+  (when (region-active-p)
+    (when (= (point) (region-end))
+      (goto-char (objed--end)))
+    (exchange-point-and-mark)
+    (if (= (point) (region-end))
+        (objed--skip-ws t)
+      (objed--skip-ws))
+    (objed--update-current-object)))
+
 
 (defun objed-toggle-state ()
   "Toggle state of object."
