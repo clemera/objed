@@ -3,7 +3,7 @@
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
 ;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
-;; Version: 0.1
+;; Version: 0.2.0
 ;; Keywords: convenience
 ;; URL: https://github.com/clemera/objed
 
