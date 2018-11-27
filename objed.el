@@ -140,18 +140,18 @@
 
 ;; * Faces
 
-(defface objed-mark
-  '((t (:inherit region)))
-  "Face used for marked objects."
-  :group 'objed-faces)
-
 (defface objed-hl
   '((t (:inherit highlight)))
   "Face used for highlighting textual content of current object."
   :group 'objed-faces)
 
+(defface objed-mark
+  '((t (:inherit region)))
+  "Face used for marked objects."
+  :group 'objed-faces)
+
 (defface objed-extend
-  '((t (:inherit objed-hl)))
+  '((t (:inherit objed-mark)))
   "Face used for extending objects."
   :group 'objed-faces)
 
@@ -519,9 +519,11 @@ update to given object."
              (when (not objed--buffer)
                (objed--init name))
              (cond  ((and (eq name current)
-                          objed--marked-ovs)
+                          objed--marked-ovs
+                          (not (region-active-p)))
                      (objed--mark-all-inside 'buffer))
-                    ((eq name current)
+                    ((and (eq name current)
+                          (not (region-active-p)))
                      (or (objed--mark-all-inside 'defun)
                          (objed--mark-all-inside 'buffer)))
                      (t (objed--switch-to name)
@@ -575,6 +577,7 @@ cons of guessed object and its state."
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
     (define-key map (kbd "C-SPC") 'set-mark-command)
+    (define-key map (kbd "C-x C-x") 'objed-exchange-point-and-mark)
     ;; TODO: birdview mode/scroll mode
     (define-key map (kbd "C-v") 'scroll-up-command)
     (define-key map "\ev" 'scroll-down-command)
@@ -1556,6 +1559,7 @@ postitive prefix argument ARG move to the nth previous object."
   (interactive "p")
   (if (objed--basic-p)
       (objed-context-object)
+    (setq deactivate-mark nil)
     ;; toggle side if coming from next?
     (objed--goto-previous (or arg 1))))
 
@@ -1568,6 +1572,12 @@ postitive prefix argument ARG move to the nth next object."
   (if (objed--basic-p)
       (progn (objed-context-object)
              (goto-char (objed--end)))
+    (when (and (region-active-p)
+               (<= (objed--beg) (region-beginning))
+               (>= (objed--end) (region-end))
+               (< (point) (objed--end)))
+      (exchange-point-and-mark))
+    (setq deactivate-mark nil)
     (objed--goto-next (or arg 1))))
 
 (defun objed-top-object ()
@@ -1667,6 +1677,11 @@ Default to sexp at point."
            (goto-char (objed--beg))
            (objed--skip-ws)))))
 
+(defun objed-exchange-point-and-mark ()
+  (interactive)
+  (exchange-point-and-mark)
+  (objed--update-current-object))
+
 (defun objed-toggle-state ()
   "Toggle state of object."
   (interactive)
@@ -1678,25 +1693,21 @@ Default to sexp at point."
                      (t
                       (objed--end))))))
 
-(defvar objed--extend-cookie nil
-  "Cookie for extend region.")
+
+(defvar objed--extend-cookie nil)
 
 (defun objed-extend ()
   "Extend current object."
   (interactive)
-  (when objed--extend-ov
-    (delete-overlay objed--extend-ov)
-    (face-remap-remove-relative objed--extend-cookie))
-  ;; the region should look like extend object.
-  (setq objed--extend-cookie
-        (face-remap-add-relative 'region 'objed-extend))
-  (setq objed--extend-ov
-        (objed--make-mark-overlay
-         (objed--beg) (if (eq objed--object 'char)
-                          (objed--beg)
-                        (objed--end))
-         'objed-extend t))
-  (push-mark (point) t t))
+  (unless objed--extend-cookie
+    (setq objed--extend-cookie
+          (face-remap-add-relative 'objed-hl
+                                   'objed-extend)))
+  (push-mark (if (or (>= (point) (objed--end))
+                     (eq objed--object 'char))
+                 (objed--beg)
+               (objed--end))
+             t t))
 
 (defun objed-contents-object ()
   "Switch to reference of an object.
@@ -2569,10 +2580,10 @@ on."
              (objed--switch-to 'char)
              (goto-char (objed--beg)))))
     ;; cleanup
-    (when objed--extend-ov
-      (delete-overlay objed--extend-ov)
-      (setq objed--extend-ov nil)
-      (face-remap-remove-relative objed--extend-cookie))
+    (when objed--extend-cookie
+      (face-remap-remove-relative objed--extend-cookie)
+      (setq objed--extend-cookie nil))
+
     (when (and range
                (not (eq exitf 'current)))
       (set-marker (car range) nil)
@@ -2598,10 +2609,11 @@ on."
           (delete-overlay ov))
         (setq objed--marked-ovs nil))
 
-      (when objed--extend-ov
-        (delete-overlay objed--extend-ov)
-        (setq objed--extend-ov nil)
-        (face-remap-remove-relative objed--extend-cookie))
+      (when objed--extend-cookie
+        (face-remap-remove-relative
+         objed--extend-cookie)
+        (setq objed--extend-cookie nil))
+
 
       (while objed--saved-vars
         (let ((setting (pop objed--saved-vars)))

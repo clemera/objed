@@ -397,9 +397,6 @@ OBJ is the object to use and defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (objed--apply #'max obj)))
 
-(defvar objed--extend-ov nil
-  "Overlay of extended object.")
-
 (defun objed--current (&optional obj)
   "Get the current range of interest.
 
@@ -407,22 +404,10 @@ If the region is active the range is defined by the region bounds
 otherwise the its the head of object OBJ which defaults to
 `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
-    (cond (objed--extend-ov
-           (cond ((<= (point)
-                      (overlay-start objed--extend-ov))
-                  (list (objed--beg)
-                        (overlay-end objed--extend-ov)))
-                 ((>= (point)
-                      (overlay-end objed--extend-ov))
-                  (list (overlay-start objed--extend-ov)
-                        (if (eq objed--object 'char)
-                            (point)
-                          (objed--end))))
-                 (t
-                  (list (overlay-start objed--extend-ov)
-                        (overlay-end objed--extend-ov)))))
-          ((region-active-p)
-           (list (region-beginning) (region-end)))
+    (cond ((region-active-p)
+           (list (region-beginning)
+                 (max (objed--end)
+                      (region-end))))
           (t
            (car obj)))))
 
