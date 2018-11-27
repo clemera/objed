@@ -137,7 +137,6 @@
 
 ;; * Faces
 
-
 (defface objed-mark
   '((t (:inherit region)))
   "Face used for marked objects."
@@ -146,6 +145,11 @@
 (defface objed-hl
   '((t (:inherit highlight)))
   "Face used for highlighting textual content of current object."
+  :group 'objed-faces)
+
+(defface objed-extend
+  '((t (:inherit objed-hl)))
+  "Face used for extending objects."
   :group 'objed-faces)
 
 (defface objed-mode-line
@@ -566,6 +570,11 @@ cons of guessed object and its state."
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
     (define-key map (kbd "C-SPC") 'set-mark-command)
+    ;; TODO: birdview mode/scroll mode
+    (define-key map (kbd "C-v") 'scroll-up-command)
+    (define-key map "\ev" 'scroll-down-command)
+    ;; "visual"
+    (define-key map "v" 'objed-extend)
 
     ;;(define-key map (kbd "C-h") which-key-C-h-map)
     (define-key map (kbd "C-h k") 'describe-key)
@@ -624,11 +633,6 @@ cons of guessed object and its state."
 
     (define-key map "i" 'objed-toggle-state)
     (define-key map "q" 'objed-toggle-side)
-
-    ;; TODO: birdview mode/scroll mode
-    (define-key map "v" 'scroll-up-command)
-    (define-key map "\ev" 'scroll-down-command)
-    (define-key map "V" 'scroll-down-command)
 
     ;; marking/unmarking
     (define-key map "m" 'objed-mark)
@@ -1158,10 +1162,9 @@ Reinitializes current object and removes itself from the hook."
 
 (defun objed-hl-function ()
   "Function used as default for `hl-line-range-function'."
-  (when (and objed--buffer objed--current-obj
-             ;; the region is the current text object now
-             (not (region-active-p)))
-    (cons (objed--beg) (objed--end))))
+  (when (and objed--buffer objed--current-obj)
+    (let ((curr (objed--current)))
+      (cons (car curr) (cadr curr)))))
 
 
 ;; * Help commands
@@ -1670,12 +1673,24 @@ Default to sexp at point."
                      (t
                       (objed--end))))))
 
+(defvar objed--extend-cookie nil
+  "Cookie for extend region.")
 
-(defun objed-select-object ()
-  "Select current object with active region."
+(defun objed-extend ()
+  "Extend current object."
   (interactive)
-  (push-mark (objed--end) t t)
-  (goto-char (objed--beg)))
+  (when objed--extend-ov
+    (delete-overlay objed--extend-ov))
+  ;; the region should look like extend object.
+  (setq objed--extend-cookie
+        (face-remap-add-relative 'region 'objed-extend))
+  (setq objed--extend-ov
+        (objed--make-mark-overlay
+         (objed--beg) (if (eq objed--object 'char)
+                          (objed--beg)
+                        (objed--end))
+         'objed-extend t))
+  (push-mark (point) t t))
 
 (defun objed-contents-object ()
   "Switch to reference of an object.
@@ -1931,7 +1946,8 @@ Each state is a list of the form:
   "Return current state data."
   (list (current-buffer)
         (point) objed--object
-        (objed--copy-object) objed--obj-state
+        (objed--copy-object)
+        objed--obj-state
         (and objed--marked-ovs
              (let ((os nil))
                (dolist (ov objed--marked-ovs (nreverse os))
@@ -1948,7 +1964,6 @@ To be used in `pre-command-hook'."
       (unless (equal curr (car objed--last-states))
         (push (objed--get-current-state)
               objed--last-states)))))
-
 
 
 (defun objed--restore-state (&optional state)
@@ -2674,6 +2689,11 @@ on."
         (dolist (ov objed--marked-ovs)
           (delete-overlay ov))
         (setq objed--marked-ovs nil))
+
+      (when objed--extend-ov
+        (delete-overlay objed--extend-ov)
+        (setq objed--extend-ov nil)
+        (face-remap-remove-relative objed--extend-cookie))
 
       (while objed--saved-vars
         (let ((setting (pop objed--saved-vars)))

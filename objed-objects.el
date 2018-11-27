@@ -397,6 +397,8 @@ OBJ is the object to use and defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (objed--apply #'max obj)))
 
+(defvar objed--extend-ov nil
+  "Overlay of extended object.")
 
 (defun objed--current (&optional obj)
   "Get the current range of interest.
@@ -405,9 +407,24 @@ If the region is active the range is defined by the region bounds
 otherwise the its the head of object OBJ which defaults to
 `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
-    (if (region-active-p)
-        (list (region-beginning) (region-end))
-      (car obj))))
+    (cond (objed--extend-ov
+           (cond ((<= (point)
+                      (overlay-start objed--extend-ov))
+                  (list (objed--beg)
+                        (overlay-end objed--extend-ov)))
+                 ((>= (point)
+                      (overlay-end objed--extend-ov))
+                  (list (overlay-start objed--extend-ov)
+                        (if (eq objed--object 'char)
+                            (point)
+                          (objed--end))))
+                 (t
+                  (list (overlay-start objed--extend-ov)
+                        (overlay-end objed--extend-ov)))))
+          ((region-active-p)
+           (list (region-beginning) (region-end)))
+          (t
+           (car obj)))))
 
 (defun objed--bounds (&optional obj)
   "Get the current object bounds.
@@ -1016,7 +1033,6 @@ object."
           (objed--goto-char (objed--beg obj)))))))
 
 
-
 (defun objed--make-object-overlay (&optional obj)
   "Create an overlay to mark current object.
 
@@ -1026,12 +1042,15 @@ OBJ is the object to use and defaults to `objed--current-obj'."
                               (objed--end obj))))
 
 
-(defun objed--make-mark-overlay (beg end)
-  "Make an objed overaly over region between BEG, END."
+(defun objed--make-mark-overlay (beg end &optional face keep)
+  "Make an objed overaly over region between BEG, END.
+
+Uses FACE `objed-mark' by default. If KEEP is non-nil keep
+overlays without content."
   (let ((ov (make-overlay beg end)))
     (overlay-put ov 'objed t)
-    (overlay-put ov 'face 'objed-mark)
-    (overlay-put ov 'evaporate t)
+    (overlay-put ov 'face (or face 'objed-mark))
+    (overlay-put ov 'evaporate (not keep))
     (overlay-put ov 'rear-nonsticky t)
     ov))
 
