@@ -1691,17 +1691,19 @@ This activate the whole object point is currently in and allows
 extending/shrinking the region by moving around using objed
 movement commands."
   (interactive)
-  (unless objed--extend-cookie
-    (setq objed--extend-cookie
-          (face-remap-add-relative 'objed-hl
-                                   'objed-extend)))
-  (unless (= (point) (objed--end))
-    (goto-char (objed--beg)))
-  (push-mark (if (or (>= (point) (objed--end))
-                     (eq objed--object 'char))
-                 (objed--beg)
-               (objed--end))
-             t t))
+  (if (region-active-p)
+      (deactivate-mark)
+    (unless objed--extend-cookie
+      (setq objed--extend-cookie
+            (face-remap-add-relative 'objed-hl
+                                     'objed-extend)))
+    (unless (= (point) (objed--end))
+      (goto-char (objed--beg)))
+    (push-mark (if (or (>= (point) (objed--end))
+                       (eq objed--object 'char))
+                   (objed--beg)
+                 (objed--end))
+               t t)))
 
 (defun objed-include-trailing-ws ()
   "Include trailing ws for current object."
