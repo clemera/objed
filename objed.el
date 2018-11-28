@@ -2580,14 +2580,17 @@ c: capitalize."
 (defvar objed--ipipe-schedule-time 0.15
   "Time frame to update the display.")
 
-(defvar objed--ipipe-timer nil)
+(defvar objed--ipipe-timer nil
+  "Timer used for `objed-ipipe'.")
 
 (defun objed--ipipe-reset-timer ()
+  "Reset timer used `objed--ipipe-timer'."
   (when objed--ipipe-timer
     (cancel-timer objed--ipipe-timer))
   (setq objed--ipipe-timer nil))
 
 (defun objed--ipipe-schedule-timer (&rest _)
+  "Schedule timer `objed--ipipe-timer'."
   (let ((mini (window-buffer (active-minibuffer-window))))
     (objed--ipipe-reset-timer)
     (setq objed--ipipe-timer
@@ -2633,6 +2636,9 @@ c: capitalize."
 
 
 (defun objed--ipipe-parse (str)
+  "Parse string STR.
+
+Returns cons cell with cmd as car and possible arguemtns as cdr."
   (with-temp-buffer
     (insert str)
     (goto-char (point-min))
@@ -2642,6 +2648,9 @@ c: capitalize."
 
 
 (defun objed--ipipe-to-string (cmd-args str)
+  "Pipe string STR through CMD-ARGS.
+
+Return restult if any or nil."
   (let* ((cmdline (minibuffer-contents))
          (parsed (objed--ipipe-parse cmdline))
          (cmd (car-safe parsed))
@@ -2690,7 +2699,9 @@ Exit if there is no content."
   (delete-minibuffer-contents)))
 
 (defun objed-ipipe-complete ()
-  "Complete for shell commands and region commands."
+  "Completion used by `objed-ipipe'.
+
+Completes shell and region commands."
   (interactive)
   (let ((bounds (or (bounds-of-thing-at-point 'symbol)
                                            (cons (point)
@@ -2709,6 +2720,9 @@ Exit if there is no content."
 ;; ** Entry command
 
 (defun objed-ipipe (beg end)
+  "Pipe region between BED END through commands.
+
+Commands can be shell commands or region commands."
   (interactive "r")
   ;; init
   (setq objed--ipipe-last "")
