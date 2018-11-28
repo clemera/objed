@@ -2686,7 +2686,10 @@ Return restult if any or nil."
 Exit if there is no content."
   (interactive)
   (if (string= "" (minibuffer-contents))
-      (exit-minibuffer)
+      (progn
+        (remove-hook 'after-change-functions
+                     #'objed--ipipe-schedule-timer t)
+        (exit-minibuffer))
     ;; when timer did not run yet, update manually
     (when objed--ipipe-timer
       (objed--ipipe-reset-timer)
