@@ -702,9 +702,15 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "j" 'objed-occur)
     ;; TODO: start query replace in current object,
     ;; or for all
-    (define-key map "%" (objed-define-op nil objed-replace current))
+    (define-key map "%"
+      (objed-define-op nil objed-replace current))
     (define-key map "&"
       (objed-define-op nil objed-pipe-region))
+
+    (define-key map "|"
+      (objed-define-op nil objed-ipipe))
+
+
     (define-key map "!"
       (objed-define-op nil objed-replace-op))
 
@@ -2552,6 +2558,184 @@ c: capitalize."
       (deactivate-mark)
       (call-interactively 'query-replace-regexp))))
 
+
+;; * Ipipe
+;; inspired by jq-mode
+
+;; ** Minibuffer setup
+
+(defvar objed-ipipe-hist '()
+  "History for `objed-ipipe'.")
+
+(defvar objed-ipipe-minibuffer-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map minibuffer-local-map)
+    (define-key map (kbd "<tab>") #'objed-ipipe-complete)
+    (define-key map (kbd "<return>") #'objed-ipipe-commit)
+    map)
+  "Keymap for `objed-ipipe'.")
+
+;; ** Display update
+
+(defvar objed--ipipe-schedule-time 0.15
+  "Time frame to update the display.")
+
+(defvar objed--ipipe-timer nil)
+
+(defun objed--ipipe-reset-timer ()
+  (when objed--ipipe-timer
+    (cancel-timer objed--ipipe-timer))
+  (setq objed--ipipe-timer nil))
+
+(defun objed--ipipe-schedule-timer ()
+  (let ((mini (window-buffer (active-minibuffer-window))))
+    (objed--ipipe-reset-timer)
+    (setq objed--ipipe-timer
+          (run-with-idle-timer
+           objed--ipipe-schedule-time nil
+           (lambda (buf)
+             (with-current-buffer buf
+               (objed--ipipe-update-display)))
+           mini))))
+
+(defvar objed--ipipe-overlay nil
+  "Overlay showing the results in current buffer.")
+
+(defvar objed--ipipe-last ""
+  "Cache last used command.")
+
+(defvar objed--ipipe-region-string ""
+  "Cache last region.")
+
+
+(defun objed--ipipe-update-display ()
+  "Update display.
+
+ Assumes current buffer is minibuffer."
+  (let ((cmd (minibuffer-contents))
+        (res nil))
+    ;; only update display if user provides new input
+    (if (and (minibufferp)
+             ;; make sure we are in an ipipe session
+             (eq (current-local-map) objed-ipipe-minibuffer-map))
+          (if (string= "" cmd)
+              ;; after commit or delete update the overlay
+              (overlay-put objed--ipipe-overlay 'after-string
+                           objed--ipipe-region-string)
+            ;; save last input and update if possible
+            (setq objed--ipipe-last cmd)
+            (if (setq res (objed--ipipe-to-string cmd objed--ipipe-region-string))
+                (overlay-put objed--ipipe-overlay 'after-string res)
+              (overlay-put objed--ipipe-overlay 'after-string
+                           objed--ipipe-region-string)))
+      (when (minibufferp)
+        (remove-hook 'after-change-functions 'objed--ipipe-schedule-time t)))))
+
+
+(defun objed--ipipe-parse (str)
+  (with-temp-buffer
+    (insert str)
+    (goto-char (point-min))
+    (when (re-search-forward "\\(.*?\\)\\( \\|\\'\\)" nil t)
+      (cons (match-string 1)
+            (buffer-substring (point) (line-end-position))))))
+
+
+(defun objed--ipipe-to-string (cmd-args str)
+  (let* ((cmdline (minibuffer-contents))
+         (parsed (objed--ipipe-parse cmdline))
+         (cmd (car-safe parsed))
+         (args (cdr-safe parsed)))
+    (cond ((and cmd (executable-find cmd))
+           (with-temp-buffer
+             (let ((exit (call-process-region
+                          str nil
+                          shell-file-name
+                          nil t nil
+                          shell-command-switch
+                          cmdline)))
+               (when (= 0 exit)
+                 (buffer-string)))))
+          ((or (and (intern-soft (concat cmd "-region"))
+                    (setq cmd (concat cmd "-region")))
+               (intern-soft cmd))
+           (when (commandp (setq cmd (intern cmd)))
+             (with-temp-buffer
+               (insert str)
+               (goto-char (point-min))
+               (push-mark (point-max) t t)
+               (when (ignore-errors (call-interactively cmd) t)
+                 (buffer-string))))))))
+
+
+
+;; ** Minibuffer commands
+
+(defun objed-ipipe-commit ()
+  "Commit current minibuffer input.
+
+Exit if there is no content."
+  (interactive)
+  (if (string= "" (minibuffer-contents))
+      (exit-minibuffer)
+    ;; when timer did not run yet, update manually
+    (when objed--ipipe-timer
+      (objed--ipipe-reset-timer)
+      (objed--ipipe-update-display))
+   ;; cache current string
+  (setq objed--ipipe-region-string
+        (overlay-get objed--ipipe-overlay 'after-string))
+  (cl-pushnew (minibuffer-contents)
+              objed-ipipe-hist :test #'string=)
+  (delete-minibuffer-contents)))
+
+(defun objed-ipipe-complete ()
+  "Complete for shell commands and region commands."
+  (interactive)
+  (let ((bounds (or (bounds-of-thing-at-point 'symbol)
+                                           (cons (point)
+                                                 (point))))
+        (sym (or (thing-at-point 'symbol) "")))
+    (cl-destructuring-bind (beg . end) bounds
+      (completion-in-region
+       beg end (append
+                (locate-file-completion-table
+                 exec-path exec-suffixes sym 'identity t)
+                (or objed--cmd-cache
+                    (progn
+                      (mapatoms #'objed--init-cmd-cache)
+                      objed--cmd-cache)))))))
+
+;; ** Entry command
+
+(defun objed-ipipe (beg end)
+  (interactive "r")
+  ;; init
+  (setq objed--ipipe-last "")
+  (setq objed--ipipe-overlay (make-overlay beg end))
+  (objed--ipipe-reset-timer)
+  (overlay-put objed--ipipe-overlay 'invisible t)
+  (overlay-put objed--ipipe-overlay 'after-string
+               (setq objed--ipipe-region-string
+                     (buffer-substring-no-properties beg end)))
+  (unwind-protect
+      (minibuffer-with-setup-hook
+          (lambda ()
+            (add-hook 'after-change-functions 'objed--ipipe-schedule-timer nil t))
+        ;; on success replace region with current overlay
+        (save-restriction
+          (narrow-to-region beg end)
+          (when (read-from-minibuffer "Command (leave blank to accept current state): " nil
+                                      objed-ipipe-minibuffer-map nil 'objed-ipipe-hist)
+            (objed--ipipe-reset-timer)
+            (delete-region beg end)
+            (save-excursion
+              (insert (overlay-get objed--ipipe-overlay 'after-string))))))
+    (objed--ipipe-reset-timer)
+    (dolist (buf (buffer-list))
+      (when (minibufferp buf)
+        (remove-hook 'after-change-functions 'objed--ipipe-schedule-time t)))
+    (delete-overlay objed--ipipe-overlay)))
 
 ;; * Exit active state
 
