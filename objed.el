@@ -2587,7 +2587,7 @@ c: capitalize."
     (cancel-timer objed--ipipe-timer))
   (setq objed--ipipe-timer nil))
 
-(defun objed--ipipe-schedule-timer ()
+(defun objed--ipipe-schedule-timer (&rest _)
   (let ((mini (window-buffer (active-minibuffer-window))))
     (objed--ipipe-reset-timer)
     (setq objed--ipipe-timer
