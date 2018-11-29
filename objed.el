@@ -2789,8 +2789,8 @@ on."
           (t
            (if (and text (objed--line-p text))
                (objed--switch-to 'line)
-             (objed--switch-to 'char)
-             (goto-char (objed--beg)))))
+             (when (objed--switch-to 'char)
+               (goto-char (objed--beg))))))
     ;; cleanup
     (when objed--extend-cookie
       (face-remap-remove-relative objed--extend-cookie)
