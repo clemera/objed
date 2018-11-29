@@ -580,6 +580,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map (kbd "?") 'objed-show-top-level)
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
+
+    (define-key map "1" 'universal-argument)
     (define-key map (kbd "C-SPC") 'set-mark-command)
     (define-key map (kbd "C-x C-x") 'objed-exchange-point-and-mark)
     ;; TODO: birdview mode/scroll mode
