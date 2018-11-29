@@ -2866,11 +2866,12 @@ positions of the text object range.
 
 RANGE is a list of the beginning and and position of
 the text object to act on."
-  (let ((text (apply #'buffer-substring range))
-        (range (list (set-marker (make-marker) (car range))
-                     (set-marker (make-marker) (cadr range)))))
-    (apply action range)
-    (objed-exit-op name text range)))
+  (when range
+    (let ((text (apply #'buffer-substring range))
+          (range (list (set-marker (make-marker) (car range))
+                       (set-marker (make-marker) (cadr range)))))
+      (apply action range)
+      (objed-exit-op name text range))))
 
 (defun objed--ov-apply (name action ovs)
   "Apply and operation to marked objects.
