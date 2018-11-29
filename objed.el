@@ -1946,7 +1946,8 @@ When PREFIX is given it will be used by RCMD as
        (goto-char beg)
        (push-mark end t t)
        (objed--with-allow-input
-        (apply handler rcmd beg end oargs))))))
+        (let ((this-command rcmd))
+          (apply handler rcmd beg end oargs)))))))
 
 
 (defun objed--eval-rspec (rcmd)
