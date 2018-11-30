@@ -526,8 +526,8 @@ update to given object."
                           (not (region-active-p)))
                      (or (objed--mark-all-inside 'defun)
                          (objed--mark-all-inside 'buffer)))
-                     (t (objed--switch-to name)
-                        (goto-char (objed--beg)))))))))
+                     (t (when (objed--switch-to name)
+                          (goto-char (objed--beg))))))))))
 
 
 (defun objed--switch-to-object-for-cmd (cmd)
