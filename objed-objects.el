@@ -2191,12 +2191,15 @@ non-nil the indentation block can contain empty lines."
   :atp
   (org-at-heading-p)
   :get-obj
-  (objed-make-object
-   :obounds (when (ignore-errors (org-back-to-heading) t)
-              (cons (point)
-                    (progn (outline-next-visible-heading 1)
+  (when (ignore-errors (org-back-to-heading) t)
+    (objed-make-object
+     :beg (point)
+     :ibeg (line-end-position)
+     :end (progn (outline-next-visible-heading 1)
                            (or (eobp) (move-end-of-line 0))
-                           (point)))))
+                           (point))
+     :iend (progn (skip-chars-backward " \t\r\n")
+                  (point))))
   :try-next
   (outline-next-visible-heading 1)
   :try-prev
