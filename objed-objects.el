@@ -1620,9 +1620,7 @@ Ignores simple structured expressions like words or symbols."
             (objed--in-string-p))
     (objed--with-narrow-for-text
      (let ((bounds (objed--get-textblock-bounds)))
-       (when (and bounds
-                  (or (not (eq (car bounds) (point-min)))
-                      (not (eq (cdr bounds) (point-max)))))
+       (when bounds
          (objed-make-object :obounds bounds)))))
   :try-next
   (objed--with-narrow-for-text

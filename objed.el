@@ -514,8 +514,8 @@ update to given object."
            (funcall (cdr binding) name))
           (t
            (let ((current objed--object))
-             ;; object called as command via M-x,
-             ;; objed need to initialize first
+             ;; object called as command via M-x, objed need to
+             ;; initialize first
              (when (not objed--buffer)
                (objed--init name))
              (cond  ((and (eq name current)
