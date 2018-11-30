@@ -712,6 +712,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "|"
       (objed-define-op nil objed-ipipe))
 
+    ;; (define-key map (kbd "<C-return>") 'objed-quickrun)
+    (define-key map (kbd "<M-return>") 'objed-insert-new-object)
 
     (define-key map "!"
       (objed-define-op nil objed-replace-op))
@@ -2653,14 +2655,12 @@ Returns cons cell with cmd as car and possible arguemtns as cdr."
             (buffer-substring (point) (line-end-position))))))
 
 
-(defun objed--ipipe-to-string (cmd-args str)
+(defun objed--ipipe-to-string (cmdline str)
   "Pipe string STR through CMD-ARGS.
 
 Return restult if any or nil."
-  (let* ((cmdline (minibuffer-contents))
-         (parsed (objed--ipipe-parse cmdline))
-         (cmd (car-safe parsed))
-         (args (cdr-safe parsed)))
+  (let* ((parsed (objed--ipipe-parse cmdline))
+         (cmd (car-safe parsed)))
     (cond ((and cmd (executable-find cmd))
            (with-temp-buffer
              (let ((exit (call-process-region
@@ -2759,6 +2759,47 @@ Commands can be shell commands or region commands."
       (when (minibufferp buf)
         (remove-hook 'after-change-functions 'objed--ipipe-schedule-time t)))
     (delete-overlay objed--ipipe-overlay)))
+
+(defun objed-insert-new-object ()
+  "Insert boundaries of object after current one."
+  (interactive)
+  (let* ((opos (objed--oend))
+         (left (objed--get-left-boundary))
+         (right (objed--get-right-boundary))
+         (oc (buffer-substring (objed--obeg) (objed--oend)))
+         (ic (buffer-substring (objed--ibeg) (objed--iend)))
+         (linep (objed--line-p oc))
+         (lispy (derived-mode-p 'lisp-mode
+                                  'emacs-lisp-mode
+                                  'clojure-mode
+                                  'racket-mode
+                                  'lisp-interaction-mode))
+         (nb nil))
+    (goto-char opos)
+    (if (string= ic oc)
+        (insert " " oc)
+      (insert (format "%s%s"
+                      (if (and linep
+                               (not (string= "" ic))
+                               (not (string-match "\\`\n\\|\n\\'" right))
+                               (not (string-match "\\`\n\\|\n\\'" left)))
+                         "\n"
+                        (if (string-match "\n\\'" oc) ""
+                          (if (looking-at "\n") "\n" " ")))
+                      left))
+      ;; stay in the middle
+      (save-excursion
+        (insert (format "%s" right))))
+    ;; dumb search for probably best pos
+    (when (re-search-backward "\\_>" opos t)
+      (re-search-backward "\\_<" opos t))
+    (if (and (not lispy)
+             (setq nb (bounds-of-thing-at-point 'list)))
+        (goto-char (car nb))
+      (when lispy
+        (indent-according-to-mode)))
+    ;; goto ref if there is one...
+    (objed--exit-objed)))
 
 ;; * Exit active state
 

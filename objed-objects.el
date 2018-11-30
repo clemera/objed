@@ -361,7 +361,8 @@ Either the symbol `whole' or `inner'.")
 (defun objed--beg (&optional obj)
   "Get beginning position of object.
 
-OBJ is the object to use and defaults to `objed--current-obj'."
+Ignores current object state. OBJ is the object to use and
+defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (caar obj)))
 
@@ -369,14 +370,16 @@ OBJ is the object to use and defaults to `objed--current-obj'."
 (defun objed--end (&optional obj)
   "Get end position of object.
 
-OBJ is the object to use and defaults to `objed--current-obj'."
+Ignores current object state. OBJ is the object to use and
+defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (cadr (car obj))))
 
 (defun objed--other (&optional obj)
   "Return object position opposite to point.
 
-OBJ is the object to use and defaults to `objed--current-obj'."
+Ignores current object state. OBJ is the object to use and
+defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (if (/= (point) (objed--end))
         (objed--end obj)
@@ -444,6 +447,51 @@ OBJ is the object to use and defaults to `objed--current-obj'."
   (let* ((obj (or obj objed--current-obj))
          (posn (objed--alt obj)))
     (cadr posn)))
+
+(defun objed--obeg (&optional obj)
+  "Get beginning position of object.
+
+OBJ is the object to use and defaults to `objed--current-obj'."
+  (let ((obj (or obj objed--current-obj)))
+    (if (objed--inner-p)
+        (objed--alt-beg obj)
+      (objed--beg obj))))
+
+(defun objed--oend (&optional obj)
+  "Get end position of object.
+
+OBJ is the object to use and defaults to `objed--current-obj'"
+  (let ((obj (or obj objed--current-obj)))
+    (if (objed--inner-p)
+        (objed--alt-end obj)
+      (objed--end obj))))
+
+(defun objed--ibeg (&optional obj)
+  "Get inner beginning position of object.
+
+OBJ is the object to use and defaults to `objed--current-obj'."
+  (let ((obj (or obj objed--current-obj)))
+    (if (objed--inner-p)
+        (objed--beg obj)
+      (objed--alt-beg obj))))
+
+(defun objed--iend (&optional obj)
+    "Get inner end position of object.
+
+OBJ is the object to use and defaults to `objed--current-obj'."
+  (let ((obj (or obj objed--current-obj)))
+    (if (objed--inner-p)
+        (objed--end obj)
+      (objed--alt-end obj))))
+
+(defun objed--get-left-boundary ()
+  "Get left boundary of current object."
+  (buffer-substring (objed--obeg) (objed--ibeg)))
+
+(defun objed--get-right-boundary ()
+  "Get right boundary of current object."
+  (buffer-substring (objed--iend) (objed--oend)))
+
 
 (defun objed--goto-char (pos)
   "Move to position POS possibly skipping leading whitespace."
