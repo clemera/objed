@@ -819,6 +819,9 @@ To define new operations see `objed-define-op'.")
     (define-key map "[" 'objed-section-object)
     (define-key map "j" 'objed-output-object)
     (define-key map "h" 'objed-buffer-object)
+    ;; TODO: inner buffer/beg-end
+    (define-key map "<" 'objed-buffer-object)
+    (define-key map ">" 'objed-buffer-object)
 
     (define-key map "z" 'objed-ace-object)
     map)
