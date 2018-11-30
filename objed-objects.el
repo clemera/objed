@@ -2205,7 +2205,13 @@ non-nil the indentation block can contain empty lines."
   :mode python-mode
   :no-skip t
   :get-obj
-  (objed-bounds-from-region-cmd #'python-mark-defun)
+  (let ((obounds (objed-bounds-from-region-cmd #'python-mark-defun)))
+    (when obounds
+      (goto-char (car obounds))
+      (re-search-forward ": *\n +" nil t)
+      (objed-make-object :obounds obounds
+                         :ibeg (point)
+                         :iend (objed--skip-backward (cdr obounds) 'ws))))
   :try-next
   (beginning-of-defun -1)
   :try-prev
