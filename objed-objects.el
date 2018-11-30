@@ -2154,11 +2154,35 @@ non-nil the indentation block can contain empty lines."
   :try-prev
   (outline-previous-visible-heading 1))
 
-(objed-define-object org paragraph
+;; blocks are "elements" in current mode
+(objed-define-object org block
   :mode org-mode
   :get-obj
-  (objed-make-object
-   :obounds (objed-bounds-from-region-cmd #'org-mark-element)))
+  (let ((bounds (objed-bounds-from-region-cmd #'org-mark-element))
+        (ibeg nil)
+        (ibounds nil))
+    (when bounds
+      (goto-char (car bounds))
+      (setq ibounds (cl-dolist (lr '((":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:")
+                                     ("#\\+BEGIN_SRC.*$" . "#\\+END_SRC")
+                                     ("#\\+begin_src.*$" . "#\\+end_src")
+                                     ("^#\\+begin_example.*$" . "#\\+end_example$")
+                                     ("^#\\+BEGIN_EXAMPLE.*$" . "#\\+END_EXAMPLE$")))
+                      (when (and (re-search-forward (car lr) (cdr bounds) t)
+                                 (skip-chars-forward "\r\n \t" (line-beginning-position 2))
+                                 (setq ibeg (point))
+                                 (progn (goto-char (cdr bounds))
+                                        (re-search-backward (cdr lr) (car bounds) t)))
+                        (skip-chars-backward " \t")
+                        (cl-return (cons ibeg (point))))))
+      (goto-char (cdr bounds))
+      (skip-chars-backward "\r\n \t")
+      ;; padding
+      (skip-chars-forward "\r\n" (1+ (1+ (point))))
+      (setf (cdr bounds) (point))
+      (objed-make-object :obounds bounds :ibounds ibounds))))
+
+
 
 (defvar comint-prompt-regexp nil)
 (declare-function comint-next-prompt "ext:comint")
