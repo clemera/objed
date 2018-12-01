@@ -2574,7 +2574,9 @@ c: capitalize."
       (goto-char (point-min))
       (hl-line-unhighlight)
       (deactivate-mark)
-      (call-interactively 'query-replace-regexp))))
+      (if (fboundp 'anzu-query-replace-regexp)
+          (call-interactively 'anzu-query-replace-regexp)
+      (call-interactively 'query-replace-regexp)))))
 
 
 ;; * Ipipe
