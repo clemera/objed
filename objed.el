@@ -609,7 +609,10 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "B" 'objed-move-char-backward)
     (define-key map "F" 'objed-move-char-forward)
 
-    (define-key map "s" (objed--call-and-switch forward-word word))
+    (define-key map "s" (objed--call-and-switch
+                         forward-word word
+                         (when (eq last-command 'objed-extend)
+                           (objed-exchange-point-and-mark))))
     (define-key map "r" (objed--call-and-switch backward-word word))
 
     (define-key map "S" 'objed-move-word-forward)
