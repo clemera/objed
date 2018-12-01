@@ -629,10 +629,10 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map (kbd "<M-right>") 'objed-indent-to-right-tab-stop)
     (define-key map (kbd "<M-left>") 'objed-indent-to-left-tab-stop)
 
-    (define-key map "`" 'objed-top-object);;'objed-backward-symbol)
     (define-key map (kbd "<home>") 'objed-top-object)
-    (define-key map (kbd "´") 'objed-bottom-object);;'objed-forward-symbol)
     (define-key map (kbd "<end>") 'objed-bottom-object)
+    (define-key map "`" 'objed-top-object);'objed-backward-symbol)
+    (define-key map "´" 'objed-bottom-object);'objed-forward-symbol)
     ;; block expansions
     (define-key map "l" 'objed-expand-block)
     (define-key map "a" 'objed-beg-of-block)
@@ -712,8 +712,13 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "|"
       (objed-define-op nil objed-ipipe))
 
-    ;; (define-key map (kbd "<C-return>") 'objed-quickrun)
-    (define-key map (kbd "<M-return>") 'objed-insert-new-object)
+    (define-key map (kbd "<C-return>")
+      (objed-define-op
+       nil objed-run-or-eval))
+    (define-key map (kbd "<M-return>")
+      'objed-insert-new-object)
+
+    ;; (define-key map "^" 'objed-raise-inner)
 
     (define-key map "!"
       (objed-define-op nil objed-replace-op))
@@ -2800,6 +2805,45 @@ Commands can be shell commands or region commands."
         (indent-according-to-mode)))
     ;; goto ref if there is one...
     (objed--exit-objed)))
+
+
+(defvar objed--eir-alist
+  '((emacs-lisp-mode . ielm)
+    (lisp-interaction-mode . ielm)
+    (clojure-mode . cider)
+    (lisp-mode . slime)
+    (racket-mode . racket)
+    (scheme-mode . scheme)
+    (hy-mode . hy)
+    (python-mode . python)
+    (ruby-mode . ruby)
+    (sml-mode . sml)
+    (scala-mode . scala)
+    (lua-mode . lua)
+    (erlang-mode . erlang)
+    (elixir-mode . iex)
+    (ocaml-mode . ocaml)
+    (prolog-mode . prolog)
+    (js3-mode . javascript)
+    (js2-mode . javascript)
+    (js-mode . javascript)
+    (sh-mode . shell))
+  "Map major mode symbols to `eval-in-repl' REPL names.")
+
+
+(defun objed-run-or-eval (beg end)
+  "Evalate region between beg and end using `eval-in-repl'."
+  (interactive "r")
+  (if (not (require 'eval-in-repl nil t))
+      (error "eval-in-repl not found")
+    (let* ((name (symbol-name (cdr (assq major-mode objed--eir-alist))))
+           (lib (intern (concat "eval-in-repl-" name)))
+           (cmd (intern (concat "eir-eval-in-" name))))
+      (when (and lib
+                 (require lib nil t)
+                 (commandp cmd))
+         (call-interactively cmd)))))
+
 
 ;; * Exit active state
 
