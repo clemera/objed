@@ -2821,14 +2821,16 @@ on."
   ;; TODO: improve exit behaviour for default operations
   (let ((exitf (cdr (assq op objed--exit-alist))))
     ;; (objed--update-current-object)
-    (cond (exitf
-           (if (functionp exitf)
-               (funcall exitf text)
-             (if (eq 'current exitf)
-                 (objed--update-current-object
-                  (objed-make-object :beg (car range)
-                                     :end (cadr range)))
-               (objed--switch-to exitf))))
+    (cond ((functionp exitf)
+           (funcall exitf text))
+          ((eq 'current exitf)
+           (objed--update-current-object
+            (objed-make-object :beg (car range)
+                               :end (cadr range))))
+          ((eq 'exit exitf)
+           (objed--exit-objed))
+          (exitf
+           (objed--switch-to exitf))
           ((or (eq op 'ignore)
                (bound-and-true-p multiple-cursors-mode)))
           (t
