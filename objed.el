@@ -426,9 +426,10 @@ arguments. If the function is able to recieve three arguments the
 third argument will be the prefix argument passed to the
 operation.
 
-If EXIT is given it should be a function which is called after
-executing the operation. The function recieves one argument which
-is the string of the textual content the operation acted on.
+If EXIT is given it should be a symbol or function which is
+called after executing the operation. The function recieves one
+argument which is the string of the textual content the operation
+acted on. See `objed-exit-op'.
 
 This macro returns a command that can be used as an `objed'
 operation."
