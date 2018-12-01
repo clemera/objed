@@ -714,7 +714,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     (define-key map (kbd "<C-return>")
       (objed-define-op
-       nil objed-run-or-eval))
+       nil objed-run-or-eval ignore))
     (define-key map (kbd "<M-return>")
       'objed-insert-new-object)
 
@@ -2830,6 +2830,10 @@ Commands can be shell commands or region commands."
     (sh-mode . shell))
   "Map major mode symbols to `eval-in-repl' REPL names.")
 
+(defvar objed-use-ielm-for-eval-p nil
+  "Whether to use ielm for `objed-run-or-eval' for Elisp.
+
+If nil eval-region is used instead.")
 
 (defun objed-run-or-eval (beg end)
   "Evalate region between beg and end using `eval-in-repl'."
@@ -2839,10 +2843,12 @@ Commands can be shell commands or region commands."
     (let* ((name (symbol-name (cdr (assq major-mode objed--eir-alist))))
            (lib (intern (concat "eval-in-repl-" name)))
            (cmd (intern (concat "eir-eval-in-" name))))
-      (when (and lib
-                 (require lib nil t)
-                 (commandp cmd))
-         (call-interactively cmd)))))
+      (cond  ((and (eq lib 'eval-in-repl-ielm)
+                   (not objed-use-ielm-for-eval-p))
+              (eval-region beg end t))
+             ((and (require lib nil t)
+                   (commandp cmd))
+             (call-interactively cmd))))))
 
 
 ;; * Exit active state
