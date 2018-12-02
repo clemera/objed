@@ -1925,12 +1925,14 @@ operation."
   (if (commandp f)
       (objed--create-op-from-rcmd f arg)
     ;; try to pass arg
-    (lambda (beg end)
-      (condition-case nil
-          (funcall f beg end arg)
-        ((wrong-number-of-arguments)
-         (when arg (message "Prefix arg ignored, not supported by operation."))
-         (funcall f beg end))))))
+     (lambda (beg end)
+       (condition-case nil
+           (objed--with-allow-input
+            (funcall f beg end arg))
+         ((wrong-number-of-arguments)
+          (when arg (message "Prefix arg ignored, not supported by operation."))
+          (objed--with-allow-input
+           (funcall f beg end)))))))
 
 
 (defun objed--create-op-from-rcmd (rcmd &optional prefix)
