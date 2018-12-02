@@ -697,8 +697,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "="
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
-    (define-key map "~"
-      (objed-define-op nil objed-undo-op current))
+    (define-key map "~" 'objed-undo)
+
 
 
     ;; special commands
@@ -2570,13 +2570,19 @@ c: capitalize."
      (capitalize-region beg end))))
 
 
-(defun objed-undo-op (_beg _end)
+(defun objed-undo ()
   "Undo in current object range."
-  (interactive "r")
-  ;; region is created by `objed--create-op-from-rcmd'
-  (if (fboundp 'undo-tree-undo)
-      (undo-tree-undo '(4))
-    (undo '(4))))
+  (interactive)
+  (unless (eq last-command 'undo)
+    (push-mark (objed--end) t)
+    (objed--update-current-object
+     (objed-make-object :beg (objed--beg)
+                        :end (set-marker (make-marker)
+                                         (objed--end)))))
+  ;; move back to start on each turn
+  (goto-char (objed--beg))
+  (undo '(4)))
+
 
 (defun objed-replace (beg end)
   "Query replace narrowed to region BEG, END."
@@ -2589,7 +2595,7 @@ c: capitalize."
       (deactivate-mark)
       (if (fboundp 'anzu-query-replace-regexp)
           (call-interactively 'anzu-query-replace-regexp)
-      (call-interactively 'query-replace-regexp)))))
+        (call-interactively 'query-replace-regexp)))))
 
 
 ;; * Ipipe
