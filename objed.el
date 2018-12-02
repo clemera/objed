@@ -2097,10 +2097,21 @@ append it to the `kill-ring'."
   "Saves the event used for `objed-electric'.")
 
 (defun objed-electric-pair (beg end)
-  "Wrap region between BEG, END like `electric'."
+  "Wrap region between BEG, END.
+
+If `current-prefix-arg' query for strings to wrap the region with
+else query for key event and use `electric'."
+  (if current-prefix-arg
+      ;; TODO: offer default, omit <> in html
+      (let ((left (read-string "Left side: "))
+            (right (read-string "Right side: ")))
+        (goto-char end)
+        (insert right)
+        (goto-char beg)
+        (insert left))
   (let ((event (or objed--electric-event
-                   (setq objed--electric-event (read-event)))))
-    (objed-electric beg end event)))
+                   (setq objed--electric-event (read-event "Wrap with: ")))))
+    (objed-electric beg end event))))
 
 
 (defun objed-electric (beg end &optional event)
