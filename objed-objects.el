@@ -2233,7 +2233,7 @@ non-nil the indentation block can contain empty lines."
 
 
 
-(defvar comint-prompt-regexp nil)
+(defvar comint-prompt-regexp "^")
 (declare-function comint-next-prompt "ext:comint")
 (declare-function comint-previous-prompt "ext:comint")
 (objed-define-object nil output
