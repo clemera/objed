@@ -562,6 +562,23 @@ BEFORE and AFTER are forms to execute before/after calling the command."
      (objed--switch-to ',obj)))
 
 
+(defun objed--forward-word ()
+    (interactive)
+    (if (and (eq last-command 'objed-extend)
+             (eq objed--object 'word)
+             (looking-at "\\<"))
+        (objed-exchange-point-and-mark)
+      (call-interactively 'forward-word)))
+
+(defun objed--backward-word ()
+  (interactive)
+  (if (and (eq last-command 'objed-extend)
+           (eq objed--object 'word)
+           (looking-back "\\>" 1))
+      (objed-exchange-point-and-mark)
+    (call-interactively 'backward-word)))
+
+
 (defvar objed-map
   (let ((map (make-sparse-keymap)))
     ;; block unused chars by default
@@ -610,11 +627,10 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "F" 'objed-move-char-forward)
 
     (define-key map "s" (objed--call-and-switch
-                         forward-word word
-                         (when (and (eq last-command 'objed-extend)
-                                    (looking-at "\\<"))
-                           (objed-exchange-point-and-mark))))
-    (define-key map "r" (objed--call-and-switch backward-word word))
+                         objed--forward-word
+                         word))
+    (define-key map "r" (objed--call-and-switch
+                         objed--backward-word word))
 
     (define-key map "S" 'objed-move-word-forward)
     (define-key map "R" 'objed-move-word-backward)
@@ -1479,11 +1495,6 @@ Skips strings and comments."
 (defvar objed--context-objects '(string bracket tag comment)
   "List of objects to be choosen by context.")
 
-(defun objed--basic-p ()
-  "Return non-nil if current object is a basic object.
-
-From basic objects `objed' starts expanding to context objects."
-  (memq objed--object '(line word char region buffer)))
 
 (defun objed--get-context-state (from)
   "Get state to be used by expand commands.
@@ -1720,7 +1731,7 @@ movement commands."
       (setq objed--extend-cookie
             (face-remap-add-relative 'objed-hl
                                      'objed-extend)))
-    (unless (= (point) (objed--end))
+    (when (< (objed--beg) (point) (objed--end))
       (goto-char (objed--beg)))
     (push-mark (if (or (>= (point) (objed--end))
                        (eq objed--object 'char))

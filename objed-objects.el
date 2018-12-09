@@ -400,6 +400,12 @@ OBJ is the object to use and defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (objed--apply #'max obj)))
 
+(defun objed--basic-p ()
+  "Return non-nil if current object is a basic object.
+
+From basic objects `objed' starts expanding to context objects."
+  (memq objed--object '(line word char region buffer)))
+
 (defun objed--current (&optional obj)
   "Get the current range of interest.
 
@@ -409,8 +415,10 @@ otherwise the its the head of object OBJ which defaults to
   (let ((obj (or obj objed--current-obj)))
     (cond ((region-active-p)
            (list (region-beginning)
-                 (max (objed--end)
-                      (region-end))))
+                 (if (objed--basic-p)
+                     (region-end)
+                   (max (objed--end)
+                        (region-end)))))
           (t
            (car obj)))))
 
