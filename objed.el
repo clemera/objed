@@ -228,7 +228,6 @@ The function should return nil if objed should not initialize."
     (org-previous-visible-heading . section)
     (comint-previous-prompt . output)
     (comint-next-prompt . output)
-    (indent-for-tab-command . char)
     (forward-button . face)
     (backward-button . face)
     (Info-next-reference . face)
