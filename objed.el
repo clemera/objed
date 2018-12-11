@@ -1074,8 +1074,8 @@ See `objed-cmd-alist'."
 
 (defun objed--until-end (pos)
   "Activate part from POS until end."
-  ;; workaround: end-of-buffer behaves weird opoint is wrong
-  ;; use the mark instead
+  ;; workaround: end-of-buffer behaves weird opoint is wrong use the
+  ;; mark instead
   (if (eq this-command #'end-of-buffer)
       (objed--change-to :beg (mark) :ibeg (mark))
     (objed--change-to :beg pos :ibeg pos)))
@@ -1084,9 +1084,14 @@ See `objed-cmd-alist'."
   "Default for `objed-init-p-function'."
   (and (eq (key-binding (kbd "C-n"))
            #'next-line)
-       ;; modes which have their own modal setup
-       (not (eq (key-binding "n")
-                #'next-line))))
+       ;; only for modes which do not
+       ;; their their own modal setup
+       (or (memq (key-binding "f")
+                 '(self-insert-command
+                   org-self-insert-command
+                   outshine-self-insert-command
+                   outline-self-insert-command
+                   undefined)))))
 
 (defun objed--init (&optional sym)
   "Initialize `objed'.
