@@ -579,14 +579,16 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
 (defun objed-quit-window (&optional kill window)
   (interactive "P")
-  (unless (one-window-p)
-    (let* ((overriding-terminal-local-map nil)
-           (nc (key-binding "q")))
-      (objed--reset)
+  (let* ((overriding-terminal-local-map nil)
+         (nc (key-binding "q")))
       (if (eq nc 'quit-window)
-          (quit-window kill window)
-        (delete-window))
-      (objed-activate 'line))))
+          (progn (objed--reset)
+                 (quit-window kill window)
+                 (objed-activate 'line))
+        (unless (one-window-p)
+          (objed--reset)
+          (delete-window)
+          (objed-activate 'line)))))
 
 (defvar objed-map
   (let ((map (make-sparse-keymap)))
