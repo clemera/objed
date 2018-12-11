@@ -1691,7 +1691,11 @@ Object is choosen based on context."
 
 Uses `objed-initial-object' for initialization."
   (interactive)
-  (objed--init (or obj objed-initial-object)))
+  (objed--init
+   (or obj
+       (if (called-interactively-p 'any)
+           objed-initial-object
+         'char))))
 
 
 (defun objed-toggle-side ()
