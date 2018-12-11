@@ -1689,13 +1689,14 @@ Object is choosen based on context."
 (defun objed-activate (&optional obj)
   "Activate objed.
 
-Uses `objed-initial-object' for initialization."
+Uses `objed-initial-object' for initialization.
+
+If called from code decide for activation with char object using
+`objed--activate'."
   (interactive)
-  (objed--init
-   (or obj
-       (if (called-interactively-p 'any)
-           objed-initial-object
-         'char))))
+  (if (called-interactively-p 'any)
+      (objed--init objed-initial-object)
+    (objed--activate (or obj 'char))))
 
 
 (defun objed-toggle-side ()
