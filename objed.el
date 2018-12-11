@@ -1,4 +1,4 @@
-;;; objed.el --- Navigate and edit text objects. -*- lexical-bindng: t -*-
+;;; objed.el --- Navigate and edit text objects. -*- lexical-binding: t -*-
 ;; Copyright (C) 2018  Clemens Radermacher
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
