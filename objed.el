@@ -1,4 +1,4 @@
-;;; objed.el --- Navigate and edit text objects. -*- lexical-binding: t -*-
+;;; objed.el --- Navigate and edit text objects. -*- lexical-bindng: t -*-
 ;; Copyright (C) 2018  Clemens Radermacher
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
@@ -577,6 +577,16 @@ BEFORE and AFTER are forms to execute before/after calling the command."
       (objed-exchange-point-and-mark)
     (call-interactively 'backward-word)))
 
+(defun objed-quit-window (&optional kill window)
+  (interactive "P")
+  (unless (one-window-p)
+    (let* ((overriding-terminal-local-map nil)
+           (nc (key-binding "q")))
+      (objed--reset)
+      (if (eq nc 'quit-window)
+          (quit-window kill window)
+        (delete-window))
+      (objed-activate 'line))))
 
 (defvar objed-map
   (let ((map (make-sparse-keymap)))
@@ -594,11 +604,12 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map (kbd "C-g") 'objed-quit)
     ;; TODO: switch with q, so quit window is qq?
     (define-key map "g" 'objed-quit)
+    (define-key map "q" 'objed-quit-window)
     (define-key map (kbd "?") 'objed-show-top-level)
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
-
     (define-key map "0" 'universal-argument)
+
     (define-key map (kbd "C-SPC") 'set-mark-command)
     (define-key map (kbd "C-x C-x") 'objed-exchange-point-and-mark)
     ;; TODO: birdview mode/scroll mode
@@ -664,12 +675,11 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "T" 'objed-move-object-backward)
     (define-key map "H" 'objed-move-object-forward)
 
-
     (define-key map "o" 'objed-expand-context)
     (define-key map "u" 'objed-upto-context)
 
     (define-key map "i" 'objed-toggle-state)
-    (define-key map "q" 'objed-toggle-side)
+    (define-key map "j" 'objed-toggle-side)
 
     ;; marking/unmarking
     (define-key map "m" 'objed-mark)
@@ -698,7 +708,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
       (objed-define-op nil objed-indent ignore))
     (define-key map ";"
       (objed-define-op nil objed-comment-or-uncomment-region))
-    (define-key map ":"
+    (define-key map (kbd "<S-return>")
       (objed-define-op nil objed-comment-duplicate))
 
     (define-key map "$"
@@ -721,7 +731,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; jump to objects with avy
     (define-key map "z" 'objed-ace)
     ;; swiper like object search
-    (define-key map "j" 'objed-occur)
+    (define-key map (kbd "M-o") 'objed-occur)
     ;; TODO: start query replace in current object,
     ;; or for all
     (define-key map "%"
@@ -1674,12 +1684,12 @@ Object is choosen based on context."
          (goto-char (objed--beg))))))
 
 
-(defun objed-activate ()
+(defun objed-activate (&optional obj)
   "Activate objed.
 
 Uses `objed-initial-object' for initialization."
   (interactive)
-  (objed--init objed-initial-object))
+  (objed--init (or obj objed-initial-object)))
 
 
 (defun objed-toggle-side ()
