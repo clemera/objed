@@ -1696,7 +1696,8 @@ If called from code decide for activation with char object using
   (interactive)
   (if (called-interactively-p 'any)
       (objed--init objed-initial-object)
-    (objed--activate (or obj 'char))))
+    (when (objed-init-p)
+      (objed--init (or obj 'char)))))
 
 
 (defun objed-toggle-side ()
