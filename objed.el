@@ -1082,8 +1082,11 @@ See `objed-cmd-alist'."
 
 (defun objed-init-p ()
   "Default for `objed-init-p-function'."
-  (eq (key-binding (kbd "C-n"))
-      #'next-line))
+  (and (eq (key-binding (kbd "C-n"))
+           #'next-line)
+       ;; modes which have their own modal setup
+       (not (eq (key-binding "n")
+                #'next-line))))
 
 (defun objed--init (&optional sym)
   "Initialize `objed'.
