@@ -1991,15 +1991,15 @@ When PREFIX is given it will be used by RCMD as
 `current-prefix-arg'."
   (let ((current-prefix-arg prefix)
         (handler (if (fboundp #'funcall-interactively)
-                     #'funcall-interactively #'funcall))
-        (oargs (objed--eval-rspec rcmd)))
+                     #'funcall-interactively #'funcall)))
     (lambda (beg end)
       (save-mark-and-excursion
        ;; in case the region commands expects an active region...
        (goto-char beg)
        (push-mark end t t)
        (objed--with-allow-input
-        (let ((this-command rcmd))
+        (let ((this-command rcmd)
+              (oargs (objed--eval-rspec rcmd)))
           (apply handler rcmd beg end oargs)))))))
 
 
