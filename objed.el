@@ -2566,7 +2566,9 @@ replacement."
   (interactive
    (let ((beg (region-beginning))
          (end (region-end)))
-     (list beg end (read-string "Replace with: "))))
+     (list beg end
+           (read-string "Replace with: "
+                        nil nil (buffer-substring beg end)))))
   (delete-region beg end)
   (insert str))
 
