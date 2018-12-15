@@ -1999,23 +1999,11 @@ When PREFIX is given it will be used by RCMD as
        (push-mark end t t)
        (objed--with-allow-input
         (let ((this-command rcmd)
-              (oargs (objed--eval-rspec rcmd)))
+              (oargs (cddr
+                      (advice-eval-interactive-spec
+                       (cadr (interactive-form rcmd))))))
           (apply handler rcmd beg end oargs)))))))
 
-
-(defun objed--eval-rspec (rcmd)
-  "Eval the interactive spec of region command RCMD.
-
-Returns the result (skipping the positional arguments)."
-  (save-mark-and-excursion
-   ;; some commands error when evaling the interactive spec if
-   ;; there is no mark
-   (unless (marker-position (mark-marker))
-     (set-marker (mark-marker) (point)))
-   (objed--with-allow-input
-    (cddr
-     (advice-eval-interactive-spec
-      (cadr (interactive-form rcmd)))))))
 
 ;; * State Info
 
