@@ -1096,6 +1096,8 @@ See `objed-cmd-alist'."
   "Default for `objed-init-p-function'."
   (and (eq (key-binding (kbd "C-n"))
            #'next-line)
+       (not (and (not buffer-read-only) (bobp)))
+       (not (and (bobp) (eobp)))
        ;; only for modes which do not
        ;; their their own modal setup
        (or (memq (key-binding "f")
