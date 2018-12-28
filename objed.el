@@ -580,7 +580,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 (defun objed-quit-window (&optional kill window)
   (interactive "P")
   (let* ((overriding-terminal-local-map nil)
-         (nc (key-binding "q")))
+         (nc (key-binding "q" nil t)))
       (if (eq nc 'quit-window)
           (progn (objed--reset)
                  (quit-window kill window)
