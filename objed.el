@@ -173,9 +173,10 @@ See also `objed-disabled-p'"
   :type '(repeat symbol))
 
 (defcustom objed-init-p-function #'objed-init-p
-  "Function which test if objed is allowd to initialize.
+  "Function which tests if objed is allowed to initialize.
 
-The function should return nil if objed should not initialize."
+This is only used for non-interactive initialization. The
+function should return nil if objed should not initialize."
   :type 'function)
 
 
@@ -1059,7 +1060,6 @@ See `objed-cmd-alist'."
              (not objed-disabled-p)
              (not (eq (cadr overriding-terminal-local-map)
                       objed-map))
-             (funcall objed-init-p-function)
              (or (not objed-disabled-modes)
                  (not (apply 'derived-mode-p objed-disabled-modes))))
       (objed--init cmd)))
@@ -1098,6 +1098,7 @@ See `objed-cmd-alist'."
        (not (minibufferp))
        (not (and (bobp)
                  (bound-and-true-p git-commit-mode)))
+       (not (derived-mode-p 'comint-mode))
        (not (and (bobp) (eobp)))
        ;; only for modes which do not
        ;; their their own modal setup
