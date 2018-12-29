@@ -680,7 +680,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "o" 'objed-expand-context)
     (define-key map "u" 'objed-upto-context)
 
-    (define-key map "i" 'objed-toggle-state)
+    (define-key map "i" 'objed-del-insert)
+    (define-key map "^" 'objed-toggle-state)
     (define-key map "j" 'objed-toggle-side)
 
     ;; marking/unmarking
@@ -698,8 +699,6 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "k" 'objed-kill)
     (define-key map "w" 'objed-copy)
     (define-key map "d" 'objed-delete)
-    (define-key map (kbd "DEL") 'objed-del-insert)
-    (define-key map (kbd "<backspace>") 'objed-del-insert)
 
     (define-key map "y" 'objed-yank)
 
@@ -2125,11 +2124,7 @@ append it to the `kill-ring'."
 (defun objed-del-insert ()
   "Delete current object and exit to insert state."
   (interactive)
-  ;; keep usual behaviour so there
-  ;; is no confusion
-  (if (eq objed--object 'char)
-      (delete-char -1)
-    (delete-region (objed--beg) (objed--end)))
+  (delete-region (objed--beg) (objed--end))
   (objed--exit-objed))
 
 (defvar objed--electric-event nil
