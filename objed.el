@@ -1749,12 +1749,24 @@ Update to object at current side."
 (defun objed-extend ()
   "Extend current object.
 
-This activate the whole object point is currently in and allows
-extending/shrinking the region by moving around using objed
-movement commands."
+This activates the region for current object and allows
+extending/shrinking the region by moving around using regular
+objed movement commands.
+
+The active region will be used as the current object when an
+objed operation is used.
+
+When called and region is already active, the region get copied
+and is deactivated."
   (interactive)
   (if (region-active-p)
-      (deactivate-mark)
+      (progn
+        (copy-region-as-kill
+         (region-beginning)
+         (region-end))
+        (deactivate-mark)
+        (setq this-command 'copy-region-as-kill)
+        (message "Copied current region."))
     (unless objed--extend-cookie
       (setq objed--extend-cookie
             (face-remap-add-relative 'objed-hl
