@@ -1097,7 +1097,7 @@ See `objed-cmd-alist'."
            #'next-line)
        (not (minibufferp))
        (not (and (bobp)
-                 (bound-and-true-p 'git-commit-mode)))
+                 (bound-and-true-p git-commit-mode)))
        (not (and (bobp) (eobp)))
        ;; only for modes which do not
        ;; their their own modal setup
