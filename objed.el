@@ -1,5 +1,5 @@
 ;;; objed.el --- Navigate and edit text objects. -*- lexical-binding: t -*-
-;; Copyright (C) 2018  Clemens Radermacher
+;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
 ;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
@@ -2414,6 +2414,7 @@ If REPLACE is non-nil replace the region with the result."
           (cond ((and (memq (car e-sexp) (list 'defvar 'defcustom 'defvar-local))
                       (consp (cdr e-sexp))
                       (boundp (cadr e-sexp)))
+                 ;; FIXME: Obey lexical-binding.
                  (set (cadr e-sexp) (eval (car (cddr e-sexp)))))
                 ((eq (car e-sexp) 'defface)
                  (elisp--eval-defun-1 (macroexpand e-sexp)))
