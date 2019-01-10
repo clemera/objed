@@ -1,5 +1,5 @@
 ;;; objed-objects.el --- Part of the objed package -*- lexical-binding: t; -*-
-;; Copyright (C) 2018  Clemens Radermacher
+;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
 ;; Maintainer: Clemens Radermacher <clemera@posteo.net>
