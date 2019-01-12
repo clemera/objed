@@ -1,0 +1,32 @@
+cdthh
+;;;;
+(defun objed--save-start-position (&rest _)
+  "Save position of point via `objed--opoint'."
+  (setq objed--opoint (point)))
+
+(defun objed--goto-start (&optional _)
+  "Goto start |of current object if there is one."
+  (when objed--current-obj
+    (goto-char (objed--beg))))
+
+(defun objed--object-trailing-line (pos)
+  "Activate trailing part from POS."
+  (unless (eq objed--obj-state 'inner)
+    (objed--reverse))
+  (objed--change-to :beg pos :ibeg pos))
+;;;;
+(defun objed--save-start-position (&rest _)
+  "Save position of point via `objed--opoint'."
+  (setq objed--opoint (point)))
+
+(defun objed--goto-start (&optional _)
+  "Goto start of current object if there is one."
+  (when objed--current-obj
+    (goto-char (objed--beg))))
+<
+|(defun objed--object-trailing-line (pos)
+  "Activate trailing part from POS."
+  (unless (eq objed--obj-state 'inner)
+    (objed--reverse))
+  (objed--change-to :beg pos :ibeg pos))
+>

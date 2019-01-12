@@ -1,0 +1,25 @@
+eeee
+;;;;
+;; Some |text
+;; and more text
+;;
+;;
+
+;; Comment end
+
+(defun check ()
+  (ignore))
+
+;; buffer end
+;;;;
+;; Some <text
+;; and more text
+;;
+;;
+
+;; Comment end>|
+
+(defun check ()
+  (ignore))
+
+;; buffer end

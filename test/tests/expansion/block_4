@@ -1,0 +1,18 @@
+llll
+;;;;
+(defun check ()
+  (ignore))
+
+;; More on same level
+
+;; Some text
+;; and |more text
+;;;;
+(defun check ()
+  (ignore))
+
+;; More on same level
+|<
+;; Some text
+;; and more text
+>

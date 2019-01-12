@@ -6,6 +6,7 @@ C-M-a
   (setq objed--opoint (point)))
 
 ;;;;
+
 <
 |(defun objed--save-start-position (&rest _)
   "Save position of point via `objed--opoint'."

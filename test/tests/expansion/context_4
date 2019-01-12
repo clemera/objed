@@ -1,0 +1,13 @@
+oooo
+;;;;
+
+(defun testing ()
+  (let ((a nil))
+    (message "this is| a test")))
+
+;;;;
+
+(defun testing ()
+  |<(let ((a nil))
+    (message "this is a test"))>)
+
