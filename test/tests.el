@@ -77,7 +77,7 @@ Insert KEY if there's no command."
 ;;   (should (equal (objed-decode-keysequence "3\C-?")
 ;;                  '(3 ""))))
 
-(defmacro objed-with (in body &optional object file)
+(defmacro objed-with (in body &optional object mode)
   (let ((init (if object `(objed--init ',object)
                 '(objed--init 'char)))
         (body (if (stringp body) `(kbd ,body) body)))
@@ -86,7 +86,8 @@ Insert KEY if there's no command."
          (unwind-protect
              (progn
                (switch-to-buffer temp-buffer)
-               (emacs-lisp-mode)
+               (or (and ,mode (funcall ',mode 1))
+                   (emacs-lisp-mode))
                (transient-mark-mode 1)
                (insert ,in)
                (goto-char (point-min))
