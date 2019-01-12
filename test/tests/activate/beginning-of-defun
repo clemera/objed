@@ -1,0 +1,13 @@
+C-M-a
+;;;;
+
+(defun objed--save-start-position (&rest _)
+  "Save position of| point via `objed--opoint'."
+  (setq objed--opoint (point)))
+
+;;;;
+<
+|(defun objed--save-start-position (&rest _)
+  "Save position of point via `objed--opoint'."
+  (setq objed--opoint (point)))
+>
