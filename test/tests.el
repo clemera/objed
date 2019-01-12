@@ -2,6 +2,8 @@
 (require 'cl-lib)
 (require 'objed)
 
+;; TO ADD NEW TESTS CREATE A DIR IN TESTS AND ADD TESTS FILES IN IT.
+
 ;; activate on load
 (objed-mode 1)
 
@@ -77,16 +79,15 @@ Insert KEY if there's no command."
 ;;   (should (equal (objed-decode-keysequence "3\C-?")
 ;;                  '(3 ""))))
 
-(defmacro objed-with (in body &optional object mode)
-  (let ((init (if object `(objed--init ',object)
-                '(objed--init 'char)))
+(defmacro objed-with (in body &optional mode)
+  (let ((init '(objed--init 'char))
         (body (if (stringp body) `(kbd ,body) body)))
     `(let ((temp-buffer (generate-new-buffer " *temp*")))
        (save-window-excursion
          (unwind-protect
              (progn
                (switch-to-buffer temp-buffer)
-               (or (and ,mode (funcall ',mode 1))
+               (or (and ',mode (funcall ',mode))
                    (emacs-lisp-mode))
                (transient-mark-mode 1)
                (insert ,in)
@@ -164,20 +165,20 @@ Insert KEY if there's no command."
     (string= str1 str2)))
 
 
-(defmacro objed-create-test (file)
+(defmacro objed-create-test (file mode)
   (let* ((parsed (objed-parse-test file))
          (key (nth 0 parsed))
          (str1 (nth 1 parsed))
          (str2 (nth 2 parsed)))
-    `(should (objed-equal (objed-with ,str1 ,key)
+    `(should (objed-equal (objed-with ,str1 ,key ,mode)
                           (prog1 ,str2
                             ;; show path of test in compile output
                             ,file)))))
 
-(defmacro objed-create-tests-for (dir)
+(defmacro objed-create-tests-for (dir mode)
   (let ((files (directory-files
                 (expand-file-name
-                 (format "tests/%s" dir)
+                 (format "tests/%s/%s" (symbol-name mode) dir)
                  (file-name-directory
                   (or load-file-name default-directory))) t "^[^.]"))
         (body nil))
@@ -185,7 +186,7 @@ Insert KEY if there's no command."
     (push (intern (format "objed-%s" dir)) body)
     (push nil body)
     (dolist (file files)
-      (push `(objed-create-test ,file) body))
+      (push `(objed-create-test ,file ,mode) body))
     (nreverse body)))
 
 
@@ -193,30 +194,28 @@ Insert KEY if there's no command."
 ;;                              (objed--call-object-interactively 'line))
 ;;                  "|<Testing line here>"))
 
-(defmacro objed-create-tests ()
+(defmacro objed-create-tests (mode)
   (let ((dirs (directory-files
                (expand-file-name
-                "tests"
+                (format "tests/%s" (symbol-name mode))
                 (file-name-directory
                  (or load-file-name default-directory))) t "^[^.]"))
         (body nil))
     (push 'progn body)
     (dolist (dir dirs)
-      (push `(objed-create-tests-for ,(file-name-nondirectory dir))
+      (push `(objed-create-tests-for ,(file-name-nondirectory dir) ,mode)
             body))
     (nreverse body)))
 
 
-(objed-create-tests)
-
-
-
-
-
-;; TODO: op tests, marking, remaining commands
+(objed-create-tests emacs-lisp-mode)
+;; TODO: op tests, marking, remaining commands, other modes
 
 
 (provide 'tests)
+
+
+
 
 
 
