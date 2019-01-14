@@ -1,7 +1,10 @@
 p
 ;;;;
+
 ;; this is the previous line
 ;; this is| the current line
+
 ;;;;
+
 <;; this is| the previous line
 >;; this is the current line

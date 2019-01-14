@@ -1,5 +1,6 @@
 cdthh
 ;;;;
+
 (defun objed--save-start-position (&rest _)
   "Save position of point via `objed--opoint'."
   (setq objed--opoint (point)))
@@ -14,7 +15,9 @@ cdthh
   (unless (eq objed--obj-state 'inner)
     (objed--reverse))
   (objed--change-to :beg pos :ibeg pos))
+
 ;;;;
+
 (defun objed--save-start-position (&rest _)
   "Save position of point via `objed--opoint'."
   (setq objed--opoint (point)))

@@ -1,5 +1,6 @@
 eeee
 ;;;;
+
 ;; Some |text
 ;; and more text
 ;;
@@ -11,7 +12,9 @@ eeee
   (ignore))
 
 ;; buffer end
+
 ;;;;
+
 ;; Some <text
 ;; and more text
 ;;

@@ -1,5 +1,6 @@
 aaaaa
 ;;;;
+
 (defun check ()
   (ignore))
 
@@ -7,8 +8,11 @@ aaaaa
 
 ;; Some text
 ;; and |more text
+
 ;;;;
-|<(defun check ()
+
+|<
+(defun check ()
   (ignore))
 
 ;; More on same level

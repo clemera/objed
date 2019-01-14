@@ -1,5 +1,6 @@
 l
 ;;;;
+
 (defun check ()
   (ignore))
 
@@ -7,7 +8,9 @@ l
 
 ;; Some text
 ;; and |more text
+
 ;;;;
+
 (defun check ()
   (ignore))
 
