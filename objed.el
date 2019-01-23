@@ -683,6 +683,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     (define-key map "i" 'objed-del-insert)
     (define-key map ":" 'objed-toggle-state)
+    (define-key map "]" 'objed-toggle-state)
     (define-key map "j" 'objed-toggle-side)
 
     ;; marking/unmarking
