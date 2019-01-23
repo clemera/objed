@@ -1562,13 +1562,16 @@ Ignores simple structured expressions like words or symbols."
   (or (ignore-errors
          (forward-sexp 1)
          (forward-sexp -1) t)
-       (ignore-errors
-         (forward-word 1)
-         (forward-sexp -1)
-         t))
+      (ignore-errors
+        (forward-word 1)
+        (forward-sexp -1)
+        t))
   :try-prev
   (or (ignore-errors
-         (forward-sexp -1) t)
+        (forward-sexp -1) t)
+      (ignore-errors
+        (up-list -1)
+        t)
        (ignore-errors
          (forward-word -1)
          t)))
