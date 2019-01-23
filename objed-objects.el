@@ -1505,27 +1505,25 @@ comments."
 Ignores simple structured expressions like words or symbols."
   (let ((opos (point))
         (real-this-command 'forward-sexp))
-    (cl-flet ((zigzag
-               (arg)
-               (ignore-errors
-                 (forward-sexp arg)
-                 (unless (eq opos (point))
-                   (prog1 (point)
-                     (forward-sexp (- arg)))))))
-      (let ((zigp nil)
-            (wb (bounds-of-thing-at-point 'word))
-            (sb (bounds-of-thing-at-point 'symbol)))
-        (when (or (and (not (eobp))
-                       (save-excursion
-                         (eq (point) (progn (setq zigp (zigzag 1)) (point))))
-                       (not (member (cons (point) zigp) (list wb sb))))
-                  (and (not (bobp))
-                       (save-excursion
-                         (eq (point) (progn (setq zigp (zigzag -1)) (point))))
-                       (not (member (cons (point) zigp)
-                                    (list wb sb)))))
-          (and zigp
-               (cons (point) zigp)))))))
+    (save-excursion
+      (cl-flet ((zigzag
+                 (arg)
+                 (ignore-errors
+                   (forward-sexp arg)
+                   (unless (eq opos (point))
+                     (prog1 (point)
+                       (forward-sexp (- arg)))))))
+        (let ((zigp nil))
+          (when (or (and (not (eobp))
+                         (save-excursion
+                           (eq (point) (progn (setq zigp (zigzag 1))
+                                              (point)))))
+                    (and (not (bobp))
+                         (save-excursion
+                           (eq (point) (progn (setq zigp (zigzag -1))
+                                              (point))))))
+            (and zigp
+                 (cons (point) zigp))))))))
 
 (objed-define-object nil sexp
   :atp
@@ -1543,35 +1541,37 @@ Ignores simple structured expressions like words or symbols."
       (goto-char (car s))
       'identifier))
   :get-obj
-  (let* ((sexpb nil)
-         (bounds (or (objed--at-sexp-p)
-                     (and (setq sexpb (save-excursion (forward-sexp -1)
-                                                      (objed--at-sexp-p)))
-                          (progn (forward-sexp -1)
-                                 sexpb))
-                    (bounds-of-thing-at-point 'symbol)
-                    (bounds-of-thing-at-point 'word))))
+  (let ((bounds (or (objed--at-sexp-p)
+                    (ignore-errors
+                      (forward-sexp -1)
+                      (objed--at-sexp-p)))))
     (when bounds
       (objed-make-object
-     :obounds bounds
-     :ibounds (when bounds
-                (goto-char (car bounds))
-                ;; include leading punctuation
-                (skip-syntax-forward ".'")
-                (let ((beg (point)))
-                  (goto-char (cdr bounds))
-                  (with-syntax-table text-mode-syntax-table
-                    (skip-syntax-backward "."))
-                  (skip-syntax-backward " .'")
-                  (cons beg (point)))))))
+       :obounds bounds
+       :ibounds (when bounds
+                  (goto-char (car bounds))
+                  ;; include leading punctuation
+                  (skip-syntax-forward ".'")
+                  (let ((beg (point)))
+                    (goto-char (cdr bounds))
+                    (with-syntax-table text-mode-syntax-table
+                      (skip-syntax-backward "."))
+                    (skip-syntax-backward " .'")
+                    (cons beg (point)))))))
   :try-next
-  (objed--with-narrow-for-text
-   (forward-sexp 1)
-   (unless (objed--at-sexp-p)
-     (forward-sexp -1)))
+  (or (ignore-errors
+         (forward-sexp 1)
+         (forward-sexp -1) t)
+       (ignore-errors
+         (forward-word 1)
+         (forward-sexp -1)
+         t))
   :try-prev
-  (objed--with-narrow-for-text
-    (forward-sexp -1)))
+  (or (ignore-errors
+         (forward-sexp -1) t)
+       (ignore-errors
+         (forward-word -1)
+         t)))
 
 
 (objed-define-object nil file
