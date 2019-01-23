@@ -683,7 +683,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     (define-key map "i" 'objed-del-insert)
     (define-key map ":" 'objed-toggle-state)
-    (define-key map "]" 'objed-toggle-state)
+    (define-key map "=" 'objed-toggle-state)
     (define-key map "j" 'objed-toggle-side)
 
     ;; marking/unmarking
@@ -717,12 +717,12 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "$"
       (objed-define-op nil flyspell-region))
 
-    (dolist (str (split-string  "'\"([{" "" t))
+    (dolist (str (split-string  "\"([{" "" t))
       (define-key map (kbd str)
         (objed-define-op nil objed-electric)))
 
     ;; quote op
-    (define-key map "="
+    (define-key map "'"
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
     (define-key map "~" 'objed-undo)
