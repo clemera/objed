@@ -651,7 +651,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "p" (objed--call-and-switch previous-line line))
     (define-key map "n" (objed--call-and-switch
                          next-line line
-                         (when (eq last-command 'objed-extend)
+                         (when (and (eq last-command 'objed-extend)
+                                    (eq objed--object 'line))
                            (objed-exchange-point-and-mark)
                            (goto-char (line-beginning-position)))))
 
