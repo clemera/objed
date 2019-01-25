@@ -1692,7 +1692,7 @@ Object is choosen based on context."
        (when (objed--switch-to obj)
          (goto-char (objed--beg))))))
 
-
+;;;###autoload
 (defun objed-activate (&optional obj)
   "Activate objed.
 
