@@ -317,7 +317,7 @@ removed."
   :type 'symbol)
 
 (defcustom objed-initial-object 'region
-  "Object to use for inititalization with `objed-activate'."
+  "Object to use as fallback for `objed-activate'."
   :group 'objed
   :type 'symbol)
 
@@ -1696,13 +1696,17 @@ Object is choosen based on context."
 (defun objed-activate (&optional obj)
   "Activate objed.
 
-Uses `objed-initial-object' for initialization.
+Uses associated `objed-cmd-alist' for `last-command' as initial
+object. Falls back to `objed-initial-object' if no match found.
 
 If called from code decide for activation with char object using
 `objed--activate'."
   (interactive)
   (if (called-interactively-p 'any)
-      (objed--init objed-initial-object)
+      (objed--init
+       (if (assq last-command objed-cmd-alist)
+           last-command
+         objed-initial-object))
     (when (objed-init-p)
       (objed--init (or obj 'char)))))
 
