@@ -4,6 +4,7 @@
 
 ;; TO ADD NEW TESTS CREATE A DIR IN TESTS AND ADD TESTS FILES IN IT.
 
+(declare-function objed--exit-objed "objed")
 ;; activate on load
 (objed-mode 1)
 
@@ -134,27 +135,27 @@ Insert KEY if there's no command."
                 (kill-buffer temp-buffer)))))))
 
 ;;* Test creation
-
-(defun objed-parse-test (file)
-  (let ((parsed nil))
-    (with-temp-buffer
-      (insert-file-contents file)
-      (delete-trailing-whitespace)
-      (goto-char (point-min))
-      (push (buffer-substring (line-beginning-position) (line-end-position))
-            parsed)
-      (search-forward ";;;;" nil t)
-      (forward-line 1)
-      (push (buffer-substring (point) (progn (search-forward ";;;;" nil t)
-                                             (forward-char -4)
-                                             (point)))
-            parsed)
-      (search-forward ";;;;" nil t)
-      (forward-line 1)
-      (push (buffer-substring (point)
-                              (point-max))
-            parsed))
-    (nreverse parsed)))
+(eval-and-compile
+  (defun objed-parse-test (file)
+    (let ((parsed nil))
+      (with-temp-buffer
+        (insert-file-contents file)
+        (delete-trailing-whitespace)
+        (goto-char (point-min))
+        (push (buffer-substring (line-beginning-position) (line-end-position))
+              parsed)
+        (search-forward ";;;;" nil t)
+        (forward-line 1)
+        (push (buffer-substring (point) (progn (search-forward ";;;;" nil t)
+                                               (forward-char -4)
+                                               (point)))
+              parsed)
+        (search-forward ";;;;" nil t)
+        (forward-line 1)
+        (push (buffer-substring (point)
+                                (point-max))
+              parsed))
+      (nreverse parsed))))
 
 
 (defun objed-equal (str1 str2)
@@ -213,11 +214,3 @@ Insert KEY if there's no command."
 
 
 (provide 'tests)
-
-
-
-
-
-
-
-
