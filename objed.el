@@ -724,7 +724,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "'"
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
-    (define-key map "~" 'objed-undo)
+    (define-key map "~" 'objed-undo-in-object)
 
     ;; special commands
     (define-key map "," 'objed-last)
@@ -2616,7 +2616,7 @@ c: capitalize."
      (capitalize-region beg end))))
 
 
-(defun objed-undo ()
+(defun objed-undo-in-object ()
   "Undo in current object range."
   (interactive)
   (unless (eq last-command 'undo)
