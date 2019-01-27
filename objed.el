@@ -664,6 +664,9 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map (kbd "<M-left>") 'objed-indent-to-left-tab-stop)
     (define-key map (kbd " <S-left>") 'objed-move-object-backward)
     (define-key map (kbd " <S-right>") 'objed-move-object-forward)
+    ;; for some objects up down is more intuitive
+    (define-key map (kbd " <S-up>") 'objed-move-object-backward)
+    (define-key map (kbd " <S-down>") 'objed-move-object-forward)
 
     (define-key map (kbd "<home>") 'objed-top-object)
     (define-key map (kbd "<end>") 'objed-bottom-object)
