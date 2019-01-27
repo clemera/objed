@@ -34,10 +34,10 @@
 ;;
 ;; Text objects are textual patterns like a line, a top level definition, a
 ;; word, a sentence or any other unit of text. When `objed-mode' is enabled,
-;; certain editing commands (configurable) will activate `objed' and enable its
-;; modal editing features. When active, keys which would usually insert a
-;; character are mapped to objed commands. Other keys and commands will continue
-;; to work as they normally would and exit this editing state again.
+;; certain editing commands (configurable) will activate `objed' and enable
+;; its modal editing features. When active, keys which would usually insert a
+;; character are mapped to objed commands. Other keys and commands will
+;; continue to work as they normally would and exit this editing state again.
 ;;
 ;; By default important self inserting keys like Space or Return are not bound
 ;; to modal commands and will exit `objed' on insertion. This makes it
@@ -1854,7 +1854,7 @@ textual content of an object via the content object."
                            lines)))))
     (when res
       (goto-char res)
-      (objed--update-current-object)
+      (objed--init objed--object)
       (goto-char (objed--beg)))))
 
 
