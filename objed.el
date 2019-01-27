@@ -3,7 +3,7 @@
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
 ;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
-;; Version: 0.3.1
+;; Version: 0.4.0
 ;; Keywords: convenience
 ;; URL: https://github.com/clemera/objed
 
@@ -619,9 +619,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map (kbd "C-v") 'scroll-up-command)
     (define-key map "\ev" 'scroll-down-command)
 
-
-    ;;(define-key map (kbd "C-h") which-key-C-h-map)
-    (define-key map (kbd "C-h k") 'describe-key)
+    (define-key map (kbd "C-h k") 'objed-describe-key)
     (when objed-use-which-key-if-available-p
       (define-key map (kbd "C-h n") 'which-key-show-next-page-cycle)
       (define-key map (kbd "C-h p") 'which-key-show-previous-page-cycle))
@@ -664,28 +662,28 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map (kbd "<C-right>") 'objed-indent-right)
     (define-key map (kbd "<M-right>") 'objed-indent-to-right-tab-stop)
     (define-key map (kbd "<M-left>") 'objed-indent-to-left-tab-stop)
+    (define-key map (kbd " <S-left>") 'objed-move-object-backward)
+    (define-key map (kbd " <S-right>") 'objed-move-object-forward)
 
     (define-key map (kbd "<home>") 'objed-top-object)
     (define-key map (kbd "<end>") 'objed-bottom-object)
-    (define-key map "`" 'objed-top-object);'objed-backward-symbol)
-    (define-key map "´" 'objed-bottom-object);'objed-forward-symbol)
+    (define-key map "<" 'objed-top-object)
+    (define-key map ">" 'objed-bottom-object)
+
     ;; block expansions
-    (define-key map "l" 'objed-expand-block)
+    (define-key map "h" 'objed-expand-block)
     (define-key map "a" 'objed-beg-of-block)
     (define-key map "e" 'objed-end-of-block)
 
     ;; context expansions
-    (define-key map "t" 'objed-current-or-previous-context)
-    (define-key map "h" 'objed-current-or-next-context)
-    (define-key map "T" 'objed-move-object-backward)
-    (define-key map "H" 'objed-move-object-forward)
+    (define-key map "[" 'objed-current-or-previous-context)
+    (define-key map "]" 'objed-current-or-next-context)
 
     (define-key map "o" 'objed-expand-context)
     (define-key map "u" 'objed-upto-context)
 
     (define-key map "i" 'objed-del-insert)
-    (define-key map ":" 'objed-toggle-state)
-    (define-key map "=" 'objed-toggle-state)
+    (define-key map "t" 'objed-toggle-state)
     (define-key map "j" 'objed-toggle-side)
 
     ;; marking/unmarking
@@ -719,17 +717,11 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "$"
       (objed-define-op nil flyspell-region))
 
-    (dolist (str (split-string  "\"([{" "" t))
-      (define-key map (kbd str)
-        (objed-define-op nil objed-electric)))
-
     ;; quote op
     (define-key map "'"
       (objed-define-op nil objed-electric-pair))
     ;; all the usual quoting signs
     (define-key map "~" 'objed-undo)
-
-
 
     ;; special commands
     (define-key map "," 'objed-last)
@@ -767,6 +759,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; direct object switches
     (define-key map "." 'objed-identifier-object)
     (define-key map "_" 'objed-symbol-object)
+    (define-key map "l" 'objed-line-object)
 
     ;;(define-key map "%" 'objed-contents-object)
      ;; not regular objects, selection
@@ -794,21 +787,21 @@ Other single character keys are bound to `objed-undefined'."
   (let ((map (define-prefix-command cmd)))
     ;; init as prefix
     (define-key objed-map (kbd key) map)
-    ;; basic bindings
-    (dolist (seq (list (number-sequence ?a ?z)
-                       (number-sequence ?A ?Z)))
-      (dolist (char seq)
-        (define-key map (kbd (format "%c" char)) 'objed-undefined)))
-    (let (loop)
-      (define-key map "-" 'negative-argument)
-      ;; Make plain numbers do numeric args.
-      (setq loop ?0)
-      (while (<= loop ?9)
-        (define-key map (char-to-string loop) 'digit-argument)
-        (setq loop (1+ loop))))
+     ;; basic bindings
+      (dolist (seq (list (number-sequence ?a ?z)
+                         (number-sequence ?A ?Z)))
+        (dolist (char seq)
+          (define-key map (kbd (format "%c" char)) 'objed-undefined)))
+      (let (loop)
+        (define-key map "-" 'negative-argument)
+        ;; Make plain numbers do numeric args.
+        (setq loop ?0)
+        (while (<= loop ?9)
+          (define-key map (char-to-string loop) 'digit-argument)
+          (setq loop (1+ loop))))
 
-    (define-key map (kbd "C-h") 'objed-describe-prefix-bindings)
-    map))
+      (define-key map (kbd "C-h") 'objed-describe-prefix-bindings)
+      map))
 
 
 (defvar objed-op-map
@@ -816,7 +809,7 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "x" 'objed-op-x)
 
     (define-key map "c"
-       ;; upcase, downcase, capitalize, reformat
+      ;; upcase, downcase, capitalize, reformat
       (objed-define-op nil objed-case-op))
 
     ;; experimental
@@ -858,12 +851,9 @@ To define new operations see `objed-define-op'.")
     (define-key map "t" 'objed-tag-object)
     (define-key map "f" 'objed-file-object)
 
-    (define-key map "[" 'objed-section-object)
+    (define-key map "*" 'objed-section-object)
     (define-key map "j" 'objed-output-object)
     (define-key map "h" 'objed-buffer-object)
-    ;; TODO: inner buffer/beg-end
-    (define-key map "<" 'objed-buffer-object)
-    (define-key map ">" 'objed-buffer-object)
 
     (define-key map "z" 'objed-ace-object)
     map)
@@ -881,8 +871,8 @@ To define new objects see `objed-define-object'.")
 
 Use `objed-define-dispatch' to define a dispatch command.")
 
-(objed-define-dispatch "<" objed--backward-until)
-(objed-define-dispatch ">" objed--forward-until)
+(objed-define-dispatch "(" objed--backward-until)
+(objed-define-dispatch ")" objed--forward-until)
 (objed-define-dispatch "*" objed--mark-all-inside)
 (objed-define-dispatch "#" objed--ace-switch-object)
 
@@ -1260,6 +1250,13 @@ non-nil which is the case when called interactively."
   "Show current prefix bindings and exit."
   (interactive)
   (call-interactively 'describe-prefix-bindings)
+  (objed--exit-objed))
+
+
+(defun objed-describe-key ()
+  "Like `describe-key' but also exit objed."
+  (interactive)
+  (call-interactively 'describe-key)
   (objed--exit-objed))
 
 
