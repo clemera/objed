@@ -445,9 +445,7 @@ operation."
              "Objed operation."
              (interactive "P")
              (let ((cmd (objed--create-op ',cmd arg)))
-               (if objed--marked-ovs
-                   (objed--ov-apply ',name cmd objed--marked-ovs)
-                 (objed--ob-apply ',name cmd (objed--current)))))
+               (objed--do cmd ',name)))
           res)
     (nreverse res)))
 
@@ -2102,19 +2100,17 @@ region command."
                rcmd
                (and (not (= 0 (prefix-numeric-value arg)))
                     arg))))
-    (if objed--marked-ovs
-        (objed--ov-apply this-command cmd objed--marked-ovs)
-      (objed--ob-apply this-command  cmd (objed--current)))))
+    (objed--do cmd rcmd)))
 
 (defun objed-kill ()
   "Kill objects."
   (interactive)
-  (objed--kill-op this-command #'kill-region t))
+  (objed--do #'kill-region))
 
 (defun objed-delete ()
   "Delete objects."
   (interactive)
-  (objed--kill-op this-command #'delete-region))
+  (objed--do #'delete-region))
 
 (defun objed-copy ()
   "Copy objects.
@@ -2125,7 +2121,7 @@ append it to the `kill-ring'."
   (when (and (eq last-command 'kill-region)
              (not (eq real-last-command 'append-next-kill)))
     (objed--goto-next))
-  (objed--kill-op 'ignore #'copy-region-as-kill t)
+  (objed--do #'copy-region-as-kill)
   ;; append on repeat
   (setq this-command 'kill-region)
   (message "Copied to `kill-ring.'"))
@@ -2133,7 +2129,7 @@ append it to the `kill-ring'."
 (defun objed-del-insert ()
   "Delete current object and exit to insert state."
   (interactive)
-  (delete-region (objed--beg) (objed--end))
+  (objed--do #'delete-region)
   (objed--exit-objed))
 
 (defvar objed--electric-event nil
@@ -3024,81 +3020,43 @@ on."
 ;; * OP execution
 
 
-(defun objed--ob-apply (name action range)
-  "Apply an operation on a text object.
+(defun objed--do (action &optional name)
+  "Execute ACTION on current object(s).
 
-NAME is the symbol of the operation.
+NAME is the symbol used for current op and defaults to
+`this-command'."
+  (let ((name (or name this-command)))
+    (cond (objed--marked-ovs
+           (objed--do-objects action name))
+          (t
+           (objed--do-object action name)))))
 
-ACTION is a function which recieves the the two buffer
-positions of the text object range.
+(defun objed--do-object (action name)
+  (let ((range (objed--current)))
+    (when range
+      (let ((text (apply #'buffer-substring range))
+            (range (list (set-marker (make-marker) (car range))
+                         (set-marker (make-marker) (cadr range)))))
+        (apply action range)
+        (objed-exit-op name text range)))))
 
-RANGE is a list of the beginning and and position of
-the text object to act on."
-  (when range
-    (let ((text (apply #'buffer-substring range))
-          (range (list (set-marker (make-marker) (car range))
-                       (set-marker (make-marker) (cadr range)))))
-      (apply action range)
-      (objed-exit-op name text range))))
+(defun objed--do-objects (action name)
+  (let ((ovs objed--marked-ovs)
+        (appendp (memq action '(kill-region copy-region-as-kill))))
+    (save-excursion
+      (dolist (ov (nreverse (copy-sequence ovs)))
+        (let ((beg (overlay-start ov))
+              (end (overlay-end ov)))
+          (when (and beg end)
+            (goto-char beg)
+            (funcall action beg end))
+          (when appendp
+            (setq last-command 'kill-region))
+          (delete-overlay ov))))
+    ;; always ?
+    (setq objed--marked-ovs nil)
+    (objed-exit-op name)))
 
-(defun objed--ov-apply (name action ovs)
-  "Apply and operation to marked objects.
-
-NAME is the symbol of the operation.
-
-ACTION is a function which recieves the two buffer
-positions of a marked object range.
-
-OVS is the list of marked objects."
-  (save-excursion
-    (dolist (ov (nreverse (copy-sequence ovs)))
-      (let ((beg (overlay-start ov))
-            (end (overlay-end ov)))
-        (when (and beg end)
-          (goto-char beg)
-          (funcall action beg end))
-        (delete-overlay ov))))
-    (objed-exit-op name))
-
-
-(defun objed--kill-op (op cmd &optional append)
-  "Op execution for `kill', `copy' and `delete' operations.
-
-OP is the internally used name for the operation and CMD the function used
-for execution. If APPEND is non-nil append to ‘kill-ring’ when
-killing marked objects.
-
-Marked object sequences are merged to built a single text object."
-  (cond ((and (cdr objed--marked-ovs)
-              (objed--ov-sequence-p
-               (nreverse (copy-sequence objed--marked-ovs))))
-         ;; seqences are auto merged for convenience
-         ;; this is usually what you want
-         (objed--merge-marked)
-         (objed--ob-apply op cmd (objed--current)))
-        (objed--marked-ovs
-         (dolist (ov (nreverse (copy-sequence objed--marked-ovs)))
-           (let ((beg (overlay-start ov))
-                 (end (overlay-end ov)))
-             (delete-overlay ov)
-             (when (and beg end)
-               (goto-char beg)
-               (apply cmd (list beg end)))
-             ;; append subsequent kills
-             (when append
-               (setq last-command 'kill-region))))
-           (setq objed--marked-ovs nil)
-           (objed-exit-op op))
-        (t
-
-         ;; no marked objects
-         (objed--ob-apply op cmd (objed--current))
-         ;; for possible repeats like default conf. (kill line...)
-         (unless (or (eq op 'ignore)
-                     ;; object gone
-                     (not objed--current-obj))
-           (objed--change-to :beg (point)
-                             :ibeg (point))))))
 
 (defun objed--ov-sequence-p (ovs)
   "Return non-nil if OVS build a sequence.
