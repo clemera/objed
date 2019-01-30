@@ -2080,19 +2080,20 @@ non-nil the indentation block can contain empty lines."
          (narrow-to-region (car bounds) (cdr bounds))
          (goto-char (car bounds))
          (objed--skip-ws)
-         (cond ((looking-at "(defun")
-                (down-list 2)
-                (up-list 1)
-                (cons (point)
-                      (progn (goto-char (point-max))
-                             (down-list -1)
-                             (point))))
-               (t
-                (cons (progn (down-list 1)
-                             (point))
-                      (progn (goto-char (point-max))
-                             (down-list -1)
-                             (point))))))))))
+         (ignore-errors
+           (cond ((looking-at "(defun")
+                  (down-list 2)
+                  (up-list 1)
+                  (cons (point)
+                        (progn (goto-char (point-max))
+                               (down-list -1)
+                               (point))))
+                 (t
+                  (cons (progn (down-list 1)
+                               (point))
+                        (progn (goto-char (point-max))
+                               (down-list -1)
+                               (point)))))))))))
 
 (objed-define-object nil tag
   :atp
