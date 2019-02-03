@@ -1739,14 +1739,16 @@ If called from code decide for activation with char object using
   "Activate and move to beginning of object at point."
   (interactive)
   (objed--init 'char)
-  (objed-current-or-previous-context))
+  (when (objed-context-object)
+    (goto-char (objed--beg))))
 
 ;;;###autoload
 (defun objed-end-of-object-at-point ()
   "Activate and move to end of object at point."
   (interactive)
   (objed--init 'char)
-  (objed-current-or-next-context))
+  (when (objed-context-object)
+    (goto-char (objed--end))))
 
 (defun objed-toggle-side ()
   "Move to other side of object.
@@ -1780,6 +1782,8 @@ Update to object at current side."
 (defun objed-toggle-state ()
   "Toggle state of object."
   (interactive)
+  (when (eq objed--object 'sexp)
+    (objed-context-object))
   (let ((sdiff (abs (- (point) (objed--beg))))
         (ediff (abs (- (point) (objed--end)))))
     (objed--reverse)
