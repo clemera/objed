@@ -1803,19 +1803,13 @@ extending/shrinking the region by moving around using regular
 objed movement commands.
 
 The active region will be used as the current object when an
-objed operation is used.
-
-When called and region is already active, the region get copied
-and is deactivated."
+objed operation is used."
   (interactive)
   (if (region-active-p)
       (progn
-        (copy-region-as-kill
-         (region-beginning)
-         (region-end))
-        (deactivate-mark)
-        (setq this-command 'copy-region-as-kill)
-        (message "Copied current region."))
+        ;; reinit on repeat
+        (setq mark-active nil)
+        (objed--init objed--object))
     (unless objed--extend-cookie
       (setq objed--extend-cookie
             (face-remap-add-relative 'objed-hl
