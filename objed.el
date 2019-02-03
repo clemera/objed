@@ -1732,6 +1732,19 @@ If called from code decide for activation with char object using
     (when (objed-init-p)
       (objed--init (or obj 'char)))))
 
+;;;###autoload
+(defun objed-beg-of-object-at-point ()
+  "Activate and move to beginning of object at point."
+  (interactive)
+  (objed--init 'char)
+  (objed-current-or-previous-context))
+
+;;;###autoload
+(defun objed-end-of-object-at-point ()
+  "Activate and move to end of object at point."
+  (interactive)
+  (objed--init 'char)
+  (objed-current-or-next-context))
 
 (defun objed-toggle-side ()
   "Move to other side of object.
@@ -3112,6 +3125,8 @@ whitespace they build a sequence."
 (defvar objed-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-SPC") 'objed-activate)
+    (define-key map (kbd "M-[") 'objed-beg-of-object-at-point)
+    (define-key map (kbd "M-]") 'objed-end-of-object-at-point)
     map)
   "Keymap for /function`objed-mode'.")
 
