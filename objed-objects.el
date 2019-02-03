@@ -1500,9 +1500,7 @@ comments."
 
 
 (defun objed--at-sexp-p ()
-  "Return non-nil if point at strutured expression.
-
-Ignores simple structured expressions like words or symbols."
+  "Return sexp object if point at strutured expression."
   (let ((opos (point))
         (real-this-command 'forward-sexp))
     (save-excursion
@@ -1515,6 +1513,8 @@ Ignores simple structured expressions like words or symbols."
                        (forward-sexp (- arg)))))))
         (let ((zigp nil))
           (when (or (and (not (eobp))
+                         (or (eq (char-syntax (char-before)) ?\s)
+                             (not (eq (char-syntax (char-after)) ?\")))
                          (save-excursion
                            (eq (point) (progn (setq zigp (zigzag 1))
                                               (point)))))
@@ -1561,8 +1561,11 @@ Ignores simple structured expressions like words or symbols."
                     (cons beg (point)))))))
   :try-next
   (or (ignore-errors
-         (forward-sexp 1)
-         (forward-sexp -1) t)
+        (forward-sexp 1)
+        (forward-sexp -1) t)
+      (ignore-errors
+        (up-list 1)
+        t)
       (ignore-errors
         (forward-word 1)
         (forward-sexp -1)

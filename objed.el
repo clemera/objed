@@ -910,14 +910,22 @@ Use `objed-define-dispatch' to define a dispatch command.")
 (defun objed--forward-sexp ()
   (interactive)
   (while (and (not (eobp))
-              (not (ignore-errors (call-interactively 'forward-sexp) t)))
+              (or  (and (not (bobp))
+                        (not (eq (char-syntax (char-before)) ?\s))
+                        (eq (char-syntax (char-after)) ?\"))
+                   (not (ignore-errors
+                          (call-interactively 'forward-sexp)
+                          t))))
     (forward-char 1)))
 
 
 (defun objed--backward-sexp ()
   (interactive)
   (while (and (not (bobp))
-              (not (ignore-errors (call-interactively 'backward-sexp) t)))
+              (or  (eq (char-syntax (char-before)) ?\")
+                   (not (ignore-errors
+                          (call-interactively 'backward-sexp)
+                          t))))
     (forward-char -1)))
 
 
