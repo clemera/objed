@@ -212,5 +212,6 @@ Insert KEY if there's no command."
 (objed-create-tests emacs-lisp-mode)
 ;; TODO: op tests, marking, remaining commands, other modes
 
-
 (provide 'tests)
+
+

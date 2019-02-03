@@ -182,10 +182,6 @@ function should return nil if objed should not initialize."
 
 (defcustom objed-cmd-alist
   '(
-    (left-char . char)
-    (right-char . char)
-    (backward-char . char)
-    (forward-char . char)
     (forward-word . word)
     (capitalize-word . word)
     (backward-word . word)
@@ -236,8 +232,6 @@ function should return nil if objed should not initialize."
     (objed-next-identifier . identifier)
     (objed-prev-identifier . identifier)
     ;; editing entry commands
-    (delete-char . char)
-    (kill-line . char)
     (yank . region)
     (yank-pop . region)
     ;; misc
@@ -629,11 +623,6 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; objed-keeper-commands...
 
     ;; general movement
-    (define-key map "b" (objed--call-and-switch backward-char char))
-    (define-key map "f" (objed--call-and-switch forward-char char))
-
-    (define-key map "B" 'objed-move-char-backward)
-    (define-key map "F" 'objed-move-char-forward)
 
     (define-key map "s" (objed--call-and-switch
                          objed--forward-word
@@ -643,6 +632,13 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     (define-key map "S" 'objed-move-word-forward)
     (define-key map "R" 'objed-move-word-backward)
+
+    (define-key map "f" (objed--call-and-switch objed--forward-sexp sexp))
+    (define-key map "b" (objed--call-and-switch objed--backward-sexp sexp))
+
+    ;; TODO: move sexp
+    (define-key map "F" 'objed-move-object-forward)
+    (define-key map "B" 'objed-move-object-backward)
 
     (define-key map "p" (objed--call-and-switch previous-line line))
     (define-key map "n" (objed--call-and-switch
@@ -655,6 +651,14 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     (define-key map "P" 'objed-move-line-backward)
     (define-key map "N" 'objed-move-line-forward)
+
+
+    (define-key map "[" 'objed-current-or-previous-context)
+    (define-key map "]" 'objed-current-or-next-context)
+
+    (define-key map "{" (objed--call-and-switch backward-paragraph paragraph))
+    (define-key map "}" (objed--call-and-switch forward-paragraph paragraph))
+
 
     (define-key map (kbd "<C-left>") 'objed-indent-left)
     (define-key map (kbd "<C-right>") 'objed-indent-right)
@@ -676,10 +680,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "a" 'objed-beg-of-block)
     (define-key map "e" 'objed-end-of-block)
 
-    ;; context expansions
-    (define-key map "[" 'objed-current-or-previous-context)
-    (define-key map "]" 'objed-current-or-next-context)
 
+    ;; context expansions
     (define-key map "o" 'objed-expand-context)
     (define-key map "u" 'objed-upto-context)
 
@@ -905,8 +907,22 @@ Use `objed-define-dispatch' to define a dispatch command.")
        :end (objed--max o))))))
 
 
+(defun objed--forward-sexp ()
+  (interactive)
+  (while (and (not (eobp))
+              (not (ignore-errors (call-interactively 'forward-sexp) t)))
+    (forward-char 1)))
+
+
+(defun objed--backward-sexp ()
+  (interactive)
+  (while (and (not (bobp))
+              (not (ignore-errors (call-interactively 'backward-sexp) t)))
+    (forward-char -1)))
+
+
 (defmacro objed--save-state (&rest body)
- " Preserve state during execution of BODY."
+ "Preserve state during execution of BODY."
   `(let ((state (objed--get-current-state)))
      (unwind-protect (progn ,@body )
        (prog1 nil (objed--restore-state state)))))
@@ -3087,10 +3103,7 @@ whitespace they build a sequence."
 
 (defvar objed-mode-map
   (let ((map (make-sparse-keymap)))
-    ;; because objed is a "big" addition to the interface overriding M-SPC might
-    ;; be ok
     (define-key map (kbd "M-SPC") 'objed-activate)
-    ;;(define-key map (kbd "C-.") 'objed-activate)
     map)
   "Keymap for /function`objed-mode'.")
 

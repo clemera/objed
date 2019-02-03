@@ -1523,7 +1523,8 @@ Ignores simple structured expressions like words or symbols."
                            (eq (point) (progn (setq zigp (zigzag -1))
                                               (point))))))
             (and zigp
-                 (cons (point) zigp))))))))
+                 (cons (min (point) zigp)
+                       (max (point) zigp)))))))))
 
 (objed-define-object nil sexp
   :atp
