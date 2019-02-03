@@ -1513,7 +1513,7 @@ comments."
                        (forward-sexp (- arg)))))))
         (let ((zigp nil))
           (when (or (and (not (eobp))
-                         (or (eq (char-syntax (char-before)) ?\s)
+                         (or (memq (char-syntax (char-before)) (list ?\s ?>))
                              (not (eq (char-syntax (char-after)) ?\")))
                          (save-excursion
                            (eq (point) (progn (setq zigp (zigzag 1))
