@@ -404,7 +404,7 @@ OBJ is the object to use and defaults to `objed--current-obj'."
   "Return non-nil if current object is a basic object.
 
 From basic objects `objed' starts expanding to context objects."
-  (memq objed--object '(line word char region buffer)))
+  (memq objed--object '(sexp line word char region buffer)))
 
 (defun objed--current (&optional obj)
   "Get the current range of interest.
