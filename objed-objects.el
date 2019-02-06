@@ -403,8 +403,10 @@ OBJ is the object to use and defaults to `objed--current-obj'."
 (defun objed--basic-p ()
   "Return non-nil if current object is a basic object.
 
-From basic objects `objed' starts expanding to context objects."
-  (memq objed--object '(sexp line word char region buffer)))
+From basic objects `objed' starts expanding to context objects.
+Thus this should be objects which have their own movement
+commands."
+  (memq objed--object '(sexp line identifier word char region buffer)))
 
 (defun objed--current (&optional obj)
   "Get the current range of interest.
@@ -1072,6 +1074,13 @@ object."
         (when obj
           (objed--update-current-object obj)
           (objed--goto-char (objed--beg obj)))))))
+
+
+(defun objed-goto-prev-identifier (arg)
+  (interactive "P")
+  (unless (eq objed--object 'identifier)
+    (objed--switch-to 'identifier))
+  (objed--goto-previous arg))
 
 
 (defun objed--make-object-overlay (&optional obj)
@@ -1996,6 +2005,7 @@ non-nil the indentation block can contain empty lines."
   :try-prev
   (objed-prev-identifier))
 
+;;;###autoload
 (defun objed-next-identifier ()
   "Move to next identifier."
   (interactive)
@@ -2013,6 +2023,7 @@ non-nil the indentation block can contain empty lines."
                     (eq real-this-command #'objed-next-identifier))
             (run-at-time 0 nil (apply-partially #'message "Last one!"))))))))
 
+;;;###autoload
 (defun objed-prev-identifier ()
   "Move to previous identifier."
   (interactive)
