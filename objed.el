@@ -899,26 +899,39 @@ Use `objed-define-dispatch' to define a dispatch command.")
 
 (defun objed--forward-sexp ()
   (interactive)
-  (while (and (not (eobp))
-              (or  (and (not (bobp))
-                        (not (memq (char-syntax (char-before)) (list ?\s ?>)))
-                        (eq (char-syntax (char-after)) ?\"))
-                   (not (ignore-errors
-                          (call-interactively 'forward-sexp)
-                          t))))
-    (forward-char 1)))
+  (let ((stringp nil))
+    (while (and (not (eobp))
+                (or  (and (not (bobp))
+                          (save-excursion
+                            (objed--skip-ws)
+                            (eq (char-syntax (char-after)) ?\"))
+                          (setq stringp (objed--in-string-p nil t)))
+                     (not (ignore-errors
+                            (call-interactively 'forward-sexp)
+                            t))))
+      (if stringp
+          (progn (goto-char stringp)
+                 (forward-sexp 1))
+        (forward-char 1))
+      (setq stringp nil))))
 
 
 (defun objed--backward-sexp ()
   (interactive)
-  (while (and (not (bobp))
-              (or  (and (not (eobp))
-                        (eq (char-syntax (char-before)) ?\")
-                        (not (memq (char-syntax (char-after)) (list ?\s ?>))))
-                   (not (ignore-errors
-                          (call-interactively 'backward-sexp)
-                          t))))
-    (forward-char -1)))
+  (let ((stringp nil))
+    (while (and (not (bobp))
+                (or  (and (not (eobp))
+                          (save-excursion
+                            (objed--skip-ws t)
+                            (eq (char-syntax (char-before)) ?\"))
+                          (setq stringp (objed--in-string-p nil t)))
+                     (not (ignore-errors
+                            (call-interactively 'backward-sexp)
+                            t))))
+      (if stringp
+          (goto-char stringp)
+        (forward-char -1))
+      (setq stringp nil))))
 
 
 (defmacro objed--save-state (&rest body)

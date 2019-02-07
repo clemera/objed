@@ -1212,14 +1212,16 @@ position POS, otherwise just return POS."
 
 ;; * Object definition helpers
 
-(defun objed--in-string-p (&optional syn)
+(defun objed--in-string-p (&optional syn ignore-atp)
   "Return non-nil if point is inside or at string.
 
 If SYN is given use it instead of syntax at point."
   (let ((syn (or syn (syntax-ppss))))
-    (or (and (nth 3 syn)
+    (if (and (nth 3 syn)
              (nth 8 syn))
-        (objed--at-string-p))))
+        (nth 8 syn)
+      (and (not ignore-atp)
+           (objed--at-string-p)))))
 
 (defun objed--at-string-p ()
   "Return non-nil if point is at string."
