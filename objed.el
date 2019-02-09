@@ -1664,25 +1664,35 @@ postitive prefix argument ARG move to the nth next object."
 (defun objed-top-object ()
   "Go to first instance of current object type."
   (interactive)
-  (let ((top (save-excursion
-               (goto-char (point-min))
-               (objed--get-next (point)))))
-    (if (equal top objed--current-obj)
-        (message "Already at first instance")
-      (objed--update-current-object top)
-      (goto-char (objed--beg)))))
+  ;; TODO: creat macro keyword so delegation
+  ;; can happen automatically, when specified
+  (cond ((eq objed--object 'identifier)
+         (objed-first-identifier)
+         (objed--update-current-object))
+        (t
+         (let ((top (save-excursion
+                      (goto-char (point-min))
+                      (objed--get-next (point)))))
+           (if (equal top objed--current-obj)
+               (message "Already at first instance")
+             (objed--update-current-object top)
+             (goto-char (objed--beg)))))))
 
 
 (defun objed-bottom-object ()
   "Go to first instance of current object type."
   (interactive)
-  (let ((bot (save-excursion
-               (goto-char (point-max))
-               (objed--get-prev (point)))))
-    (if (equal bot objed--current-obj)
-        (message "Already at last instance")
-      (objed--update-current-object bot)
-      (goto-char (objed--beg)))))
+  (cond ((eq objed--object 'identifier)
+         (objed-last-identifier)
+         (objed--update-current-object))
+        (t
+         (let ((bot (save-excursion
+                      (goto-char (point-max))
+                      (objed--get-prev (point)))))
+           (if (equal bot objed--current-obj)
+               (message "Already at last instance")
+             (objed--update-current-object bot)
+             (goto-char (objed--beg)))))))
 
 
 (defun objed-expand-context ()
