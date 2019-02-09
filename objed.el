@@ -546,6 +546,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
               (symbol-name cmd) (symbol-name obj))
      (interactive)
      ,before
+     (setq this-command ',cmd)
      (call-interactively ',cmd)
      ,after
      (objed--switch-to ',obj)))
