@@ -233,6 +233,8 @@ function should return nil if objed should not initialize."
     (Info-prev-reference . face)
     (objed-next-identifier . identifier)
     (objed-prev-identifier . identifier)
+    (objed-first-identifier . identifier)
+    (objed-last-identifier . identifier)
     ;; editing entry commands
     (yank . region)
     (yank-pop . region)
@@ -3158,6 +3160,8 @@ whitespace they build a sequence."
     (define-key map (kbd "M-]") 'objed-end-of-object-at-point)
     (define-key map (kbd "C-,") 'objed-prev-identifier)
     (define-key map (kbd "C-.") 'objed-identifier-object)
+    (define-key map (kbd "C-<") 'objed-first-identifier)
+    (define-key map (kbd "C->") 'objed-last-identifier)
     map)
   "Keymap for /function`objed-mode'.")
 
@@ -3183,6 +3187,7 @@ and `avy' if they are available. This can be deactivated by
 setting the user options `objed-use-which-key-if-available-p' and
 `objed-use-avy-if-available-p' before loading."
   :global t
+  :keymap objed-mode-map
   :require 'objed
   (if objed-mode
       (progn

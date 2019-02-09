@@ -2011,7 +2011,7 @@ non-nil the indentation block can contain empty lines."
 (defun objed-next-identifier ()
   "Move to next identifier."
   (interactive)
-   (let ((bds nil))
+  (let ((bds nil))
     (if (not (setq bds (bounds-of-thing-at-point 'symbol)))
         (re-search-forward  "\\_<" nil t)
       (let ((sym (and (or bds (setq bds (bounds-of-thing-at-point 'symbol)))
@@ -2043,6 +2043,32 @@ non-nil the indentation block can contain empty lines."
             (when (or (eq real-this-command #'objed-current-or-previous-context)
                       (eq real-this-command #'objed-prev-identifier))
               (run-at-time 0 nil (apply-partially #'message "First one!")))))))))
+
+(defun objed--get-ident-format ()
+  (let ((sym (or (symbol-at-point)
+                 (and (re-search-forward "\\_<" nil t)
+                      (symbol-at-point)))))
+    (when sym
+      (format "\\_<%s\\_>" sym))))
+
+;;;###autoload
+(defun objed-first-identifier ()
+  "Move to first instance of identifier at point."
+  (interactive)
+  (let ((ident (objed--get-ident-format)))
+    (when ident
+      (goto-char (point-min))
+      (when (re-search-forward ident nil t)
+        (goto-char (match-beginning 0))))))
+
+;;;###autoload
+(defun objed-last-identifier ()
+  "Move to last instance of identifier at point."
+  (interactive)
+  (let ((ident (objed--get-ident-format)))
+    (when ident
+      (goto-char (point-max))
+      (re-search-backward ident nil t))))
 
 
 (objed-define-object nil section
