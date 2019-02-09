@@ -1664,24 +1664,26 @@ postitive prefix argument ARG move to the nth next object."
 (defun objed-top-object ()
   "Go to first instance of current object type."
   (interactive)
-  (objed--get-next (point))
-  (let ((o (car (objed--collect-backward
-                 (objed--min) (point-min)))))
-    (if (not o)
+  (let ((top (save-excursion
+               (goto-char (point-min))
+               (objed--get-next (point)))))
+    (if (equal top objed--current-obj)
         (message "Already at first instance")
-      (goto-char (car o))
-      (objed--update-current-object))))
+      (objed--update-current-object top)
+      (goto-char (objed--beg)))))
+
 
 (defun objed-bottom-object ()
-  "Go to last instance of current object type."
+  "Go to first instance of current object type."
   (interactive)
-  (objed--get-next (point))
-  (let ((o (car (nreverse (objed--collect-forward
-                           (objed--max) (point-max))))))
-    (if (not o)
+  (let ((bot (save-excursion
+               (goto-char (point-max))
+               (objed--get-prev (point)))))
+    (if (equal bot objed--current-obj)
         (message "Already at last instance")
-      (goto-char (car o))
-      (objed--update-current-object))))
+      (objed--update-current-object bot)
+      (goto-char (objed--beg)))))
+
 
 (defun objed-expand-context ()
   "Expand to objects based on context.
