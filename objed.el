@@ -3206,11 +3206,13 @@ setting the user options `objed-use-which-key-if-available-p' and
   :require 'objed
   (if objed-mode
       (progn
+        (add-hook 'minibuffer-setup-hook 'objed--reset)
         (setq objed--which-key-avail-p (when objed-use-which-key-if-available-p
                                          (require 'which-key nil t))
               objed--avy-avail-p (when objed-use-avy-if-available-p
                                    (require 'avy nil t)))
         (objed--install-advices objed-cmd-alist t))
+    (remove-hook 'minibuffer-setup-hook 'objed--reset)
     (objed--remove-advices objed-cmd-alist)))
 
 
