@@ -1138,7 +1138,8 @@ See `objed-cmd-alist'."
 (defun objed--init (&optional sym)
   "Initialize `objed'.
 
-SYM is a symbol (command or object symbol) used to initialize."
+SYM is a symbol (command or object symbol) used to initialize
+or object position data."
   ;; if anything went wrong make sure to start with clean state
   (when objed--buffer
     (objed--reset))
@@ -1181,9 +1182,11 @@ SYM is a symbol (command or object symbol) used to initialize."
   (set-cursor-color objed-cursor-color)
 
   ;; init object
-  (if (commandp sym)
-      (objed--switch-to-object-for-cmd sym)
-    (objed--switch-to sym))
+  (cond ((commandp sym)
+         (objed--switch-to-object-for-cmd sym))
+        ((symbolp sym)
+         (objed--switch-to sym))
+        (t (objed--update-current-object sym)))
 
   ;; transient map
   (fset #'objed--exit-objed
