@@ -802,16 +802,22 @@ Other single character keys are bound to `objed-undefined'."
 
 (defvar objed-op-map
   (let ((map (objed--define-prefix "x" 'objed-op-map)))
+    ;; apply region command on object
     (define-key map "x" 'objed-op-x)
-
+    ;; todo: show object op hydra command
     (define-key map "c"
       ;; upcase, downcase, capitalize, reformat
       (objed-define-op nil objed-case-op))
 
-    ;; experimental
     (define-key map "e" 'objed-eval)
-    ;; uses edit-indirect if av., via prefix
     (define-key map "n" 'objed-narrow)
+    ;; actions analog to C-x C-KEY which exit
+    (define-key map "s" 'save-buffer)
+    (define-key map "f" 'find-file)
+    (define-key map "w" 'write-file)
+    (define-key map "v" 'find-alternate-file)
+    (define-key map "b" 'switch-to-buffer)
+
     map)
   "Map for additional operations called via a prefix from `objed-map'.
 
