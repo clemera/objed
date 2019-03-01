@@ -1784,6 +1784,28 @@ If called from code decide for activation with char object using
   (when (objed-context-object)
     (goto-char (objed--end))))
 
+;;;###autoload
+(defun objed-until-beg-of-object-at-point ()
+  "Move to beginning of object at point and active text moved over."
+  (interactive)
+  (let ((pos (point)))
+    (objed--init 'char)
+    (when (objed-context-object)
+      (objed--reverse)
+      (goto-char (objed--ibeg))
+      (objed--change-to :end pos :iend pos))))
+
+;;;###autoload
+(defun objed-until-end-of-object-at-point ()
+  "Move to end of object at point and active text moved over."
+  (interactive)
+  (let ((pos (point)))
+    (objed--init 'char)
+    (when (objed-context-object)
+      (objed--reverse)
+      (goto-char (objed--iend))
+      (objed--change-to :beg pos :ibeg pos))))
+
 (defun objed-toggle-side ()
   "Move to other side of object.
 
@@ -3171,6 +3193,8 @@ whitespace they build a sequence."
 (defvar objed-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-SPC") 'objed-activate)
+    (define-key map (kbd "M-(") 'objed-until-beg-of-object-at-point)
+    (define-key map (kbd "M-)") 'objed-until-end-of-object-at-point)
     (define-key map (kbd "M-[") 'objed-beg-of-object-at-point)
     (define-key map (kbd "M-]") 'objed-end-of-object-at-point)
     (define-key map (kbd "C-,") 'objed-prev-identifier)
