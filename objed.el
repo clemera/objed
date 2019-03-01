@@ -695,12 +695,12 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "m" 'objed-mark)
     ;; mark upwards
     (define-key map "M" 'objed-toggle-mark-backward)
-    ;; (define-key map "U" 'objed-unmark-all)
+    ;; (define-key map "M" 'objed-unmark-all)
 
     ;; "visual"
     (define-key map "v" 'objed-extend)
-    (define-key map "+" 'objed-include-trailing-ws)
-    (define-key map "-" 'objed-include-leading-ws)
+    (define-key map "@" 'objed-include-trailing-ws)
+    ;;(define-key map "-" 'objed-include-leading-ws)
 
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
@@ -730,9 +730,10 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     ;; direct object switches
     (define-key map "." 'objed-identifier-object)
+    (define-key map "," 'objed-goto-prev-identifier)
     (define-key map "_" 'objed-symbol-object)
+    (define-key map "l" 'objed-line-object)
     ;;(define-key map "%" 'objed-contents-object)
-
 
     ;; prefix keys
     (define-key map "x" 'objed-op-map)
@@ -740,11 +741,9 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     ;; special commands
     (define-key map "*" 'objed-mark-more)
-    (define-key map "," 'objed-goto-prev-identifier)
-    (define-key map "l" 'objed-last)
-
-    ;; jump to objects with avy
-    (define-key map "`" 'objed-ace)
+    (define-key map "u" 'objed-last)
+    ;; zap to object, jump to objects with avy
+    (define-key map "z" 'objed-ace)
     ;; swiper like object search
     (define-key map (kbd "M-o") 'objed-occur)
     ;; TODO: start query replace in current object,
@@ -870,9 +869,8 @@ Use `objed-define-dispatch' to define a dispatch command.")
 
 
 (objed-define-dispatch "#" objed--ace-switch-object)
-
-(objed-define-dispatch "u" objed--backward-until)
-(objed-define-dispatch "z" objed--forward-until)
+(objed-define-dispatch "-" objed--backward-until)
+(objed-define-dispatch "+" objed--forward-until)
 
 (defun objed--backward-until (name)
   "Activate part from point backward until object NAME."
