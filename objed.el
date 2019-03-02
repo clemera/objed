@@ -215,6 +215,7 @@ function should return nil if objed should not initialize."
     (back-to-indentation . line)
     (org-beginning-of-line . line)
     (org-end-of-line . line)
+    (recenter-top-bottom . line)
     (forward-sentence . sentence)
     (org-forward-sentence . sentence)
     (backward-sentence . sentence)
@@ -264,7 +265,6 @@ be used to restore previous states."
     undo-only
     delete-other-windows
     reposition-window
-    recenter-top-bottom
     eval-defun
     eval-last-sexp
     )
