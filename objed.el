@@ -1832,11 +1832,9 @@ Default to sexp at point."
   (let ((sdiff (abs (- (point) (objed--beg))))
         (ediff (abs (- (point) (objed--end)))))
     (cond ((> ediff sdiff)
-           (goto-char (objed--end))
-           (objed--skip-ws t))
+           (goto-char (objed--end)))
           (t
-           (goto-char (objed--beg))
-           (objed--skip-ws)))))
+           (goto-char (objed--beg))))))
 
 (defun objed-exchange-point-and-mark ()
   "Exchange point and mark.
