@@ -3093,50 +3093,53 @@ on."
 
 (defun objed--reset ()
   "Reset variables and state information."
-  (when objed--buffer
-    ;; rest object as well
-    (setq objed--object nil)
-    (setq objed--opoint nil)
-    (setq objed--electric-event nil)
+  (if (eq (cadr overriding-terminal-local-map)
+          objed-map)
+      (objed--exit-objed)
+    (when objed--buffer
+      ;; rest object as well
+      ;;(setq objed--object nil)
+      (setq objed--opoint nil)
+      (setq objed--electric-event nil)
 
-    (when objed--marked-ovs
-      (dolist (ov objed--marked-ovs)
-        (delete-overlay ov))
-      (setq objed--marked-ovs nil))
+      (when objed--marked-ovs
+        (dolist (ov objed--marked-ovs)
+          (delete-overlay ov))
+        (setq objed--marked-ovs nil))
 
-    (when objed--extend-cookie
-      (face-remap-remove-relative
-       objed--extend-cookie)
-      (setq objed--extend-cookie nil))
+      (when objed--extend-cookie
+        (face-remap-remove-relative
+         objed--extend-cookie)
+        (setq objed--extend-cookie nil))
 
+      (when objed--saved-cursor
+        (set-cursor-color objed--saved-cursor))
 
-    (when objed--saved-cursor
-      (set-cursor-color objed--saved-cursor))
+      (when objed--hl-cookie
+        (face-remap-remove-relative objed--hl-cookie))
 
-    (when objed--hl-cookie
-      (face-remap-remove-relative objed--hl-cookie))
+      (when (> (length objed--last-states) objed-states-max)
+        (setq objed--last-states
+              (cl-subseq objed--last-states 0 objed-states-max)))
+      ;; things that need to be reset in objed buffer
+      (when (buffer-live-p objed--buffer)
+        (with-current-buffer objed--buffer
 
-    (when objed-modeline-hint-p
-      (funcall objed-modeline-setup-func objed-mode-line-format 'reset))
+          (when objed-modeline-hint-p
+            (funcall objed-modeline-setup-func objed-mode-line-format 'reset))
 
-    (unless objed--hl-line-keep-p
-      (hl-line-mode -1))
+          (unless objed--hl-line-keep-p
+            (hl-line-mode -1))
 
-    (when (> (length objed--last-states) objed-states-max)
-      (setq objed--last-states
-            (cl-subseq objed--last-states 0 objed-states-max)))
+          (while objed--saved-vars
+            (let ((setting (pop objed--saved-vars)))
+              (if (consp setting)
+                  (set (car setting) (cdr setting))
+                (kill-local-variable setting))))
+          (remove-hook 'pre-command-hook 'objed--push-state t)))
 
-    (when (buffer-live-p objed--buffer)
-      (with-current-buffer objed--buffer
-        (while objed--saved-vars
-          (let ((setting (pop objed--saved-vars)))
-            (if (consp setting)
-                (set (car setting) (cdr setting))
-              (kill-local-variable setting))))
-        (remove-hook 'pre-command-hook 'objed--push-state t)))
-
-    (setq objed--block-p nil)
-    (setq objed--buffer nil)))
+      (setq objed--block-p nil)
+      (setq objed--buffer nil))))
 
 
 
