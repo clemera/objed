@@ -1174,7 +1174,7 @@ or object position data."
 
   (setq objed--buffer (current-buffer))
   (add-hook 'pre-command-hook 'objed--push-state nil t)
-
+  (add-hook 'post-command-hook 'objed--check-buffer)
   (pcase-dolist
       (`(,var . ,val)
        `((hl-line-range-function . objed-hl-function)
@@ -3102,6 +3102,11 @@ on."
   (setq mark-active nil)
   (objed--exit-objed))
 
+(defun objed--check-buffer ()
+  (when (not (eq (current-buffer) objed--buffer))
+    (objed--reset--objed-buffer)
+    (objed--init (or objed--object 'char))))
+
 (defun objed--reset--objed-buffer ()
   ;; things that need to be reset in objed buffer
   (when (buffer-live-p objed--buffer)
@@ -3150,6 +3155,7 @@ on."
         (setq objed--last-states
               (cl-subseq objed--last-states 0 objed-states-max)))
       (objed--reset--objed-buffer)
+      (remove-hook 'post-command-hook 'objed--check-buffer)
       (setq objed--block-p nil)
       (setq objed--buffer nil))))
 
