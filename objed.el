@@ -241,6 +241,7 @@ function should return nil if objed should not initialize."
     (yank-pop . region)
     ;; misc
     (which-key-C-h-dispatch . char)
+    (switch-to-buffer . char)
     )
   "Entry commands and associated objects."
   :group 'objed
