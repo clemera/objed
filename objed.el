@@ -821,6 +821,9 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "v" 'find-alternate-file)
     (define-key map "b" 'switch-to-buffer)
     (define-key map "o" 'objed-other-window)
+    (define-key map "1" 'delete-other-windows)
+    (define-key map "2" 'split-window-vertically)
+    (define-key map "3" 'split-window-horizontally)
 
     map)
   "Map for additional operations called via a prefix from `objed-map'.
