@@ -56,7 +56,7 @@
 
 ;; * Macros
 
-(defvar objed--object nil
+(defvar-local objed--object nil
   "The symbol of the current object.")
 
 

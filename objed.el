@@ -820,11 +820,19 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "w" 'write-file)
     (define-key map "v" 'find-alternate-file)
     (define-key map "b" 'switch-to-buffer)
+    (define-key map "o" 'objed-other-window)
 
     map)
   "Map for additional operations called via a prefix from `objed-map'.
 
 To define new operations see `objed-define-op'.")
+
+(defun objed-other-window ()
+  "Like `other-window' for objed."
+  (interactive)
+  (objed--reset--objed-buffer)
+  (other-window 1)
+  (objed--init (or objed--object 'char)))
 
 
 (defvar objed-object-map
@@ -3091,14 +3099,31 @@ on."
   (setq mark-active nil)
   (objed--exit-objed))
 
+(defun objed--reset--objed-buffer ()
+  ;; things that need to be reset in objed buffer
+  (when (buffer-live-p objed--buffer)
+    (with-current-buffer objed--buffer
+      ;; reset object as well?
+      ;;(setq objed--object nil)
+      (when objed-modeline-hint-p
+        (funcall objed-modeline-setup-func objed-mode-line-format 'reset))
+
+      (unless objed--hl-line-keep-p
+        (hl-line-mode -1))
+
+      (while objed--saved-vars
+        (let ((setting (pop objed--saved-vars)))
+          (if (consp setting)
+              (set (car setting) (cdr setting))
+            (kill-local-variable setting))))
+      (remove-hook 'pre-command-hook 'objed--push-state t))))
+
 (defun objed--reset ()
   "Reset variables and state information."
   (if (eq (cadr overriding-terminal-local-map)
           objed-map)
       (objed--exit-objed)
     (when objed--buffer
-      ;; rest object as well
-      ;;(setq objed--object nil)
       (setq objed--opoint nil)
       (setq objed--electric-event nil)
 
@@ -3121,23 +3146,7 @@ on."
       (when (> (length objed--last-states) objed-states-max)
         (setq objed--last-states
               (cl-subseq objed--last-states 0 objed-states-max)))
-      ;; things that need to be reset in objed buffer
-      (when (buffer-live-p objed--buffer)
-        (with-current-buffer objed--buffer
-
-          (when objed-modeline-hint-p
-            (funcall objed-modeline-setup-func objed-mode-line-format 'reset))
-
-          (unless objed--hl-line-keep-p
-            (hl-line-mode -1))
-
-          (while objed--saved-vars
-            (let ((setting (pop objed--saved-vars)))
-              (if (consp setting)
-                  (set (car setting) (cdr setting))
-                (kill-local-variable setting))))
-          (remove-hook 'pre-command-hook 'objed--push-state t)))
-
+      (objed--reset--objed-buffer)
       (setq objed--block-p nil)
       (setq objed--buffer nil))))
 
