@@ -2162,7 +2162,7 @@ When PREFIX is given it will be used by RCMD as
 
 ;; * State Info
 
-(defvar objed--last-states nil
+(defvar-local objed--last-states nil
   "Stack of last states.
 
 See `objed--get-current-state' for details.
@@ -3107,6 +3107,7 @@ on."
 (defun objed--check-buffer ()
   (when (not (eq (current-buffer) objed--buffer))
     (objed--reset--objed-buffer)
+    (select-window (get-buffer-window (current-buffer)))
     (objed--init (or objed--object 'char))))
 
 (defun objed--reset--objed-buffer ()
@@ -3115,8 +3116,24 @@ on."
     (with-current-buffer objed--buffer
       ;; reset object as well?
       ;;(setq objed--object nil)
+      (when objed--marked-ovs
+        (dolist (ov objed--marked-ovs)
+          (delete-overlay ov))
+        (setq objed--marked-ovs nil))
+
+      (when objed--extend-cookie
+        (face-remap-remove-relative
+         objed--extend-cookie)
+        (setq objed--extend-cookie nil))
+
+      (when objed--hl-cookie
+        (face-remap-remove-relative objed--hl-cookie))
       (when objed-modeline-hint-p
         (funcall objed-modeline-setup-func objed-mode-line-format 'reset))
+
+      (when (> (length objed--last-states) objed-states-max)
+        (setq objed--last-states
+              (cl-subseq objed--last-states 0 objed-states-max)))
 
       (unless objed--hl-line-keep-p
         (hl-line-mode -1))
@@ -3137,25 +3154,8 @@ on."
       (setq objed--opoint nil)
       (setq objed--electric-event nil)
 
-      (when objed--marked-ovs
-        (dolist (ov objed--marked-ovs)
-          (delete-overlay ov))
-        (setq objed--marked-ovs nil))
-
-      (when objed--extend-cookie
-        (face-remap-remove-relative
-         objed--extend-cookie)
-        (setq objed--extend-cookie nil))
-
       (when objed--saved-cursor
         (set-cursor-color objed--saved-cursor))
-
-      (when objed--hl-cookie
-        (face-remap-remove-relative objed--hl-cookie))
-
-      (when (> (length objed--last-states) objed-states-max)
-        (setq objed--last-states
-              (cl-subseq objed--last-states 0 objed-states-max)))
       (objed--reset--objed-buffer)
       (remove-hook 'post-command-hook 'objed--check-buffer)
       (setq objed--block-p nil)
