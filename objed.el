@@ -848,8 +848,7 @@ To define new operations see `objed-define-op'.")
     ;; default objects
     (define-key map "c" 'objed-char-object)
     (define-key map "r" 'objed-word-object)
-    (define-key map "l" 'objed-line-object)
-
+    ;; line object is direct accesible via l
     ;; sexp at point
     (define-key map "." 'objed-sentence-object)
     (define-key map "p" 'objed-paragraph-object)
@@ -870,6 +869,7 @@ To define new operations see `objed-define-op'.")
     (define-key map "f" 'objed-file-object)
 
     (define-key map "*" 'objed-section-object)
+    (define-key map "l" 'objed-page-object)
     (define-key map "j" 'objed-output-object)
     (define-key map "h" 'objed-buffer-object)
 

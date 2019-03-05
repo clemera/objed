@@ -1606,6 +1606,16 @@ comments."
   :try-prev
   (re-search-backward  "/\\|\\\\" nil t))
 
+(objed-define-object nil page
+  :atp
+  (looking-at page-delimiter)
+  :get-obj
+  (bounds-of-thing-at-point 'page)
+  :try-next
+  (forward-line 1)
+  :try-prev
+  (forward-line -1))
+
 (objed-define-object nil defun
   :get-obj
   (objed-bounds-from-region-cmd #'mark-defun)
