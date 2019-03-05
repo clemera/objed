@@ -242,6 +242,7 @@ function should return nil if objed should not initialize."
     ;; misc
     (which-key-C-h-dispatch . char)
     (switch-to-buffer . char)
+    (find-file . char)
     )
   "Entry commands and associated objects."
   :group 'objed
