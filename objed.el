@@ -591,10 +591,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 (defvar objed-map
   (let ((map (make-sparse-keymap)))
     ;; block unused chars by default
-    (dolist (seq (list (number-sequence ?a ?z)
-                       (number-sequence ?A ?Z)))
-      (dolist (char seq)
-        (define-key map (format "%c" char) 'objed-undefined)))
+      (dolist (char (number-sequence ?a ?z))
+        (define-key map (format "%c" char) 'objed-undefined))
     ;; keep map active for numeric args
     (dolist (n (number-sequence ?0 ?9))
       (define-key map (format "%c" n) 'digit-argument)
@@ -789,11 +787,9 @@ Other single character keys are bound to `objed-undefined'."
     ;; init as prefix
     (define-key objed-map (kbd key) map)
      ;; basic bindings
-      (dolist (seq (list (number-sequence ?a ?z)
-                         (number-sequence ?A ?Z)))
-        (dolist (char seq)
-          (define-key map (kbd (format "%c" char)) 'objed-undefined)))
-      (let (loop)
+    (dolist (char (number-sequence ?a ?z))
+      (define-key map (kbd (format "%c" char)) 'objed-undefined))
+    (let (loop)
         (define-key map "-" 'negative-argument)
         ;; Make plain numbers do numeric args.
         (setq loop ?0)
@@ -823,6 +819,7 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "v" 'find-alternate-file)
     (define-key map "b" 'switch-to-buffer)
     (define-key map "o" 'objed-other-window)
+    (define-key map "k" 'objed-kill-buffer)
     (define-key map "1" 'delete-other-windows)
     (define-key map "2" 'split-window-vertically)
     (define-key map "3" 'split-window-horizontally)
@@ -837,6 +834,13 @@ To define new operations see `objed-define-op'.")
   (interactive)
   (objed--reset--objed-buffer)
   (other-window 1)
+  (objed--init (or objed--object 'char)))
+
+(defun objed-kill-buffer ()
+  "Like `kill-this-buffer' for objed."
+  (interactive)
+  (objed--reset--objed-buffer)
+  (kill-buffer (current-buffer))
   (objed--init (or objed--object 'char)))
 
 
