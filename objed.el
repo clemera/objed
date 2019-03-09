@@ -370,6 +370,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (declare-function avy--style-fn "ext:avy")
 (declare-function avy-goto-char "ext:avy")
 (declare-function edit-indirect-region "ext:edit-indirect")
+(declare-function edit-indirect-commit "ext:edit-indirect")
 (declare-function electric-pair-syntax-info "ext:elec-pair")
 (declare-function hl-line-unhighlight "ext:hl-line")
 
@@ -815,8 +816,6 @@ Other single character keys are bound to `objed-undefined'."
     ;; remove restrictions
     (define-key map "r" ctl-x-r-map)
     (define-key map "n" 'objed-narrow)
-    ;; less narrow
-    (define-key map "l" 'widen)
 
     ;; TODO: undo propose integration
     (define-key map "u" (objed--call-and-switch undo char))
@@ -2530,6 +2529,8 @@ Swaps the current object with the previous one."
   (interactive)
   (objed--switch-and-move 'line 'forward))
 
+(defvar edit-indirect--overlay)
+
 
 (defun objed-narrow (&optional arg)
   "Narrow to object.
@@ -2539,12 +2540,16 @@ With prefix argument ARG call `edit-indirect-region' if
   (interactive "P")
   (if objed--marked-ovs
       (message "Narrowing not possible with multiple objects.")
-    (if (and (require 'edit-indirect nil t)
-             arg)
-        (switch-to-buffer
-         (apply #'edit-indirect-region (objed--current)))
-      (apply 'narrow-to-region (objed--current))))
-  (objed--exit-objed))
+    (cond (edit-indirect--overlay
+           (edit-indirect-commit))
+          ((buffer-narrowed-p)
+           (widen))
+          (t
+           (if (and (require 'edit-indirect nil t)
+                    arg)
+               (switch-to-buffer
+                (apply #'edit-indirect-region (objed--current)))
+             (apply 'narrow-to-region (objed--current)))))))
 
 
 (defvar eval-sexp-fu-flash-mode nil)
