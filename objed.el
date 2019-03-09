@@ -811,7 +811,17 @@ Other single character keys are bound to `objed-undefined'."
       (objed-define-op nil objed-case-op))
 
     (define-key map "e" 'objed-eval)
+    (define-key map "d" 'dired-jump)
+    ;; remove restrictions
+    (define-key map "r" ctl-x-r-map)
     (define-key map "n" 'objed-narrow)
+    ;; less narrow
+    (define-key map "l" 'widen)
+
+    ;; TODO: undo propose integration
+    (define-key map "u" (objed--call-and-switch undo char))
+    (define-key map "z" 'objed-repeat)
+
     ;; actions analog to C-x C-KEY which exit
     (define-key map "s" 'save-buffer)
     (define-key map "f" 'find-file)
@@ -828,6 +838,12 @@ Other single character keys are bound to `objed-undefined'."
   "Map for additional operations called via a prefix from `objed-map'.
 
 To define new operations see `objed-define-op'.")
+
+(defun objed-repeat ()
+  (interactive)
+  (call-interactively 'repeat)
+  (setq real-this-command 'repeat)
+  (objed--switch-to 'char))
 
 (defun objed-other-window ()
   "Like `other-window' for objed."
