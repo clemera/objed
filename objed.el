@@ -610,6 +610,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map (kbd "?") 'objed-show-top-level)
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
+    ;; for quick access
     (define-key map "0" 'universal-argument)
 
     (define-key map (kbd "C-SPC") 'set-mark-command)
@@ -755,8 +756,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map (kbd "M-o") 'objed-occur)
     ;; TODO: start query replace in current object,
     ;; or for all
-    (define-key map "%"
-      (objed-define-op nil objed-replace current))
+    (define-key map "%" 'objed-replace)
+      ;; (objed-define-op nil objed-replace current))
     (define-key map "&"
       (objed-define-op nil objed-pipe-region))
 
@@ -770,9 +771,6 @@ BEFORE and AFTER are forms to execute before/after calling the command."
       'objed-insert-new-object)
     ;; TODO:
     ;; (define-key map "^" 'objed-raise-inner)
-    (define-key map "!"
-      (objed-define-op nil objed-replace-op))
-
     map)
   "Keymap for commands when `objed' is active.")
 
@@ -2737,20 +2735,6 @@ Comments empty line, too. BEG, END and ARG are passed to
              (delete-char -1))
     (comment-or-uncomment-region beg end arg)))
 
-(defun objed-replace-op (beg end str)
-  "Replace region with string read from minibuffer.
-
-Use the region between BEG and END. STR is the string to use for
-replacement."
-  (interactive
-   (let ((beg (region-beginning))
-         (end (region-end)))
-     (list beg end
-           (read-string "Replace with: "
-                        nil nil (buffer-substring beg end)))))
-  (delete-region beg end)
-  (insert str))
-
 
 (defun objed-case-op (beg end case)
   "Change case of region.
@@ -2789,18 +2773,37 @@ c: capitalize."
   (undo '(4)))
 
 
-(defun objed-replace (beg end)
+(defun objed-replace ()
   "Query replace narrowed to region BEG, END."
-  (interactive "r")
+  (interactive)
+  (let ((beg (objed--beg))
+        (end (objed--end)))
+    (if (memq objed--object '(word symbol identifier))
+        (objed--replace-ident beg end)
+      (save-excursion
+        (save-restriction
+          (narrow-to-region beg end)
+          (goto-char (point-min))
+          (hl-line-unhighlight)
+          (deactivate-mark)
+          (if (fboundp 'anzu-query-replace-regexp)
+              (call-interactively 'anzu-query-replace-regexp)
+            (call-interactively 'query-replace-regexp)))))))
+
+(defun objed--replace-ident (beg end)
+  (let ((str (objed--with-allow-input
+              (read-string "Replace with: "
+                          nil nil (buffer-substring beg end)))))
+    (if objed--marked-ovs
+        (objed--do-objects (apply-partially #'objed--replace-action str)
+                           this-command)
+      (objed--replace-action str beg end))))
+
+(defun objed--replace-action (str beg end)
   (save-excursion
-    (save-restriction
-      (narrow-to-region beg end)
-      (goto-char (point-min))
-      (hl-line-unhighlight)
-      (deactivate-mark)
-      (if (fboundp 'anzu-query-replace-regexp)
-          (call-interactively 'anzu-query-replace-regexp)
-        (call-interactively 'query-replace-regexp)))))
+    (goto-char beg)
+    (delete-region beg end)
+    (insert str)))
 
 
 ;; * Ipipe
