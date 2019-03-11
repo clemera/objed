@@ -452,13 +452,16 @@ operation."
           res)
     (nreverse res)))
 
+(defvar objed--with-allow-input nil)
 
 (defmacro objed--with-allow-input (&rest body)
   "Allow input in minibuffer while `objed' is active.
 
 The code executed in BODY allows minibuffer input without
 interferring with `objed'."
-  `(let ((overriding-terminal-local-map nil))
+  `(let ((overriding-terminal-local-map nil)
+         (minibuffer-setup-hook (remq 'objed--reset minibuffer-setup-hook))
+         (objed--with-allow-input t))
      (set-cursor-color objed--saved-cursor)
      (unwind-protect (progn ,@body)
        ;; body might exit objed...
@@ -1267,6 +1270,7 @@ Reinitializes the current object in case the current command is
 one of `objed-keeper-commands'."
   (let ((ocmd (lookup-key objed-map (this-command-keys-vector))))
     (or (commandp ocmd)
+        objed--with-allow-input
         (and this-command
              (or (memq this-command objed-keeper-commands)
                  (assq this-command objed-cmd-alist))
@@ -3130,10 +3134,11 @@ on."
   (objed--exit-objed))
 
 (defun objed--check-buffer ()
-  (when (not (eq (current-buffer) objed--buffer))
-    (objed--reset--objed-buffer)
-    (select-window (get-buffer-window (current-buffer)))
-    (objed--init (or objed--object 'char))))
+  (unless objed--with-allow-input
+    (when (not (eq (current-buffer) objed--buffer))
+      (objed--reset--objed-buffer)
+      (select-window (get-buffer-window (current-buffer)))
+      (objed--init (or objed--object 'char)))))
 
 (defun objed--reset--objed-buffer ()
   ;; things that need to be reset in objed buffer
