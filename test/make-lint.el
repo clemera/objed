@@ -1,28 +1,46 @@
 ;;; -*- lexical-binding: t; -*-
 
 ;; checkdoc tests
-(require 'checkdoc)
-(let ((guess-checkdoc-error-buffer-name "*Warnings*"))
-  ;; This buffer name is hard-coded in checkdoc and it may change
-  (ignore-errors
-    (kill-buffer guess-checkdoc-error-buffer-name))
-  (mapc (lambda (f)
-          (checkdoc-file f))
-        (file-expand-wildcards "*.el"))
-  (when-let ((buf (get-buffer guess-checkdoc-error-buffer-name)))
-    (with-current-buffer buf
-      (unless (= 0 (buffer-size))
-        (kill-emacs 1)))))
+;; (require 'checkdoc)
+;; (let ((guess-checkdoc-error-buffer-name "*Warnings*"))
+;;   ;; This buffer name is hard-coded in checkdoc and it may change
+;;   (ignore-errors
+;;     (kill-buffer guess-checkdoc-error-buffer-name))
+;;   (mapc (lambda (f)
+;;           (checkdoc-file f))
+;;         (file-expand-wildcards "*.el"))
+;;   (when-let ((buf (get-buffer guess-checkdoc-error-buffer-name)))
+;;     (with-current-buffer buf
+;;       (unless (= 0 (buffer-size))
+;;         (kill-emacs 1)))))
 
 
-;; package lint
+;; ;; package lint
 ;; (require 'package-lint)
-;; (package-lint-batch-and-exit))
+;; (let ((success t))
+;;   (dolist (file (file-expand-wildcards "*.el"))
+;;     (with-temp-buffer
+;;       (insert-file-contents file t)
+;;       (emacs-lisp-mode)
+;;       (let ((checking-result (package-lint-buffer)))
+;;         (when checking-result
+;;           (setq success nil)
+;;           (message "In `%s':" file)
+;;           (pcase-dolist (`(,line ,col ,type ,message) checking-result)
+;;             (message "  at %d:%d: %s: %s" line col type message))))))
+;;   (kill-emacs (if success 0 1)))
 
 ;; elsa
 ;; (require 'elsa)
-;; (let ((output (with-output-to-string (elsa-run))))
-;;   (unless (string-empty-p output)
-;;     (princ output)
-;;     (error "Elsa issues detected")))
+;; (defun my-elsa-run ()
+;;   "Run `elsa-process-file' and output errors to stdout for flycheck."
+;;   (elsa-load-config)
+;;   (dolist (file (file-expand-wildcards "*.el"))
+;;     (--each (reverse (oref (elsa-process-file file) errors))
+;;       (princ (concat file ":" (elsa-message-format it))))))
+;; (my-elsa-run)
+
+
+
+
 

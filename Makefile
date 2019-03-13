@@ -5,12 +5,12 @@ update:
 	$(EMACS) -Q -batch -l test/make-update.el
 
 lint:
-	$(EMACS) -Q -batch -l test/make-lint.el
+	$(EMACS) -Q -batch -l test/elpa.el -l test/make-lint.el
 
 compile: clean
 	$(EMACS) -Q -batch -l test/elpa.el -l test/make-compile.el
 
-test: compile 
+test: compile
 	$(EMACS) -Q -batch -l test/elpa.el -l test/make-test.el
 
 clean:

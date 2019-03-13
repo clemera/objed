@@ -1,5 +1,5 @@
 ;; list of the all the dependencies, including the dev dependencies
-(defvar dev-packages '())
+(defvar dev-packages '(package-lint elsa))
 
 ;; initialize package.el
 (setq package-user-dir
@@ -7,8 +7,8 @@
 (message "installing in %s ...\n" package-user-dir)
 (package-initialize)
 (setq package-archives
-      '(("melpa" . "http://melpa.org/packages/")
-        ("gnu" . "http://elpa.gnu.org/packages/")))
+      '(("melpa" . "https://melpa.org/packages/")
+        ("gnu" . "https://elpa.gnu.org/packages/")))
 (package-refresh-contents)
 
 ;; install dependencies
