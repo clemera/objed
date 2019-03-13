@@ -11,4 +11,5 @@
   (load (expand-file-name project-tests-file project-test-path))
 
   ;; run the tests
+  ;; (buttercup-run-discover))
   (ert-run-tests-batch-and-exit))
