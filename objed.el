@@ -291,7 +291,7 @@ state. Commands added to this list wont do that."
   'objed-modeline-hint "ea0be40dd"
   "Whether to show hint for current object in mode line.")
 
-(defcustom objed-modeline-hint-p t
+(defcustom objed-modeline-hint t
   "Whether to show hint for current object in mode line."
   :group 'objed
   :type 'boolean)
@@ -334,7 +334,7 @@ removed."
 
 To avoid loading `which-key' set this var before activating `objed-mode.'")
 
-(defcustom objed-use-which-key-if-available-p t
+(defcustom objed-use-which-key-if-available t
   "Whether to allow loading and use of `which-key'.
 
 To avoid loading `which-key' set this var before activating `objed-mode.'"
@@ -348,7 +348,7 @@ To avoid loading `which-key' set this var before activating `objed-mode.'"
 Respects `which-key-idle-delay'.
 The top level help is also available via `objed-show-top-level'.")
 
-(defcustom objed-auto-wk-top-level-p nil
+(defcustom objed-auto-wk-top-level nil
   "Whether to show top level help automatically when activating.
 
 Respects `which-key-idle-delay'.
@@ -362,7 +362,7 @@ The top level help is also available via `objed-show-top-level'."
 
 To avoid loading `avy' set this var before activating `objed-mode.'")
 
-(defcustom objed-use-avy-if-available-p t
+(defcustom objed-use-avy-if-available t
   "Whether to allow loading and use of `avy'.
 
 To avoid loading `avy' set this var before activating `objed-mode.'"
@@ -373,7 +373,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
   'objed-use-hl "ea0be40dd"
   "Whether allow loading and use of `hl-line' to highlight the current object.")
 
-(defcustom objed-use-hl-p t
+(defcustom objed-use-hl t
   "Whether allow loading and use of `hl-line' to highlight the current object."
   :group 'objed
   :type 'boolean)
