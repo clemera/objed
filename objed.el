@@ -287,6 +287,10 @@ state. Commands added to this list wont do that."
   :group 'objed
   :type 'function)
 
+(define-obsolete-variable-alias 'objed-modeline-hint-p
+  'objed-modeline-hint "ea0be40dd"
+  "Whether to show hint for current object in mode line.")
+
 (defcustom objed-modeline-hint-p t
   "Whether to show hint for current object in mode line."
   :group 'objed
@@ -324,12 +328,25 @@ removed."
 
 ;; optional dep options
 
+(define-obsolete-variable-alias 'objed-use-which-key-if-available-p
+  'objed-use-which-key-if-available "ea0be40dd"
+  "Whether to allow loading and use of `which-key'.
+
+To avoid loading `which-key' set this var before activating `objed-mode.'")
+
 (defcustom objed-use-which-key-if-available-p t
   "Whether to allow loading and use of `which-key'.
 
 To avoid loading `which-key' set this var before activating `objed-mode.'"
   :group 'objed
   :type 'boolean)
+
+(define-obsolete-variable-alias 'objed-auto-wk-top-level-p
+  'objed-auto-wk-top-level "ea0be40dd"
+  "Whether to show top level help automatically when activating.
+
+Respects `which-key-idle-delay'.
+The top level help is also available via `objed-show-top-level'.")
 
 (defcustom objed-auto-wk-top-level-p nil
   "Whether to show top level help automatically when activating.
@@ -339,12 +356,22 @@ The top level help is also available via `objed-show-top-level'."
   :group 'objed
   :type 'boolean)
 
+(define-obsolete-variable-alias 'objed-use-avy-if-available-p
+  'objed-use-avy-if-available "ea0be40dd"
+  "Whether to allow loading and use of `avy'.
+
+To avoid loading `avy' set this var before activating `objed-mode.'")
+
 (defcustom objed-use-avy-if-available-p t
   "Whether to allow loading and use of `avy'.
 
 To avoid loading `avy' set this var before activating `objed-mode.'"
   :group 'objed
   :type 'boolean)
+
+(define-obsolete-variable-alias 'objed-use-hl-p
+  'objed-use-hl "ea0be40dd"
+  "Whether allow loading and use of `hl-line' to highlight the current object.")
 
 (defcustom objed-use-hl-p t
   "Whether allow loading and use of `hl-line' to highlight the current object."
