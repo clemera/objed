@@ -1,18 +1,20 @@
 ;;; -*- lexical-binding: t; -*-
 
 ;; checkdoc tests
-;; (require 'checkdoc)
-;; (let ((guess-checkdoc-error-buffer-name "*Warnings*"))
-;;   ;; This buffer name is hard-coded in checkdoc and it may change
-;;   (ignore-errors
-;;     (kill-buffer guess-checkdoc-error-buffer-name))
-;;   (mapc (lambda (f)
-;;           (checkdoc-file f))
-;;         (file-expand-wildcards "*.el"))
-;;   (when-let ((buf (get-buffer guess-checkdoc-error-buffer-name)))
-;;     (with-current-buffer buf
-;;       (unless (= 0 (buffer-size))
-;;         (kill-emacs 1)))))
+(require 'subr-x)
+(require 'checkdoc)
+(let ((guess-checkdoc-error-buffer-name "*Warnings*")
+      (sentence-end-double-space nil))
+  ;; This buffer name is hard-coded in checkdoc and it may change
+  (ignore-errors
+    (kill-buffer guess-checkdoc-error-buffer-name))
+  (mapc (lambda (f)
+          (checkdoc-file f))
+        (file-expand-wildcards "*.el"))
+  (when-let ((buf (get-buffer guess-checkdoc-error-buffer-name)))
+    (with-current-buffer buf
+      (unless (= 0 (buffer-size))
+        (kill-emacs 1)))))
 
 
 ;; ;; package lint

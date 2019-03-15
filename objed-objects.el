@@ -140,7 +140,7 @@ Usage:
 
 PACKAGE is the name of the package the object should be loaded
 for. If nil you are defining a default object and need to add a
-binding in `objed-object-map' for the object command.
+binding in variable `objed-object-map' for the object command.
 
 NAME is a symbol which defines the name which will be used to
 refer to this object. ARGS is a list of keyword arguments and
@@ -216,7 +216,7 @@ is not skipped before search for the next one via :try-next.
 :commands (optional)
 
 If given the value should be a list of commands for which objed
-should activate (when `objed-mode' is on) with the object beeing
+should activate (when variable `objed-mode' is on) with the object beeing
 defined."
   (declare (indent 2))
   (let* ((mode (plist-get args :mode))
@@ -563,6 +563,7 @@ and the current window."
     (setq posns (nreverse posns))))
 
 (defun objed--no-skipper-p ()
+  "If current object should be skipped."
   (get (objed--name2func objed--object)
        'objed-no-skip))
 
@@ -1077,6 +1078,9 @@ object."
 
 
 (defun objed-goto-prev-identifier (arg)
+  "Switch to nth previous identifier.
+
+nth is given by ARG."
   (interactive "P")
   (unless (eq objed--object 'identifier)
     (objed--switch-to 'identifier))
@@ -1215,7 +1219,10 @@ position POS, otherwise just return POS."
 (defun objed--in-string-p (&optional syn ignore-atp)
   "Return non-nil if point is inside or at string.
 
-If SYN is given use it instead of syntax at point."
+If SYN is given use it instead of syntax at point.
+
+If IGNORE-ATP is non-nil dont test if point is at a string
+only if its withing one."
   (let ((syn (or syn (syntax-ppss))))
     (if (and (nth 3 syn)
              (nth 8 syn))
@@ -1328,7 +1335,8 @@ If SYN is given use it instead of syntax at point."
 (defun objed--skip-ws (&optional back limit)
   "Skip whitspace.
 
-Defaults to forward, if BACK is non-nil skip backwards."
+Defaults to forward, if BACK is non-nil skip backwards.
+Skips until LIMIT."
   (if back
       (skip-chars-backward " \r\n\t" limit)
     (skip-chars-forward " \r\n\t" limit)))
@@ -2055,6 +2063,7 @@ non-nil the indentation block can contain empty lines."
               (run-at-time 0 nil (apply-partially #'message "First one!")))))))))
 
 (defun objed--get-ident-format ()
+  "Get format string for identifier."
   (let ((sym (or (symbol-at-point)
                  (and (re-search-forward "\\_<" nil t)
                       (symbol-at-point)))))
