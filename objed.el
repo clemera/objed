@@ -194,8 +194,6 @@ function should return nil if objed should not initialize."
     (scroll-up-command . line)
     (scroll-down-command . line)
     (move-to-window-line-top-bottom . line)
-    (xref-find-definitions . line)
-    (xref-pop-marker-stack . line)
     (imenu . line)
     (backward-paragraph . paragraph)
     (forward-paragraph . paragraph)
@@ -241,8 +239,11 @@ function should return nil if objed should not initialize."
     (yank-pop . region)
     ;; misc
     (which-key-C-h-dispatch . char)
-    (switch-to-buffer . char)
     (find-file . char)
+    ;; keep object of buffer if available...
+    (switch-to-buffer . nil)
+    (xref-find-definitions . nil)
+    (xref-pop-marker-stack . nil)
     )
   "Entry commands and associated objects."
   :group 'objed
@@ -400,6 +401,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (declare-function edit-indirect-commit "ext:edit-indirect")
 (declare-function electric-pair-syntax-info "ext:elec-pair")
 (declare-function hl-line-unhighlight "ext:hl-line")
+(declare-function hl-line-highlight "ext:hl-line")
 
 
 
@@ -1274,7 +1276,13 @@ or object position data."
          (objed--switch-to-object-for-cmd sym))
         ((symbolp sym)
          (objed--switch-to sym))
-        (t (objed--update-current-object sym)))
+        (t
+         (unless objed--object
+           (setq objed--object 'char))
+         ;; uses objed--object
+         (objed--update-current-object sym)))
+  ;; make sure the object is highlighted
+  (hl-line-highlight)
 
   ;; transient map
   (fset #'objed--exit-objed
@@ -3183,13 +3191,13 @@ on and RANGE hold the object position data."
   (objed--exit-objed))
 
 (defun objed--check-buffer ()
-  "Check if current buffer is still the `objed-buffer'.
+  "Check if current buffer is still the `objed--buffer'.
 
 Resets objed if appropriate."
   (unless objed--with-allow-input
     (when (not (eq (current-buffer) objed--buffer))
       (objed--reset--objed-buffer)
-      (select-window (get-buffer-window (current-buffer)))
+      (select-window (get-buffer-window (current-buffer)) t)
       (objed--init (or objed--object 'char)))))
 
 (defun objed--reset--objed-buffer ()
