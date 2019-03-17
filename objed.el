@@ -865,6 +865,8 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "b" 'switch-to-buffer)
     (define-key map "o" 'objed-other-window)
     (define-key map "k" 'objed-kill-buffer)
+
+    (define-key map "0" 'delete-window)
     (define-key map "1" 'delete-other-windows)
     (define-key map "2" 'split-window-vertically)
     (define-key map "3" 'split-window-horizontally)
@@ -2583,9 +2585,8 @@ Swaps the current object with the previous one."
   (interactive)
   (objed--switch-and-move 'line 'forward))
 
+
 (defvar edit-indirect--overlay)
-
-
 (defun objed-narrow (&optional arg)
   "Narrow to object.
 
@@ -2594,7 +2595,7 @@ With prefix argument ARG call `edit-indirect-region' if
   (interactive "P")
   (if objed--marked-ovs
       (message "Narrowing not possible with multiple objects.")
-    (cond (edit-indirect--overlay
+    (cond ((bound-and-true-p edit-indirect--overlay)
            (edit-indirect-commit))
           ((buffer-narrowed-p)
            (widen))
