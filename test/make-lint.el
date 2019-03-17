@@ -25,7 +25,7 @@
 (when (require 'package-lint nil t)
   (define-advice package-lint--get-package-prefix (:override () objed)
     "Use objed as prefix for all files."
-    "objed")
+    (file-name-nondirectory (expand-file-name "." default-directory)))
   (fset #'package-lint--test-keyseq #'ignore)
   (fset #'package-lint--check-eval-after-load #'ignore)
   (let ((success t))
