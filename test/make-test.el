@@ -8,7 +8,7 @@
   (add-to-list 'load-path project-test-path)
 
   ;; load the file with tests
-  (load (expand-file-name project-tests-file project-test-path))
+  (load (expand-file-name project-tests-file project-test-path) nil t)
 
   ;; run the tests
   ;; (buttercup-run-discover))
