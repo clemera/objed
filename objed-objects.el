@@ -1641,7 +1641,17 @@ comments."
 
 (objed-define-object nil url
   :get-obj
-  (bounds-of-thing-at-point 'url)
+  (let ((bounds (bounds-of-thing-at-point 'url)))
+    (when bounds
+      (objed-make-object :obounds bounds
+                         :ibounds
+                         (progn
+                           (goto-char (car bounds))
+                           (re-search-forward "https?://" nil t)
+                           (cons (point)
+                                 (if (search-forward "/" (cdr bounds) t)
+                                     (1- (point))
+                                   (cdr bounds)))))))
   :try-next
   (re-search-forward "http")
   :try-prev
