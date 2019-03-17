@@ -1605,15 +1605,27 @@ comments."
   :atp
   (looking-at "/\\|\\\\")
   :get-obj
-  ;; TODO: inner bounds without extension
   (let* ((bounds (bounds-of-thing-at-point 'filename))
          (file (and bounds (buffer-substring (car bounds) (cdr bounds)))))
-    (when (and file (string-match "/\\|\\\\" file))
-      bounds))
+    (when (and file (string-match (rx (or (and bos (or "/" "\\"))
+                                          (and "." (* alnum) eos)))
+                                  file))
+      (objed-make-object :obounds bounds
+                         :ibounds
+                         (let ((ifile (or (file-name-directory file)
+                                          (file-name-sans-extension file))))
+                           (when ifile
+                             (goto-char (car bounds))
+                             (search-forward ifile)
+                             (cons (match-beginning 0) (match-end 0)))))))
   :try-next
-  (re-search-forward  "/\\|\\\\" nil t)
+  (re-search-forward  (rx (or (or "/" "\\")
+                              (and "." (* alnum))))
+                      nil t)
   :try-prev
-  (re-search-backward  "/\\|\\\\" nil t))
+  (re-search-backward  (rx (or (or "/" "\\")
+                               (and "." (* alnum))))
+                       nil t))
 
 (objed-define-object nil mail
   :get-obj
