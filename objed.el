@@ -3173,8 +3173,10 @@ If nil ‘eval-region’ is used instead.")
          (oend (objed--oend)))
     (objed--reset)
     (delete-region obeg oend)
-    (save-excursion
-      (insert istring))))
+    (objed--init
+     (objed-make-object :beg (point)
+                        :end (save-excursion (insert istring)
+                                             (point))))))
 
 
 (defun objed-execute ()
