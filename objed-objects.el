@@ -1615,6 +1615,14 @@ comments."
   :try-prev
   (re-search-backward  "/\\|\\\\" nil t))
 
+(objed-define-object nil mail
+  :get-obj
+  (bounds-of-thing-at-point 'email)
+  :try-next
+  (re-search-forward  "@" nil t)
+  :try-prev
+  (re-search-backward  "@" nil t))
+
 (objed-define-object nil page
   :atp
   (looking-at page-delimiter)
