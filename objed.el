@@ -1892,6 +1892,39 @@ back to `objed-initial-object' if no match found."
       (goto-char (objed--iend))
       (objed--change-to :beg pos :ibeg pos))))
 
+(defun objed--get-ident-format ()
+  "Get format string for identifier."
+  (let ((sym (or (symbol-at-point)
+                 (and (re-search-forward "\\_<" nil t)
+                      (symbol-at-point)))))
+    (when sym
+      (format "\\_<%s\\_>" sym))))
+
+;;;###autoload
+(defun objed-first-identifier ()
+  "Move to first instance of identifier at point."
+  (interactive)
+  (let ((ident (objed--get-ident-format)))
+    (when ident
+      (goto-char (point-min))
+      (when (re-search-forward ident nil t)
+        (goto-char (match-beginning 0))))))
+
+;;;###autoload
+(defun objed-last-identifier ()
+  "Move to last instance of identifier at point."
+  (interactive)
+  (let ((ident (objed--get-ident-format)))
+    (when ident
+      (goto-char (point-max))
+      (re-search-backward ident nil t))))
+
+;;;###autoload
+(defun objed-identifier ()
+  "Activate object with identifier at point."
+  (interactive)
+  (objed--init 'identifier))
+
 (defun objed-toggle-side ()
   "Move to other side of object.
 
@@ -3327,7 +3360,7 @@ whitespace they build a sequence."
     (define-key map (kbd "M-[") 'objed-beg-of-object-at-point)
     (define-key map (kbd "M-]") 'objed-end-of-object-at-point)
     (define-key map (kbd "C-,") 'objed-prev-identifier)
-    (define-key map (kbd "C-.") 'objed-identifier-object)
+    (define-key map (kbd "C-.") 'objed-identifier)
     (define-key map (kbd "C-<") 'objed-first-identifier)
     (define-key map (kbd "C->") 'objed-last-identifier)
     map)
