@@ -789,8 +789,7 @@ to the selected one."
        nil objed-run-or-eval ignore))
     (define-key map (kbd "<M-return>")
       'objed-insert-new-object)
-    ;; TODO:
-    ;; (define-key map "^" 'objed-raise-inner)
+    (define-key map "^" 'objed-raise)
     map)
   "Keymap for commands when `objed' is active.")
 
@@ -3160,7 +3159,23 @@ If nil ‘eval-region’ is used instead.")
               (eval-region beg end t))
              ((and (require lib nil t)
                    (commandp cmd))
-             (call-interactively cmd))))))
+              (call-interactively cmd))))))
+
+
+(defun objed-raise ()
+  "Replace object with inner part."
+  (interactive)
+  (let* ((ibeg (objed--ibeg))
+         (iend (objed--iend))
+         (istring (buffer-substring ibeg iend))
+         (obeg (objed--obeg))
+         (oend (objed--oend)))
+    (objed--reset)
+    (delete-region obeg oend)
+    (save-excursion
+      (insert istring))))
+
+
 
 
 ;; * Exit active state
