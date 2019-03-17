@@ -738,7 +738,11 @@ specific versions of object."
   (cond ((memq query '(:try-next :try-prev))
          (condition-case nil
              (funcall objf query)
-           ((end-of-buffer beginning-of-buffer search-failed scan-error)
+           (search-failed
+            (error "No %s %s found"
+                   (if (eq query :try-next) "next" "previous")
+                   objed--object))
+           ((end-of-buffer beginning-of-buffer scan-error)
             (ignore))))
         (t
          (funcall objf query))))
@@ -1631,19 +1635,17 @@ comments."
   :get-obj
   (bounds-of-thing-at-point 'email)
   :try-next
-  (re-search-forward  "@" nil t)
+  (re-search-forward  "@")
   :try-prev
-  (re-search-backward  "@" nil t))
+  (re-search-backward  "@"))
 
 (objed-define-object nil url
   :get-obj
   (bounds-of-thing-at-point 'url)
   :try-next
-  (re-search-forward "http"
-                     nil t)
+  (re-search-forward "http")
   :try-prev
-  (re-search-backward "http"
-                      nil t))
+  (re-search-backward "http"))
 
 (objed-define-object nil page
   :atp
