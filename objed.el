@@ -911,6 +911,7 @@ To define new operations see `objed-define-op'.")
     (define-key map "t" 'objed-tag-object)
     (define-key map "f" 'objed-file-object)
     (define-key map "m" 'objed-mail-object)
+    (define-key map "u" 'objed-url-object)
 
     (define-key map "*" 'objed-section-object)
     (define-key map "l" 'objed-page-object)

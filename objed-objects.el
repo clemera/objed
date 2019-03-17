@@ -1635,6 +1635,16 @@ comments."
   :try-prev
   (re-search-backward  "@" nil t))
 
+(objed-define-object nil url
+  :get-obj
+  (bounds-of-thing-at-point 'url)
+  :try-next
+  (re-search-forward "http"
+                     nil t)
+  :try-prev
+  (re-search-backward "http"
+                      nil t))
+
 (objed-define-object nil page
   :atp
   (looking-at page-delimiter)
