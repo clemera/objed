@@ -839,8 +839,7 @@ Other single character keys are bound to `objed-undefined'."
 
     ;; TODO: undo propose integration
     (define-key map "u" (objed--call-and-switch undo char))
-    (define-key map "z" 'objed-repeat)
-
+    ;; (define-key map "z" 'objed-repeat)
     ;; actions analog to C-x C-KEY which exit
     (define-key map "s" 'save-buffer)
     (define-key map "f" 'find-file)
@@ -3174,8 +3173,6 @@ If nil ‘eval-region’ is used instead.")
     (delete-region obeg oend)
     (save-excursion
       (insert istring))))
-
-
 
 
 ;; * Exit active state
