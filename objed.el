@@ -135,8 +135,7 @@
 (defgroup objed-faces nil
   "Faces for `objed'"
   :group 'objed
-  :group 'faces
-  :prefix "objed-")
+  :group 'faces)
 
 ;; * Faces
 
@@ -169,8 +168,7 @@ If the current `major-mode' is in the list or derives from a
 member of it `objed' will not activate.
 
 See also `objed-disabled-p'"
-  :group 'objed
-  :type '(repeat symbol))
+    :type '(repeat symbol))
 
 (defcustom objed-init-p-function #'objed-init-p
   "Function which tests if objed is allowed to initialize.
@@ -246,7 +244,6 @@ function should return nil if objed should not initialize."
     (xref-pop-marker-stack . nil)
     )
   "Entry commands and associated objects."
-  :group 'objed
   :type '(alist :key-type sexp
                 :value-type (choice sexp
                                     (repeat sexp))))
@@ -257,7 +254,6 @@ function should return nil if objed should not initialize."
 
 This option holds the number of times `objed-last' can
 be used to restore previous states."
-  :group 'objed
   :type 'integer)
 
 
@@ -275,17 +271,14 @@ be used to restore previous states."
 
 When regular commands are executed `objed' will exit its editing
 state. Commands added to this list wont do that."
-  :group 'objed
   :type '(repeat function))
 
 (defcustom objed-cursor-color "#e52b50"
   "Cursor color to use when `objed' is active."
-  :group 'objed
   :type 'color)
 
 (defcustom objed-which-key-order #'which-key-description-order
   "Key sort order to use for which key help popups."
-  :group 'objed
   :type 'function)
 
 (define-obsolete-variable-alias 'objed-modeline-hint-p
@@ -294,7 +287,6 @@ state. Commands added to this list wont do that."
 
 (defcustom objed-modeline-hint t
   "Whether to show hint for current object in mode line."
-  :group 'objed
   :type 'boolean)
 
 (defcustom objed-mode-line-format
@@ -306,7 +298,6 @@ state. Commands added to this list wont do that."
   "Format used to display hint in mode-line.
 
 Only relevant when `objed-modeline-hint-p' is non-nil."
-  :group 'objed
   :type 'sexp)
 
 (defcustom objed-modeline-setup-func #'objed--setup-mode-line
@@ -318,12 +309,10 @@ add/remove the mode line hint.
 It also recieves a second optional argument which indicates if
 the hint should be remove or added. If non-nil the hint should be
 removed."
-  :group 'objed
   :type 'symbol)
 
 (defcustom objed-initial-object 'region
   "Object to use as fallback for `objed-activate'."
-  :group 'objed
   :type 'symbol)
 
 
@@ -339,7 +328,6 @@ To avoid loading `which-key' set this var before activating `objed-mode.'")
   "Whether to allow loading and use of `which-key'.
 
 To avoid loading `which-key' set this var before activating `objed-mode.'"
-  :group 'objed
   :type 'boolean)
 
 (define-obsolete-variable-alias 'objed-auto-wk-top-level-p
@@ -354,7 +342,6 @@ The top level help is also available via `objed-show-top-level'.")
 
 Respects `which-key-idle-delay'.
 The top level help is also available via `objed-show-top-level'."
-  :group 'objed
   :type 'boolean)
 
 (define-obsolete-variable-alias 'objed-use-avy-if-available-p
@@ -367,7 +354,6 @@ To avoid loading `avy' set this var before activating `objed-mode.'")
   "Whether to allow loading and use of `avy'.
 
 To avoid loading `avy' set this var before activating `objed-mode.'"
-  :group 'objed
   :type 'boolean)
 
 (define-obsolete-variable-alias 'objed-use-hl-p
@@ -376,7 +362,6 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 
 (defcustom objed-use-hl t
   "Whether allow loading and use of `hl-line' to highlight the current object."
-  :group 'objed
   :type 'boolean)
 
 
