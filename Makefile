@@ -15,5 +15,7 @@ test: compile lint
 
 clean:
 	rm -f *.elc
+	rm -f test/*.elc	
+
 
 .PHONY: update lint compile test clean

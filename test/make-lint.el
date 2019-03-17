@@ -18,16 +18,16 @@
 
 
 ;; package lint
+(declare-function package-lint--get-package-prefix@objed "ext:package-lint")
+(declare-function package-lint--test-keyseq "ext:package-lint")
+(declare-function package-lint--check-eval-after-load "ext:package-lint")
+(declare-function package-lint-buffer "ext:package-lint")
 (when (require 'package-lint nil t)
   (define-advice package-lint--get-package-prefix (:override () objed)
     "Use objed as prefix for all files."
     "objed")
-  (define-advice package-lint--check-eval-after-load
-      (:override () ignore)
-    nil)
-  (define-advice package-lint--test-keyseq
-      (:override (_) ignore)
-    nil)
+  (fset #'package-lint--test-keyseq #'ignore)
+  (fset #'package-lint--check-eval-after-load #'ignore)
   (let ((success t))
     (dolist (file (file-expand-wildcards "*.el"))
       (with-temp-buffer
