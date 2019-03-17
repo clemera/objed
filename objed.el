@@ -790,6 +790,8 @@ to the selected one."
     (define-key map (kbd "<M-return>")
       'objed-insert-new-object)
     (define-key map "^" 'objed-raise)
+    (define-key map "!" 'objed-execute)
+
     map)
   "Keymap for commands when `objed' is active.")
 
@@ -830,15 +832,15 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "c"
       ;; upcase, downcase, capitalize, reformat
       (objed-define-op nil objed-case-op))
+    ;; (define-key map "q" 'objed-reformat-object)
 
     (define-key map "e" 'objed-eval)
-    (define-key map "d" 'dired-jump)
-    ;; remove restrictions
     (define-key map "r" ctl-x-r-map)
     (define-key map "n" 'objed-narrow)
 
     ;; TODO: undo propose integration
     (define-key map "u" (objed--call-and-switch undo char))
+    (define-key map "d" 'dired-jump)
     ;; (define-key map "z" 'objed-repeat)
     ;; actions analog to C-x C-KEY which exit
     (define-key map "s" 'save-buffer)
@@ -3173,6 +3175,21 @@ If nil ‘eval-region’ is used instead.")
     (delete-region obeg oend)
     (save-excursion
       (insert istring))))
+
+
+(defun objed-execute ()
+  "Execute object contents as shell commands."
+  (interactive)
+  (let* ((beg (objed--beg))
+         (end (objed--end))
+         (str (concat (buffer-substring beg end) "\n"))
+         (lines (split-string str "[\r\n]" t)))
+    (objed--reset)
+    (dolist (line lines)
+      (when (y-or-n-p (concat (format "$ %s" line)
+                              "?"))
+        (shell-command line)))
+    (objed--init objed--object)))
 
 
 ;; * Exit active state
