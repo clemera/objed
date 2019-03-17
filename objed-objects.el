@@ -2,7 +2,10 @@
 ;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
+;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
+;; Version: 0.7.2
 ;; Maintainer: Clemens Radermacher <clemera@posteo.net>
+;; URL: https://github.com/clemera/objed
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -50,9 +53,6 @@
 (declare-function objed--install-advices-for "ext:objed")
 
 
-;; dyn bindings
-(defvar avy-action nil)
-(defvar avy-all-windows nil)
 
 ;; * Macros
 
@@ -613,7 +613,8 @@ character of the string."
             (push (cons str (point)) lines)))))))
 
 
-
+(defvar avy-action)
+(defvar avy-all-windows)
 (defun objed--ace-until (&optional start back)
   "Get position of object using `avy'.
 
@@ -2307,7 +2308,7 @@ non-nil the indentation block can contain empty lines."
 
 
 
-(defvar comint-prompt-regexp "^")
+(defvar comint-prompt-regexp)
 (declare-function comint-next-prompt "ext:comint")
 (declare-function comint-previous-prompt "ext:comint")
 (objed-define-object nil output

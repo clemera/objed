@@ -17,30 +17,41 @@
         (kill-emacs 1)))))
 
 
-;; ;; package lint
-;; (require 'package-lint)
-;; (let ((success t))
-;;   (dolist (file (file-expand-wildcards "*.el"))
-;;     (with-temp-buffer
-;;       (insert-file-contents file t)
-;;       (emacs-lisp-mode)
-;;       (let ((checking-result (package-lint-buffer)))
-;;         (when checking-result
-;;           (setq success nil)
-;;           (message "In `%s':" file)
-;;           (pcase-dolist (`(,line ,col ,type ,message) checking-result)
-;;             (message "  at %d:%d: %s: %s" line col type message))))))
-;;   (kill-emacs (if success 0 1)))
+;; package lint
+(when (require 'package-lint nil t)
+  (define-advice package-lint--get-package-prefix (:override () objed)
+    "Use objed as prefix for all files."
+    "objed")
+  (define-advice package-lint--check-eval-after-load
+      (:override () ignore)
+    nil)
+  (define-advice package-lint--test-keyseq
+      (:override (_) ignore)
+    nil)
+  (let ((success t))
+    (dolist (file (file-expand-wildcards "*.el"))
+      (with-temp-buffer
+        (insert-file-contents file t)
+        (emacs-lisp-mode)
+        (let ((checking-result (package-lint-buffer)))
+          (when checking-result
+            (setq success nil)
+            (message "In `%s':" file)
+            (pcase-dolist (`(,line ,col ,type ,message) checking-result)
+              (message "  at %d:%d: %s: %s" line col type message))))))
+    (kill-emacs (if success 0 1))))
 
 ;; elsa
-;; (require 'elsa)
-;; (defun my-elsa-run ()
-;;   "Run `elsa-process-file' and output errors to stdout for flycheck."
-;;   (elsa-load-config)
-;;   (dolist (file (file-expand-wildcards "*.el"))
-;;     (--each (reverse (oref (elsa-process-file file) errors))
-;;       (princ (concat file ":" (elsa-message-format it))))))
-;; (my-elsa-run)
+;; (when (require 'elsa nil t)
+;;   (defun my-elsa-run ()
+;;     "Run `elsa-process-file' and output errors to stdout for flycheck."
+;;     (interactive)
+;;     (with-help-window (get-buffer-create "*elsa*")
+;;       (elsa-load-config)
+;;       (dolist (file (file-expand-wildcards "*.el"))
+;;         (--each (reverse (oref (elsa-process-file file) errors))
+;;           (princ (concat file ":" (elsa-message-format it)))))))
+;;   (my-elsa-run))
 
 
 

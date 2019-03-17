@@ -380,14 +380,10 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
   :type 'boolean)
 
 
-;; info for byte-comp
-(defvar ivy-sort-function-alist nil)
-(defvar which-key-replacement-alist nil)
-(defvar which-key-mode nil)
-(defvar which-key-idle-delay 1.0)
-(defvar which-key--using-top-level nil)
-(defvar avy-all-windows nil)
-(defvar avy-action nil)
+;; dyns
+(defvar which-key-idle-delay)
+(defvar which-key--using-top-level)
+(defvar which-key-replacement-alist)
 
 
 (declare-function objed--exit-objed "objed" nil t)
@@ -1246,8 +1242,9 @@ or object position data."
          (suggest-key-bindings . nil)
          (which-key-sort-order . ,objed-which-key-order)
          (which-key-replacement-alist
-          . ,(append objed--wk-replacement-alist
-                     which-key-replacement-alist))))
+          . ,(when (bound-and-true-p which-key-replacement-alist)
+               (append objed--wk-replacement-alist
+                       which-key-replacement-alist)))))
     (push
      (if (local-variable-p var)
          (cons var (symbol-value var))
@@ -1413,7 +1410,7 @@ matches IREGEX is not displayed."
   (when (and objed--which-key-avail-p
              ;; let the user deactivate later as well...
              objed-use-which-key-if-available-p
-             which-key-mode
+             (bound-and-true-p which-key-mode)
              (or nowait (sit-for which-key-idle-delay)))
     (prog1 t
       (setq which-key--using-top-level desc)
@@ -2007,6 +2004,8 @@ textual content of an object via the content object."
     (force-mode-line-update)))
 
 
+(defvar avy-all-windows)
+(defvar avy-action)
 (defun objed-ace ()
   "Jump to an object with `avy'."
   (interactive)
@@ -2030,6 +2029,7 @@ textual content of an object via the content object."
             (t
              (message "No objects found."))))))
 
+(defvar ivy-sort-function-alist)
 (defun objed-occur ()
   "Complete initial lines and jump to object."
   (interactive)
@@ -2606,7 +2606,7 @@ With prefix argument ARG call `edit-indirect-region' if
              (apply 'narrow-to-region (objed--current)))))))
 
 
-(defvar eval-sexp-fu-flash-mode nil)
+(defvar eval-sexp-fu-flash-mode)
 ;; adapted from lispy
 (defun objed--eval-func (beg end &optional replace)
   "Evaluate code between BEG and END.
