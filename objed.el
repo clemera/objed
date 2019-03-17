@@ -851,6 +851,7 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "o" 'objed-other-window)
     (define-key map "k" 'objed-kill-buffer)
 
+    (define-key map "j" 'imenu)
     (define-key map "0" 'delete-window)
     (define-key map "1" 'delete-other-windows)
     (define-key map "2" 'split-window-vertically)
