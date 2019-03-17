@@ -23,8 +23,9 @@
 ;;; Commentary:
 ;;
 ;; A global minor-mode to navigate and edit text objects. Objed enables modal
-;; editing and composition of commands, too. It combines ideas of other Editors
-;; like Vim or Kakoune and tries to align them with regular Emacs conventions.
+;; editing and composition of commands, too. It combines ideas of other
+;; Editors like Vim or Kakoune and tries to align them with regular Emacs
+;; conventions.
 ;;
 ;; For more information also see:
 ;;
@@ -832,8 +833,9 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "c"
       ;; upcase, downcase, capitalize, reformat
       (objed-define-op nil objed-case-op))
-    ;; (define-key map "q" 'objed-reformat-object)
 
+    (define-key map "q"
+      (objed-define-op nil objed-reformat-op ignore))
     (define-key map "e" 'objed-eval)
     (define-key map "r" ctl-x-r-map)
     (define-key map "n" 'objed-narrow)
@@ -2676,6 +2678,22 @@ If REPLACE is non-nil replace the region with the result."
                 (insert str)))))))))
 
 
+;; TODO: toggle like fill/unfill
+(defun objed-reformat-op (beg end)
+  "Reformat object between BEG and END."
+  (interactive "r")
+  (cond ((memq objed--object (list 'paragraph 'sentence 'line 'textblock))
+         (fill-paragraph)
+         (objed--init objed--object))
+        ((memq objed--object (list 'sexp 'bracket))
+         (save-excursion
+           (goto-char beg)
+           (indent-pp-sexp))
+         (objed--init objed--object))
+        (t
+         (objed-indent beg end))))
+
+
 (defun objed-eval (&optional replace)
   "Eval objects.
 
@@ -2696,8 +2714,8 @@ If REPLACE is non-nil replace evaluated code with result."
 (defun objed-pipe-region (beg end cmd &optional variant)
   "Pipe region text between BEG and END through a shell CMD.
 
-VARIANT is either the char r or e to either replace the text with
-the result or to echo it."
+VARIANT is either the char r or e to either replace the text with the result
+or to echo it."
   (interactive (let ((variant (read-char-choice "Replace [r] Echo [e] "
                                                 (list ?r ?e)))
                      (cmd (read-shell-command "Shell command: ")))
