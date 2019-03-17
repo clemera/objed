@@ -2814,12 +2814,12 @@ c: capitalize."
 (defun objed-replace ()
   "Query replace narrowed to region BEG, END."
   (interactive)
-  (let ((beg (objed--beg))
-        (end (objed--end)))
-    (if (memq objed--object '(word symbol identifier))
-        (objed--replace-ident beg end)
-      (save-excursion
-        (save-restriction
+  (if (memq objed--object '(word symbol identifier))
+      (objed--replace-object)
+    (save-excursion
+      (save-restriction
+        (let ((beg (objed--beg))
+              (end (objed--end)))
           (narrow-to-region beg end)
           (goto-char (point-min))
           (hl-line-unhighlight)
@@ -2828,22 +2828,25 @@ c: capitalize."
               (call-interactively 'anzu-query-replace-regexp)
             (call-interactively 'query-replace-regexp)))))))
 
-(defun objed--replace-ident (beg end)
-  "Replace text between BEG and END for object(s)."
-  (let ((str (objed--with-allow-input
-              (read-string "Replace with: "
-                          nil nil (buffer-substring beg end)))))
-    (if objed--marked-ovs
-        (objed--do-objects (apply-partially #'objed--replace-action str)
-                           this-command)
-      (objed--replace-action str beg end))))
+(defun objed--replace-object ()
+  "Replace current object(s) with string queried from user."
+  (let* ((beg (objed--beg))
+         (end (objed--end))
+         (str (objed--with-allow-input
+               (read-string "Replace with: "
+                            nil nil (buffer-substring beg end))))
+         (n (objed--do (apply-partially
+                        #'objed--replace-region-with-string str)
+                       this-command)))
+    (message "Replaced %s objects." n)))
 
-(defun objed--replace-action (str beg end)
-  "Replace region BEG, END with STR."
+
+(defun objed--replace-region-with-string (str beg end)
+  "Use string STR to replace region BEG, END."
   (save-excursion
     (goto-char beg)
-    (delete-region beg end)
-    (insert str)))
+    (search-forward (buffer-substring beg end))
+    (replace-match str)))
 
 
 ;; * Ipipe
@@ -3247,7 +3250,9 @@ Resets objed if appropriate."
   "Execute ACTION on current object(s).
 
 NAME is the symbol used for current op and defaults to
-`this-command'."
+`this-command'.
+
+Return number of times ACTION got applied."
   (let ((name (or name this-command)))
     (cond (objed--marked-ovs
            (objed--do-objects action name))
@@ -3261,26 +3266,30 @@ NAME is the symbol used for current op and defaults to
       (let ((text (apply #'buffer-substring range))
             (range (list (set-marker (make-marker) (car range))
                          (set-marker (make-marker) (cadr range)))))
-        (apply action range)
-        (objed-exit-op name text range)))))
+        (prog1 1
+          (apply action range)
+          (objed-exit-op name text range))))))
 
 (defun objed--do-objects (action name)
   "Apply ACTION for op named NAME on marked objects."
   (let ((ovs objed--marked-ovs)
-        (appendp (memq action '(kill-region copy-region-as-kill))))
+        (appendp (memq action '(kill-region copy-region-as-kill)))
+        (n 0))
     (save-excursion
       (dolist (ov (nreverse (copy-sequence ovs)))
         (let ((beg (overlay-start ov))
               (end (overlay-end ov)))
           (when (and beg end)
             (goto-char beg)
-            (funcall action beg end))
+            (funcall action beg end)
+            (cl-incf n))
           (when appendp
             (setq last-command 'kill-region))
           (delete-overlay ov))))
-    ;; always ?
-    (setq objed--marked-ovs nil)
-    (objed-exit-op name)))
+    (prog1 n
+      ;; always ?
+      (setq objed--marked-ovs nil)
+      (objed-exit-op name))))
 
 
 (defun objed--ov-sequence-p (ovs)
