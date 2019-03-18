@@ -599,12 +599,15 @@ selected one."
          (nc (key-binding "q" nil t)))
     (if (string-match "insert" (symbol-name nc))
         (cond ((and (not (eq last-command this-command))
-                    (or (objed--at-comment-p)
+                    (or (eq major-mode 'fundamental-mode)
+                        (derived-mode-p 'text-mode)
+                        (objed--at-comment-p)
                         (objed--in-string-or-comment-p)))
                (call-interactively 'fill-paragraph)
                (objed--switch-to 'textblock))
               ((objed--switch-to 'defun)
-               (indent-region (objed--beg) (objed--end))))
+               (indent-region (objed--beg) (objed--end))
+               (objed--switch-to 'defun)))
       (call-interactively nc))))
 
 (defvar objed-map
