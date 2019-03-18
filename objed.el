@@ -589,28 +589,29 @@ Accommodate for `objed-extend'."
       (objed-exchange-point-and-mark)
     (call-interactively 'backward-word)))
 
-(defun objed-quit-window (&optional kill window)
+(defun objed-quit-window-or-reformat ()
   "Quit window for objed.
 
-if KILL is non-nil kill the buffer. WINDOW defaults
-to the selected one."
-  (interactive "P")
+if KILL is non-nil kill the buffer. WINDOW defaults to the
+selected one."
+  (interactive)
   (let* ((overriding-terminal-local-map nil)
          (nc (key-binding "q" nil t)))
-      (if (eq nc 'quit-window)
-          (progn (objed--reset)
-                 (quit-window kill window)
-                 (objed-activate 'line))
-        (unless (one-window-p)
-          (objed--reset)
-          (delete-window)
-          (objed-activate 'line)))))
+    (if (string-match "insert" (symbol-name nc))
+        (cond ((and (not (eq last-command this-command))
+                    (or (objed--at-comment-p)
+                        (objed--in-string-or-comment-p)))
+               (call-interactively 'fill-paragraph)
+               (objed--switch-to 'textblock))
+              ((objed--switch-to 'defun)
+               (indent-region (objed--beg) (objed--end))))
+      (call-interactively nc))))
 
 (defvar objed-map
   (let ((map (make-sparse-keymap)))
     ;; block unused chars by default
-      (dolist (char (number-sequence ?a ?z))
-        (define-key map (format "%c" char) 'objed-undefined))
+    (dolist (char (number-sequence ?a ?z))
+      (define-key map (format "%c" char) 'objed-undefined))
     ;; keep map active for numeric args
     (dolist (n (number-sequence ?0 ?9))
       (define-key map (format "%c" n) 'digit-argument)
@@ -620,7 +621,7 @@ to the selected one."
     (define-key map (kbd "C-g") 'objed-quit)
     ;; TODO: switch with q, so quit window is qq?
     (define-key map "g" 'objed-quit)
-    (define-key map "q" 'objed-quit-window)
+    (define-key map "q" 'objed-quit-window-or-reformat)
     (define-key map (kbd "?") 'objed-show-top-level)
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
@@ -771,7 +772,7 @@ to the selected one."
     ;; TODO: start query replace in current object,
     ;; or for all
     (define-key map "%" 'objed-replace)
-      ;; (objed-define-op nil objed-replace current))
+    ;; (objed-define-op nil objed-replace current))
     (define-key map "&"
       (objed-define-op nil objed-pipe-region))
 
@@ -2502,8 +2503,7 @@ temporary to `objed--indent-map'"
 
 Moves point over any whitespace afterwards."
   (interactive "r")
-  (indent-region beg end)
-  (objed--switch-to 'region))
+  (indent-region beg end))
 
 (defun objed-indent-left (arg)
   "Indent all lines in object leftward by ARG space."
