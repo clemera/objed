@@ -1920,7 +1920,8 @@ back to `objed-initial-object' if no match found."
 (defun objed-identifier ()
   "Activate object with identifier at point."
   (interactive)
-  (objed--init 'identifier))
+  (objed--init 'identifier)
+  (goto-char (objed--beg)))
 
 (defun objed-toggle-side ()
   "Move to other side of object.
