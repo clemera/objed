@@ -1926,7 +1926,10 @@ back to `objed-initial-object' if no match found."
 (defun objed-next-identifier ()
   "Activate object with identifier at point."
   (interactive)
-  (objed--next-identifier))
+  (if objed--buffer
+      (objed--next-identifier)
+    (when (objed--init 'identifier)
+      (goto-char (objed--beg)))))
 
 ;;;###autoload
 (defun objed-prev-identifier ()
