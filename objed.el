@@ -530,17 +530,8 @@ update to given object."
     (cond (binding
            (funcall (cdr binding) name))
           (t
-           (let ((current objed--object))
-             ;; object called as command via M-x, objed need to
-             ;; initialize first
-             (when (not objed--buffer)
-               (objed--init name))
-             ;; goto next on repeat
-             (cond  ((eq name current)
-                     (setq this-command 'objed-goto-next)
-                     (objed--goto-next))
-                    (t (when (objed--switch-to name)
-                         (goto-char (objed--beg))))))))))
+           (when (objed--switch-to name)
+             (goto-char (objed--beg)))))))
 
 
 (defun objed--switch-to-object-for-cmd (cmd)
@@ -759,7 +750,7 @@ to the selected one."
       (objed-define-op nil objed-electric))
 
     ;; direct object switches
-    (define-key map "." 'objed-identifier-object)
+    (define-key map "." 'objed-goto-next-identifier)
     (define-key map "," 'objed-goto-prev-identifier)
     (define-key map "_" 'objed-symbol-object)
     (define-key map "l" 'objed-line-object)

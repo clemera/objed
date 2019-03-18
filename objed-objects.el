@@ -1091,6 +1091,15 @@ nth is given by ARG."
     (objed--switch-to 'identifier))
   (objed--goto-previous arg))
 
+(defun objed-goto-next-identifier (arg)
+  "Switch to nth next identifier.
+
+nth is given by ARG."
+  (interactive "P")
+  (if (eq objed--object 'identifier)
+      (objed--goto-next arg)
+    (objed--switch-to 'identifier)))
+
 
 (defun objed--make-object-overlay (&optional obj)
   "Create an overlay to mark current object.
@@ -2190,14 +2199,14 @@ non-nil the indentation block can contain empty lines."
      :beg (progn (unless (looking-at "<")
                    (sgml-skip-tag-backward 1))
                  (point))
-     :ibeg (save-excursion (search-forward ">" nil t)
-                           (point))
+     :ibeg (save-excursion
+             (when (search-forward ">" nil t)
+               (point)))
      :end (progn
-            (unless (looking-back ">" 1)
-              (sgml-skip-tag-forward 1))
+            (sgml-skip-tag-forward 1)
             (point))
-     :iend (progn (search-backward "<" nil t)
-                  (point))))
+     :iend (progn (when (search-backward "<" nil t)
+                    (point)))))
   :try-next
   (search-forward "<" nil t)
   :try-prev
