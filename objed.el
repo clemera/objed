@@ -228,6 +228,7 @@ function should return nil if objed should not initialize."
     (comint-next-prompt . output)
     (forward-button . face)
     (backward-button . face)
+    (sgml-skip-tag-backward . tag)
     (Info-next-reference . face)
     (Info-prev-reference . face)
     (objed-next-identifier . identifier)
@@ -530,7 +531,7 @@ update to given object."
     (cond (binding
            (funcall (cdr binding) name))
           (t
-           (when (objed--switch-to name)
+           (when (objed--init name)
              (goto-char (objed--beg)))))))
 
 
@@ -1253,29 +1254,30 @@ or object position data."
   (set-cursor-color objed-cursor-color)
 
   ;; init object
-  (cond ((commandp sym)
-         (objed--switch-to-object-for-cmd sym))
-        ((symbolp sym)
-         (objed--switch-to sym))
-        (t
-         (unless objed--object
-           (setq objed--object 'char))
-         ;; uses objed--object
-         (objed--update-current-object sym)))
-  ;; make sure the object is highlighted
-  (hl-line-highlight)
+  (prog1 (cond ((commandp sym)
+                (objed--switch-to-object-for-cmd sym))
+               ((symbolp sym)
+                (objed--switch-to sym))
+               (t
+                (unless objed--object
+                  (setq objed--object 'char))
+                ;; uses objed--object
+                (objed--update-current-object sym)))
 
-  ;; transient map
-  (fset #'objed--exit-objed
-        (set-transient-map objed-map
-                           #'objed--keep-transient-p
-                           #'objed--reset))
+    ;; make sure the object is highlighted
+    (hl-line-highlight)
 
-  (when objed-modeline-hint-p
-    (funcall objed-modeline-setup-func objed-mode-line-format))
-  ;; show which key after redisplay if active
-  (when objed-auto-wk-top-level-p
-    (run-at-time 0 nil #'objed-show-top-level)))
+    ;; transient map
+    (fset #'objed--exit-objed
+          (set-transient-map objed-map
+                             #'objed--keep-transient-p
+                             #'objed--reset))
+
+    (when objed-modeline-hint-p
+      (funcall objed-modeline-setup-func objed-mode-line-format))
+    ;; show which key after redisplay if active
+    (when objed-auto-wk-top-level-p
+      (run-at-time 0 nil #'objed-show-top-level))))
 
 
 (defun objed--setup-mode-line (format &optional reset)

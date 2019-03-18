@@ -2192,7 +2192,7 @@ non-nil the indentation block can contain empty lines."
        (or (looking-at "<")
            (looking-back ">" 1)))
   :get-obj
-  ;; TODO: fix detection if point inside <..|..>
+  ;; TODO: fix sgml-backward not working
   (when (derived-mode-p 'sgml-mode)
     ;; like with bracket detect at boundary
     (objed-make-object
