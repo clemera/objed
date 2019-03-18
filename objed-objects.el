@@ -51,6 +51,10 @@
 
 (declare-function objed--install-advices "ext:objed")
 (declare-function objed--install-advices-for "ext:objed")
+(declare-function objed-goto-next-identifier "ext:objed")
+(declare-function objed-goto-prev-identifier "ext:objed")
+(declare-function objed-next-identifier "ext:objed")
+(declare-function objed-prev-identifier "ext:objed")
 
 
 
@@ -1081,26 +1085,6 @@ object."
           (objed--update-current-object obj)
           (objed--goto-char (objed--beg obj)))))))
 
-
-(defun objed-goto-prev-identifier (arg)
-  "Switch to nth previous identifier.
-
-nth is given by ARG."
-  (interactive "P")
-  (unless (eq objed--object 'identifier)
-    (objed--switch-to 'identifier))
-  (objed--goto-previous arg))
-
-(defun objed-goto-next-identifier (arg)
-  "Switch to nth next identifier.
-
-nth is given by ARG."
-  (interactive "P")
-  (if (eq objed--object 'identifier)
-      (objed--goto-next arg)
-    (objed--switch-to 'identifier)))
-
-
 (defun objed--make-object-overlay (&optional obj)
   "Create an overlay to mark current object.
 
@@ -2073,14 +2057,13 @@ non-nil the indentation block can contain empty lines."
   :get-obj
   (bounds-of-thing-at-point 'symbol)
   :try-next
-  (objed-next-identifier)
+  (objed--next-identifier)
   :try-prev
-  (objed-prev-identifier))
+  (objed--prev-identifier))
 
-;;;###autoload
-(defun objed-next-identifier ()
+
+(defun objed--next-identifier ()
   "Move to next identifier."
-  (interactive)
   (let ((bds nil))
     (if (not (setq bds (bounds-of-thing-at-point 'symbol)))
         (re-search-forward  "\\_<" nil t)
@@ -2091,14 +2074,12 @@ non-nil the indentation block can contain empty lines."
         (if (re-search-forward (format "\\_<%s\\_>" sym) nil t)
             (goto-char (match-beginning 0))
           (goto-char (car bds))
-          (when (or (eq real-this-command #'objed-current-or-next-context)
-                    (eq real-this-command #'objed-next-identifier))
+          (when (or (eq real-this-command #'objed-next-identifier)
+                    (eq real-this-command #'objed-goto-next-identifier))
             (run-at-time 0 nil (apply-partially #'message "Last one!"))))))))
 
-;;;###autoload
-(defun objed-prev-identifier ()
+(defun objed--prev-identifier ()
   "Move to previous identifier."
-  (interactive)
   (let ((bds nil))
     (if (not (setq bds (bounds-of-thing-at-point 'symbol)))
         (re-search-backward  "\\_<" nil t)
@@ -2110,8 +2091,8 @@ non-nil the indentation block can contain empty lines."
           (if (re-search-backward (format "\\_<%s\\_>" sym) nil t)
               (goto-char (match-beginning 0))
             (goto-char (car bds))
-            (when (or (eq real-this-command #'objed-current-or-previous-context)
-                      (eq real-this-command #'objed-prev-identifier))
+            (when (or (eq real-this-command #'objed-prev-identifier)
+                      (eq real-this-command #'objed-goto-prev-identifier))
               (run-at-time 0 nil (apply-partially #'message "First one!")))))))))
 
 

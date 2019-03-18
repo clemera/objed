@@ -1919,11 +1919,31 @@ back to `objed-initial-object' if no match found."
       (re-search-backward ident nil t))))
 
 ;;;###autoload
-(defun objed-identifier ()
+(defun objed-next-identifier ()
   "Activate object with identifier at point."
   (interactive)
-  (objed--init 'identifier)
-  (goto-char (objed--beg)))
+  (objed--next-identifier))
+
+;;;###autoload
+(defun objed-prev-identifier ()
+  "Activate object with identifier at point."
+  (interactive)
+  (objed--prev-identifier))
+
+(defun objed-goto-prev-identifier ()
+  "Switch to previous identifier."
+  (interactive)
+  (objed--prev-identifier)
+  (when (objed--switch-to 'identifier)
+    (goto-char (objed--beg))))
+
+(defun objed-goto-next-identifier ()
+  "Switch to next identifier."
+  (interactive)
+  (when (eq objed--object 'identifier)
+    (objed--next-identifier))
+  (when (objed--switch-to 'identifier)
+    (goto-char (objed--beg))))
 
 (defun objed-toggle-side ()
   "Move to other side of object.
@@ -3407,7 +3427,7 @@ whitespace they build a sequence."
     (define-key map (kbd "M-[") 'objed-beg-of-object-at-point)
     (define-key map (kbd "M-]") 'objed-end-of-object-at-point)
     (define-key map (kbd "C-,") 'objed-prev-identifier)
-    (define-key map (kbd "C-.") 'objed-identifier)
+    (define-key map (kbd "C-.") 'objed-next-identifier)
     (define-key map (kbd "C-<") 'objed-first-identifier)
     (define-key map (kbd "C->") 'objed-last-identifier)
     map)
