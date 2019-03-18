@@ -3,6 +3,14 @@
 (require 'objed)
 
 ;; TO ADD NEW TESTS CREATE A DIR IN TESTS AND ADD TESTS FILES IN IT.
+(defun objed-run-tests ()
+  (interactive)
+  (let ((buf (or (get-buffer "objed/tests.el")
+                 (find-file-noselect "~/objed/test/tests.el"))))
+    (with-current-buffer buf
+      ;; create tests...
+      (eval-buffer)
+      (ert t))))
 
 (declare-function objed--exit-objed "objed")
 ;; activate on load
