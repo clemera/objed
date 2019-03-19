@@ -1421,12 +1421,11 @@ comments."
 
 (objed-define-object nil ace
   :get-obj
-  (avy-goto-char (read-event "Ace to char: "))
-  (objed-make-object
-   :beg (point)
-   :ibeg (point)
-   :end (if (eobp) (point) (1+ (point)))
-   :iend (if (eobp) (point) (1+ (point)))))
+  (let ((pos (1+ (point))))
+    (avy-goto-char (read-event "Ace to char: "))
+    (objed-make-object
+     :beg (point)
+     :end pos)))
 
 (objed-define-object nil trailing
   :atp

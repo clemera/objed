@@ -921,7 +921,7 @@ To define new operations see `objed-define-op'.")
     (define-key map "[" 'objed-page-object)
     (define-key map "p" 'objed-output-object)
     (define-key map "h" 'objed-buffer-object)
-    ;; (define-key map "z" 'objed-ace-object)
+    (define-key map "z" 'objed-ace-object)
     map)
   "Keymap used for additional text-objects by `objed'.
 
