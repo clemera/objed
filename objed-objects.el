@@ -742,12 +742,10 @@ specific versions of object."
   (cond ((memq query '(:try-next :try-prev))
          (condition-case nil
              (funcall objf query)
-           (search-failed
+           ((search-failed end-of-buffer beginning-of-buffer scan-error)
             (error "No %s %s found"
                    (if (eq query :try-next) "next" "previous")
-                   objed--object))
-           ((end-of-buffer beginning-of-buffer scan-error)
-            (ignore))))
+                   objed--object))))
         (t
          (funcall objf query))))
 
