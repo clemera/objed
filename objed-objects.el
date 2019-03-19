@@ -2074,7 +2074,7 @@ non-nil the indentation block can contain empty lines."
           (goto-char (car bds))
           (when (or (eq real-this-command #'objed-next-identifier)
                     (eq real-this-command #'objed-goto-next-identifier))
-            (run-at-time 0 nil (apply-partially #'message "Last one!"))))))))
+            (run-at-time 0 nil (apply-partially #'message "No next identifier"))))))))
 
 (defun objed--prev-identifier ()
   "Move to previous identifier."
@@ -2091,7 +2091,7 @@ non-nil the indentation block can contain empty lines."
             (goto-char (car bds))
             (when (or (eq real-this-command #'objed-prev-identifier)
                       (eq real-this-command #'objed-goto-prev-identifier))
-              (run-at-time 0 nil (apply-partially #'message "First one!")))))))))
+              (run-at-time 0 nil (apply-partially #'message "No previous identifier")))))))))
 
 
 

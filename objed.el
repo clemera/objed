@@ -1739,8 +1739,10 @@ postitive prefix argument ARG move to the nth previous object."
   (interactive "p")
   (if (objed--basic-p)
       (objed-context-object)
-    ;; toggle side if coming from next?
-    (objed--goto-previous (or arg 1))))
+    (let ((pos (point)))
+      (objed--goto-previous (or arg 1))
+      (when (eq pos (point))
+        (error "No previous %s" objed--object)))))
 
 
 (defun objed-current-or-next-context (&optional arg)
@@ -1756,7 +1758,10 @@ postitive prefix argument ARG move to the nth next object."
     (when (and (region-active-p)
                (eq last-command 'objed-extend))
       (exchange-point-and-mark))
-    (objed--goto-next (or arg 1))))
+    (let ((pos (point)))
+      (objed--goto-next (or arg 1))
+      (when (eq pos (point))
+        (error "No next %s" objed--object)))))
 
 (defun objed-top-object ()
   "Go to first instance of current object type."
