@@ -1916,20 +1916,32 @@ back to `objed-initial-object' if no match found."
 (defun objed-first-identifier ()
   "Move to first instance of identifier at point."
   (interactive)
-  (let ((ident (objed--get-ident-format)))
-    (when ident
+  (let ((ib (if (looking-at "\\_<") (point)
+              (save-excursion
+                (re-search-backward "\\_<")
+                (point))))
+        (format (objed--get-ident-format)))
+    (when format
       (goto-char (point-min))
-      (when (re-search-forward ident nil t)
-        (goto-char (match-beginning 0))))))
+      (when (re-search-forward format nil t)
+        (goto-char (match-beginning 0))
+        (when (= (point) ib)
+          (message "No previous indentifier"))))))
 
 ;;;###autoload
 (defun objed-last-identifier ()
   "Move to last instance of identifier at point."
   (interactive)
-  (let ((ident (objed--get-ident-format)))
-    (when ident
+  (let ((ib (if (looking-at "\\_<") (point)
+              (save-excursion
+                (re-search-backward "\\_<")
+                (point))))
+        (format (objed--get-ident-format)))
+    (when format
       (goto-char (point-max))
-      (re-search-backward ident nil t))))
+      (re-search-backward format nil t)
+      (when (= (point) ib)
+        (message "No next indentifier")))))
 
 ;;;###autoload
 (defun objed-next-identifier ()
