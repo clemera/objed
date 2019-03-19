@@ -1778,7 +1778,7 @@ postitive prefix argument ARG move to the nth next object."
            (if (equal top objed--current-obj)
                (message "Already at first instance")
              (objed--update-current-object top)
-             (goto-char (objed--beg)))))))
+             (objed--goto-char (objed--beg)))))))
 
 
 (defun objed-bottom-object ()
@@ -1794,7 +1794,7 @@ postitive prefix argument ARG move to the nth next object."
            (if (equal bot objed--current-obj)
                (message "Already at last instance")
              (objed--update-current-object bot)
-             (goto-char (objed--beg)))))))
+             (objed--goto-char (objed--beg)))))))
 
 
 (defun objed-expand-context ()
