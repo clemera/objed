@@ -897,6 +897,7 @@ To define new operations see `objed-define-op'.")
     (define-key map "c" 'objed-char-object)
     (define-key map "w" 'objed-word-object)
     (define-key map "l" 'objed-line-object)
+    (define-key map " " 'objed-region-object)
 
     (define-key map "." 'objed-sentence-object)
     (define-key map "{" 'objed-paragraph-object)
