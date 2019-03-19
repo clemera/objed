@@ -601,7 +601,8 @@ selected one."
   (interactive)
   (let* ((overriding-terminal-local-map nil)
          (nc (key-binding "q" nil t)))
-    (if (string-match "insert" (symbol-name nc))
+    (if (and (string-match "insert" (symbol-name nc))
+             (not buffer-read-only))
         (cond ((and (not (eq last-command this-command))
                     (or (eq major-mode 'fundamental-mode)
                         (derived-mode-p 'text-mode)
@@ -611,7 +612,7 @@ selected one."
                (objed--switch-to 'textblock))
               ((objed--switch-to 'defun)
                (indent-region (objed--beg) (objed--end))
-               (objed--switch-to 'defun)))
+               (objed--update-current-object)))
       (call-interactively nc))))
 
 (defvar objed-map
