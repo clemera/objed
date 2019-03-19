@@ -895,7 +895,7 @@ To define new operations see `objed-define-op'.")
     (define-key map (kbd "SPC") 'objed-region-object)
     ;; default objects
     (define-key map "c" 'objed-char-object)
-    (define-key map "r" 'objed-word-object)
+    (define-key map "w" 'objed-word-object)
     ;; line object is direct accesible via l
     ;; sexp at point
     (define-key map "." 'objed-sentence-object)
