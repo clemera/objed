@@ -1957,12 +1957,14 @@ back to `objed-initial-object' if no match found."
 
 Default to sexp at point."
   (interactive)
-  (let ((sdiff (abs (- (point) (objed--beg))))
-        (ediff (abs (- (point) (objed--end)))))
-    (cond ((> ediff sdiff)
-           (goto-char (objed--end)))
-          (t
-           (goto-char (objed--beg))))))
+  (if (use-region-p)
+      (exchange-point-and-mark)
+    (let ((sdiff (abs (- (point) (objed--beg))))
+          (ediff (abs (- (point) (objed--end)))))
+      (cond ((> ediff sdiff)
+             (goto-char (objed--end)))
+            (t
+             (goto-char (objed--beg)))))))
 
 (defun objed-exchange-point-and-mark ()
   "Exchange point and mark.
