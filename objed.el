@@ -896,15 +896,14 @@ To define new operations see `objed-define-op'.")
     ;; default objects
     (define-key map "c" 'objed-char-object)
     (define-key map "w" 'objed-word-object)
-    ;; line object is direct accesible via l
-    ;; sexp at point
+    (define-key map "l" 'objed-line-object)
+
     (define-key map "." 'objed-sentence-object)
-    (define-key map "p" 'objed-paragraph-object)
+    (define-key map "{" 'objed-paragraph-object)
     (define-key map "q" 'objed-textblock-object)
     (define-key map "o" 'objed-sexp-object)
 
     (define-key map "i" 'objed-indent-object)
-    ;; meg
     (define-key map "a" 'objed-block-object)
 
     (define-key map "b" 'objed-bracket-object)
@@ -919,11 +918,10 @@ To define new operations see `objed-define-op'.")
     (define-key map "u" 'objed-url-object)
 
     (define-key map "*" 'objed-section-object)
-    (define-key map "l" 'objed-page-object)
-    (define-key map "j" 'objed-output-object)
+    (define-key map "[" 'objed-page-object)
+    (define-key map "p" 'objed-output-object)
     (define-key map "h" 'objed-buffer-object)
-
-    (define-key map "`" 'objed-ace-object)
+    ;; (define-key map "z" 'objed-ace-object)
     map)
   "Keymap used for additional text-objects by `objed'.
 
