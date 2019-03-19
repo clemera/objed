@@ -269,6 +269,10 @@ be used to restore previous states."
     reposition-window
     eval-defun
     eval-last-sexp
+    kmacro-start-macro
+    kmacro-start-macro-or-insert-counter
+    kmacro-end-or-call-macro
+    kmacro-call-macro
     )
   "Regular Emacs commands which should not exit modal edit state.
 
