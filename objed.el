@@ -2031,10 +2031,12 @@ The active region will be used as the current object when an
 objed operation is used."
   (interactive)
   (if (region-active-p)
-      (progn
+      (if (fboundp 'er/expand-region)
+          (call-interactively 'er/expand-region)
         ;; reinit on repeat
         (setq mark-active nil)
-        (objed--init objed--object))
+        (objed--init objed--object)
+        (message "Install expand-region to expand on repeat."))
     (unless objed--extend-cookie
       (setq objed--extend-cookie
             (face-remap-add-relative 'objed-hl
