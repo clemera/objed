@@ -1776,7 +1776,7 @@ postitive prefix argument ARG move to the nth next object."
                       (goto-char (point-min))
                       (objed--get-next (point)))))
            (if (equal top objed--current-obj)
-               (message "Already at first instance")
+               (message "No previous %s" objed--object)
              (objed--update-current-object top)
              (objed--goto-char (objed--beg)))))))
 
@@ -1792,7 +1792,7 @@ postitive prefix argument ARG move to the nth next object."
                       (goto-char (point-max))
                       (objed--get-prev (point)))))
            (if (equal bot objed--current-obj)
-               (message "Already at last instance")
+               (message "No next %s" objed--object)
              (objed--update-current-object bot)
              (objed--goto-char (objed--beg)))))))
 
@@ -1916,7 +1916,8 @@ back to `objed-initial-object' if no match found."
 (defun objed-first-identifier ()
   "Move to first instance of identifier at point."
   (interactive)
-  (let ((ib (if (looking-at "\\_<") (point)
+  (let ((ib (if (looking-at "\\_<")
+                (point)
               (save-excursion
                 (re-search-backward "\\_<")
                 (point))))
