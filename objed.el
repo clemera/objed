@@ -1947,7 +1947,8 @@ back to `objed-initial-object' if no match found."
 (defun objed-next-identifier ()
   "Activate object with identifier at point."
   (interactive)
-  (if objed--buffer
+  (if (and objed--buffer
+           (eq objed--object 'identifier))
       (objed--next-identifier)
     (when (objed--init 'identifier)
       (goto-char (objed--beg)))))
