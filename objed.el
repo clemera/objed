@@ -3307,10 +3307,15 @@ on and RANGE hold the object position data."
       (set-marker (cadr range) nil))))
 
 (defun objed-quit ()
-  "Quit and deactivate `objed-map'."
+  "Quit and deactivate.
+
+If region is active deactivate it first."
   (interactive)
-  (setq mark-active nil)
-  (objed--exit-objed))
+  (if mark-active
+      (progn
+        (setq mark-active nil)
+        (objed--init objed--object))
+    (objed--exit-objed)))
 
 (defun objed--check-buffer ()
   "Check if current buffer is still the `objed--buffer'.
