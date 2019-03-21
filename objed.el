@@ -780,6 +780,7 @@ selected one."
     ;; TODO: start query replace in current object,
     ;; or for all
     (define-key map "%" 'objed-replace)
+    (define-key map ":" 'objed-eval)
     ;; (objed-define-op nil objed-replace current))
     (define-key map "&"
       (objed-define-op nil objed-pipe-region))
