@@ -647,7 +647,7 @@ selected one."
       (define-key map (kbd "C-h n") 'which-key-show-next-page-cycle)
       (define-key map (kbd "C-h p") 'which-key-show-previous-page-cycle))
 
-    (define-key map (kbd "C-M-w") 'append-next-kill)
+    (define-key map (kbd "C-M-w") 'objed-append-mode)
     ;; todo: restore object state, too?
     (define-key map "/" (objed--call-and-switch undo char))
     (define-key map "~" 'objed-undo-in-object)
@@ -2391,27 +2391,36 @@ region command."
   (interactive)
   (objed--do #'delete-region))
 
+
+(defvar objed--append-do-append nil)
+
 (define-minor-mode objed-append-mode
   "Append kills on `objed-copy'.
 
 When `objed-append-mode' is active `objed-copy' will append kills
-to the `kill-ring'.")
+to the `kill-ring'."
+  :init-value nil
+  (if objed-append-mode
+      (setq objed--append-do-append nil)))
+
 
 (defun objed-copy ()
   "Copy objects.
 
 On repeat activate `objed-append-mode'"
   (interactive)
-  (when objed-append-mode
+  (when (and objed-append-mode
+             objed--append-do-append)
     ;; append on repeat
     (setq last-command 'kill-region))
   (objed--do #'copy-region-as-kill)
   (if (eq real-last-command real-this-command)
-      (progn (objed-append-mode 1)
-             (message "Append mode activated. Press g to stop."))
-    (message (if objed-append-mode
+      (ignore "implement register")
+    (message (if (and objed-append-mode
+                      objed--append-do-append)
                  "Appended to `kill-ring'"
-               "Copied to `kill-ring.'"))))
+               "Copied to `kill-ring.'"))
+    (setq objed--append-do-append t)))
 
 (defun objed-del-insert ()
   "Delete current object and exit to insert state."
@@ -3322,9 +3331,6 @@ If region is active deactivate it first."
   (cond (mark-active
          (setq mark-active nil)
          (objed--init objed--object))
-        (objed-append-mode
-         (objed-append-mode -1)
-         (message "Append mode deactivated"))
         (t
          (objed--exit-objed))))
 
