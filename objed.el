@@ -2408,11 +2408,10 @@ to the `kill-ring'."
   (if objed-append-mode
       (setq objed--append-do-append nil)))
 
-
 (defun objed-copy ()
   "Copy objects.
 
-On repeat activate `objed-append-mode'"
+On repeat ask for copy object text to register."
   (interactive)
   (when (and objed-append-mode
              objed--append-do-append)
@@ -2420,7 +2419,8 @@ On repeat activate `objed-append-mode'"
     (setq last-command 'kill-region))
   (objed--do #'copy-region-as-kill)
   (if (eq real-last-command real-this-command)
-      (ignore "implement register")
+      (set-register (register-read-with-preview "Copy object to register: ")
+                    (objed--object-string))
     (message (if (and objed-append-mode
                       objed--append-do-append)
                  "Appended to `kill-ring'"

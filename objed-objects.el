@@ -506,6 +506,11 @@ OBJ is the object to use and defaults to `objed--current-obj'."
   "Get right boundary of current object."
   (buffer-substring (objed--iend) (objed--oend)))
 
+(defun objed--object-string ()
+  "Return object string content."
+  (filter-buffer-substring (objed--beg)
+                           (objed--end)))
+
 
 (defun objed--goto-char (pos)
   "Move to position POS possibly skipping leading whitespace."
