@@ -648,6 +648,9 @@ selected one."
       (define-key map (kbd "C-h p") 'which-key-show-previous-page-cycle))
 
     (define-key map (kbd "C-M-w") 'objed-append-mode)
+    ;; use uppercase as C-M replacement
+    (define-key map (kbd "W") 'objed-append-mode)
+
     ;; todo: restore object state, too?
     (define-key map "/" (objed--call-and-switch undo char))
     (define-key map "~" 'objed-undo-in-object)
