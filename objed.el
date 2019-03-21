@@ -2391,19 +2391,27 @@ region command."
   (interactive)
   (objed--do #'delete-region))
 
+(define-minor-mode objed-append-mode
+  "Append kills on `objed-copy'.
+
+When `objed-append-mode' is active `objed-copy' will append kills
+to the `kill-ring'.")
+
 (defun objed-copy ()
   "Copy objects.
 
-On repeat move on the next instance of current object type and
-append it to the `kill-ring'."
+On repeat activate `objed-append-mode'"
   (interactive)
-  (when (and (eq last-command 'kill-region)
-             (not (eq real-last-command 'append-next-kill)))
-    (objed--goto-next))
+  (when objed-append-mode
+    ;; append on repeat
+    (setq last-command 'kill-region))
   (objed--do #'copy-region-as-kill)
-  ;; append on repeat
-  (setq this-command 'kill-region)
-  (message "Copied to `kill-ring.'"))
+  (if (eq real-last-command real-this-command)
+      (progn (objed-append-mode 1)
+             (message "Append mode activated. Press g to stop."))
+    (message (if objed-append-mode
+                 "Appended to `kill-ring'"
+               "Copied to `kill-ring.'"))))
 
 (defun objed-del-insert ()
   "Delete current object and exit to insert state."
@@ -3311,11 +3319,14 @@ on and RANGE hold the object position data."
 
 If region is active deactivate it first."
   (interactive)
-  (if mark-active
-      (progn
-        (setq mark-active nil)
-        (objed--init objed--object))
-    (objed--exit-objed)))
+  (cond (mark-active
+         (setq mark-active nil)
+         (objed--init objed--object))
+        (objed-append-mode
+         (objed-append-mode -1)
+         (message "Append mode deactivated"))
+        (t
+         (objed--exit-objed))))
 
 (defun objed--check-buffer ()
   "Check if current buffer is still the `objed--buffer'.
