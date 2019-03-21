@@ -181,7 +181,8 @@ function should return nil if objed should not initialize."
 
 
 (defcustom objed-cmd-alist
-  '(
+  '((left-char . char)
+    (right-char . char)
     (forward-word . word)
     (capitalize-word . word)
     (backward-word . word)
