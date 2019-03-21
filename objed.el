@@ -1951,6 +1951,8 @@ back to `objed-initial-object' if no match found."
   (if (and objed--buffer
            (eq objed--object 'identifier))
       (objed--next-identifier)
+    (unless (thing-at-point 'symbol)
+      (re-search-forward  "\\_<" nil t))
     (when (objed--init 'identifier)
       (goto-char (objed--beg)))))
 
@@ -1970,9 +1972,12 @@ back to `objed-initial-object' if no match found."
 (defun objed-goto-next-identifier ()
   "Switch to next identifier."
   (interactive)
-  (when (eq objed--object 'identifier)
-    (objed--next-identifier))
-  (when (objed--switch-to 'identifier)
+  (if (eq objed--object 'identifier)
+      (progn (objed--next-identifier)
+             (objed--update-current-object))
+    (unless (thing-at-point 'symbol)
+      (re-search-forward  "\\_<" nil t))
+    (objed--switch-to 'identifier)
     (goto-char (objed--beg))))
 
 (defun objed-toggle-side ()
