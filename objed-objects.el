@@ -511,6 +511,10 @@ OBJ is the object to use and defaults to `objed--current-obj'."
   (filter-buffer-substring (objed--beg)
                            (objed--end)))
 
+(defun objed--at-object-p (obj)
+  "Return non nil when point is at object OBJ."
+  (funcall (objed--name2func obj) :atp))
+
 
 (defun objed--goto-char (pos)
   "Move to position POS possibly skipping leading whitespace."

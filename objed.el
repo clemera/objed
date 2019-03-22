@@ -784,8 +784,9 @@ selected one."
     ;; TODO: start query replace in current object,
     ;; or for all
     (define-key map "%" 'objed-replace)
-    (define-key map ":" 'objed-eval)
-    ;; (objed-define-op nil objed-replace current))
+    ;; TODO: objed-eval-expression
+    (define-key map ":" 'eval-expression)
+
     (define-key map "&"
       (objed-define-op nil objed-pipe-region))
 
@@ -843,7 +844,7 @@ Other single character keys are bound to `objed-undefined'."
 
     (define-key map "q"
       (objed-define-op nil objed-reformat-op ignore))
-    (define-key map "e" 'objed-eval)
+    (define-key map "e" 'objed-eval-context)
     (define-key map "r" ctl-x-r-map)
     (define-key map "n" 'objed-narrow)
 
@@ -2787,7 +2788,7 @@ If REPLACE is non-nil replace the region with the result."
          (objed-indent beg end))))
 
 
-(defun objed-eval (&optional replace)
+(defun objed-eval-context (&optional replace)
   "Eval objects.
 
 If REPLACE is non-nil replace evaluated code with result."
@@ -2801,8 +2802,16 @@ If REPLACE is non-nil replace evaluated code with result."
             (when (and beg end)
               (goto-char beg)
               (funcall 'objed--eval-func beg end replace)))))
-    (apply 'objed--eval-func
-           (append (objed--current) (list replace)))))
+    (when (and (objed--at-object-p 'bracket)
+               (not (eq objed--object 'bracket)))
+      (objed--switch-to 'bracket))
+    (unless (and (not (eq last-command this-command))
+                 (apply 'objed--eval-func
+                        (append (objed--current) (list replace))))
+      (objed--switch-to 'defun)
+      (apply 'objed--eval-func
+             (append (objed--current) (list replace))))))
+
 
 (defun objed-pipe-region (beg end cmd &optional variant)
   "Pipe region text between BEG and END through a shell CMD.
