@@ -1826,7 +1826,8 @@ On expand move to start of object."
       (let ((pos (point)))
         (save-excursion
           (objed-context-object)
-          (when (< (objed--beg) pos (objed--end))
+          (when (< (objed--skip-forward (objed--beg) 'ws)
+                   pos (objed--end))
             (objed-toggle-state)))
         (when (or (< (objed--beg) (point) (objed--end))
                   (< (point) (objed--beg)))
