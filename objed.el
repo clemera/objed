@@ -2455,25 +2455,32 @@ inserting objed-register (see `objed-copy')."
        (insert-register :objed-register)))))
 
 
-(defun objed-copy ()
+(defun objed-copy (&optional reg)
   "Copy objects.
 
-On repeat ask for copy object text to objed register."
-  (interactive)
+On repeat add text to objed register.
+With prefix arg REG non nil ask for register."
+  (interactive "P")
   (when (and objed-append-mode
              objed--append-do-append)
     ;; append on repeat
     (setq last-command 'kill-region))
   (objed--do #'copy-region-as-kill 'keep)
-  (if (eq real-last-command real-this-command)
-      (progn (set-register :objed-register
-                           (objed--object-string))
-             (message "Copied to objed register"))
-    (message (if (and objed-append-mode
-                      objed--append-do-append)
-                 "Appended to `kill-ring'"
-               "Copied to `kill-ring.'"))
-    (setq objed--append-do-append t)))
+  (cond ((eq real-last-command real-this-command)
+         (set-register :objed-register
+                       (objed--object-string))
+         (message "Copied to objed register, insert with x-i."))
+        (reg
+         (set-register (register-read-with-preview "Save to register: ")
+                       (objed--object-string))
+         (message "Copied to register"))
+
+        (t
+         (message (if (and objed-append-mode
+                           objed--append-do-append)
+                      "Appended to `kill-ring'"
+                    "Copied to `kill-ring.'"))
+         (setq objed--append-do-append t))))
 
 (defun objed-del-insert ()
   "Delete current object and exit to insert state."
