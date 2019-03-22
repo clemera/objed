@@ -2434,19 +2434,41 @@ to the `kill-ring'."
   (if objed-append-mode
       (setq objed--append-do-append nil)))
 
+(defun objed-insert (&optional read)
+  "Insert stuff.
+
+When READ is non-nil read insert action, otherwise default to
+inserting objed-register (see `objed-copy')."
+  (interactive "P")
+  (let ((action
+         (or (and read
+                  (read-char-choice
+                   "[f]ile, [r]egsiter, [o]bjed register " '(?f ?r ?o)))
+             ?o)))
+    (cl-case action
+      (?f
+       (call-interactively 'insert-file))
+      (?r
+       (insert-register
+        (register-read-with-preview "Inser register: ")))
+      (?o
+       (insert-register :objed-register)))))
+
+
 (defun objed-copy ()
   "Copy objects.
 
-On repeat ask for copy object text to register."
+On repeat ask for copy object text to objed register."
   (interactive)
   (when (and objed-append-mode
              objed--append-do-append)
     ;; append on repeat
     (setq last-command 'kill-region))
-  (objed--do #'copy-region-as-kill)
+  (objed--do #'copy-region-as-kill 'keep)
   (if (eq real-last-command real-this-command)
-      (set-register (register-read-with-preview "Copy object to register: ")
-                    (objed--object-string))
+      (progn (set-register :objed-register
+                           (objed--object-string))
+             (message "Copied to objed register"))
     (message (if (and objed-append-mode
                       objed--append-do-append)
                  "Appended to `kill-ring'"
