@@ -948,6 +948,8 @@ Update `objed--current-obj' to RANGE which defaults to object at
 point. If RANGE is a single item list only update the head of
 current object position data."
   (cond ((null range)
+         (unless objed--object
+           (setq objed--object 'char))
          ;; get current object at point
          (setq objed--current-obj (objed--get)))
         ((and (consp range)
