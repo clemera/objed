@@ -1898,8 +1898,7 @@ back to `objed-initial-object' if no match found."
 On repeat move to previous."
   (interactive)
   (objed--init 'char)
-  (when (objed-context-object)
-    (goto-char (objed--beg))))
+  (objed-current-or-previous-context))
 
 ;;;###autoload
 (defun objed-end-of-object-at-point ()
