@@ -1895,7 +1895,7 @@ back to `objed-initial-object' if no match found."
 (defun objed-beg-of-object-at-point ()
   "Activate and move to beginning of object at point.
 
-On repeat move to previous."
+On repeat or at boundary move to previous."
   (interactive)
   (objed--init 'char)
   (objed-current-or-previous-context))
@@ -1904,7 +1904,7 @@ On repeat move to previous."
 (defun objed-end-of-object-at-point ()
   "Activate and move to end of object at point.
 
-On repeat move to next."
+On repeat or at boundary move to next."
   (interactive)
   (objed--init 'char)
   (objed-current-or-next-context))
