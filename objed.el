@@ -610,10 +610,12 @@ selected one."
                         (objed--at-comment-p)
                         (objed--in-string-or-comment-p)))
                (call-interactively 'fill-paragraph)
-               (objed--switch-to 'textblock))
+               (objed--switch-to 'textblock)
+               (message "Filled paragraph."))
               ((objed--switch-to 'defun)
                (indent-region (objed--beg) (objed--end))
-               (objed--update-current-object)))
+               (objed--update-current-object)
+               (message "Indented defun.")))
       (call-interactively nc))))
 
 (defvar objed-map
