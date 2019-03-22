@@ -836,15 +836,15 @@ Other single character keys are bound to `objed-undefined'."
 (defvar objed-op-map
   (let ((map (objed--define-prefix "x" 'objed-op-map)))
     ;; apply region command on object
-    (define-key map "x" 'objed-op-x)
+    (define-key map (kbd "TAB") 'objed-op-x)
     ;; todo: show object op hydra command
     (define-key map "c"
       ;; upcase, downcase, capitalize, reformat
       (objed-define-op nil objed-case-op))
 
+    (define-key map "x" 'objed-eval-context)
     (define-key map "q"
       (objed-define-op nil objed-reformat-op ignore))
-    (define-key map "e" 'objed-eval-context)
     (define-key map "r" ctl-x-r-map)
     (define-key map "n" 'objed-narrow)
 
@@ -897,7 +897,7 @@ To define new operations see `objed-define-op'.")
 (defvar objed-object-map
   (let ((map (objed--define-prefix "c" 'objed-object-map)))
     ;; choose via completion
-    (define-key map "x" 'objed-object-x)
+    (define-key map (kbd "TAB") 'objed-object-x)
     (define-key map (kbd "SPC") 'objed-region-object)
     ;; default objects
     (define-key map "c" 'objed-char-object)
@@ -2801,12 +2801,16 @@ If REPLACE is non-nil replace evaluated code with result."
             (when (and beg end)
               (goto-char beg)
               (funcall 'objed--eval-func beg end replace)))))
+    (set-transient-map '(keymap (?x . objed-eval-context)))
+    (unless objed--buffer
+      (objed--init 'char))
     (when (and (objed--at-object-p 'bracket)
                (not (eq objed--object 'bracket)))
       (objed--switch-to 'bracket))
-    (unless (and (not (eq last-command this-command))
-                 (apply 'objed--eval-func
-                        (append (objed--current) (list replace))))
+    (when (or (eq last-command this-command)
+              (not  (apply 'objed--eval-func
+                           (append (objed--current) (list replace))))
+              (objed--in-string-or-comment-p))
       (objed--switch-to 'defun)
       (apply 'objed--eval-func
              (append (objed--current) (list replace))))))
