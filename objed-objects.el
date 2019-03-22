@@ -714,10 +714,14 @@ OBJ defaults to `objed--current-obj'."
           (copy-sequence (cadr obj)))))
 
 (defun objed--get-object (o &optional s)
-  "Get object O with state S."
-  (let ((objed--object o)
-        (objed--obj-state (or s 'whole)))
-    (objed--get)))
+  "Get object O with state S.
+
+When object O is already current return it."
+  (if (eq objed--object o)
+      objed--current-obj
+    (let ((objed--object o)
+          (objed--obj-state (or s 'whole)))
+      (objed--get))))
 
 (defun objed--name2func (name &optional no-mode)
   "Return function name for object with NAME.
@@ -2060,6 +2064,8 @@ non-nil the indentation block can contain empty lines."
   (objed--prev-content))
 
 (objed-define-object nil identifier
+  :atp (or (looking-at "\\_<")
+           (looking-back "\\_>" 1))
   :get-obj
   (bounds-of-thing-at-point 'symbol)
   :try-next

@@ -784,8 +784,7 @@ selected one."
     ;; TODO: start query replace in current object,
     ;; or for all
     (define-key map "%" 'objed-replace)
-    ;; TODO: objed-eval-expression
-    (define-key map ":" 'eval-expression)
+    (define-key map ":" 'objed-eval-expression)
 
     (define-key map "&"
       (objed-define-op nil objed-pipe-region))
@@ -842,7 +841,9 @@ Other single character keys are bound to `objed-undefined'."
       ;; upcase, downcase, capitalize, reformat
       (objed-define-op nil objed-case-op))
 
-    (define-key map "x" 'objed-eval-context)
+    (define-key map "x" 'objed-eval-defun)
+    (define-key map "e" 'objed-eval-exp)
+    (define-key map "i" 'objed-insert)
     (define-key map "q"
       (objed-define-op nil objed-reformat-op ignore))
     (define-key map "r" ctl-x-r-map)
@@ -1824,7 +1825,8 @@ On expand move to start of object."
           (objed-context-object)
           (when (< (objed--beg) pos (objed--end))
             (objed-toggle-state)))
-        (when (< (objed--beg) (point) (objed--end))
+        (when (or (< (objed--beg) (point) (objed--end))
+                  (< (point) (objed--beg)))
           (goto-char (objed--beg))))
     (if (objed--inner-p)
         (let ((curr (objed--current)))
@@ -2726,6 +2728,7 @@ With prefix argument ARG call `edit-indirect-region' if
 
 (defvar eval-sexp-fu-flash-mode)
 ;; adapted from lispy
+;; TODO: flash region
 (defun objed--eval-func (beg end &optional replace)
   "Evaluate code between BEG and END.
 
@@ -2787,8 +2790,36 @@ If REPLACE is non-nil replace the region with the result."
          (objed-indent beg end))))
 
 
-(defun objed-eval-context (&optional replace)
-  "Eval objects.
+(defun objed-eval-expression (&optional ins)
+  "Eval expression.
+
+Prefix arg INS:
+
+  With \\[universal-argument] insert result into current buffer.
+
+  With \\[universal-argument] \\[universal-argument] insert
+  functioncall at point into minibuffer.
+
+  With \\[universal-argument] \\[universal-argument]
+  \\[universal-argument] insert function call and insert result."
+  (interactive "P")
+  (let* ((funs (car (elisp--fnsym-in-current-sexp)))
+         (func (and (or (functionp funs)
+                        (subrp funs)
+                        (macrop funs)
+                        (special-form-p funs))
+                    (format "(%s )" (symbol-name funs)))))
+    (if (and func (and ins (member ins '((64) (16)))))
+        (minibuffer-with-setup-hook (lambda ()
+                                      (insert func)
+                                      (forward-char -1))
+          (let ((current-prefix-arg (equal '(64) ins)))
+            (call-interactively 'eval-expression)))
+      (let ((current-prefix-arg ins))
+        (call-interactively 'eval-expression)))))
+
+(defun objed-eval-defun (&optional replace)
+  "Eval defun or objects.
 
 If REPLACE is non-nil replace evaluated code with result."
   (interactive "P")
@@ -2801,19 +2832,33 @@ If REPLACE is non-nil replace evaluated code with result."
             (when (and beg end)
               (goto-char beg)
               (funcall 'objed--eval-func beg end replace)))))
-    (set-transient-map '(keymap (?x . objed-eval-context)))
-    (unless objed--buffer
-      (objed--init 'char))
-    (when (and (objed--at-object-p 'bracket)
-               (not (eq objed--object 'bracket)))
-      (objed--switch-to 'bracket))
-    (when (or (eq last-command this-command)
-              (not  (apply 'objed--eval-func
-                           (append (objed--current) (list replace))))
-              (objed--in-string-or-comment-p))
-      (objed--switch-to 'defun)
-      (apply 'objed--eval-func
-             (append (objed--current) (list replace))))))
+    (let* ((odata (objed--get-object 'defun))
+           (reg (objed--current odata))
+           (res nil))
+      (when (and reg
+                 (setq res (apply 'objed--eval-func
+                                  (append reg (list replace)))))
+        (prog1 res
+          (objed--switch-to 'defun nil odata))))))
+
+(defun objed-eval-exp (&optional replace)
+  "Eval expression at point, fallback to defun.
+
+If REPLACE is non-nil replace evaluated code with result."
+  (interactive)
+  (let* ((obj (cond ((objed--at-object-p 'bracket)
+                       'bracket)
+                    ((or (objed--at-object-p 'identifier)
+                         (objed--inside-object-p 'identifier))
+                     'identifier)
+                    (t 'defun)))
+         (odata (objed--get-object obj))
+         (res (and odata
+                   (apply 'objed--eval-func
+                     (append (objed--current odata) (list replace))))))
+      (when res
+        (prog1 res
+          (objed--switch-to obj nil odata)))))
 
 
 (defun objed-pipe-region (beg end cmd &optional variant)
