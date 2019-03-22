@@ -566,33 +566,22 @@ BEFORE and AFTER are forms to execute before/after calling the command."
               (symbol-name cmd) (symbol-name obj))
      (interactive)
      ,before
-     (setq this-command ',cmd)
-     (call-interactively ',cmd)
-     ,after
-     (objed--switch-to ',obj)))
+     (let* ((prb (and (region-active-p) (= (point) (region-beginning))))
+            (pre (and (region-active-p) (= (point) (region-end))))
+            (pos (point)))
+       (setq this-command ',cmd)
+       (call-interactively ',cmd)
+       ,after
+       (objed--switch-to ',obj)
+       (when (or prb pre)
+         (cond ((and prb
+                     (= (point) (region-end)))
+                (set-mark pos))
+               ((and pre
+                     (= (point) (region-beginning)))
+                (set-mark pos)))))))
 
 
-(defun objed--forward-word ()
-  "Forward word.
-
-Accommodate for `objed-extend'."
-  (interactive)
-  (if (and (eq last-command 'objed-extend)
-           (eq objed--object 'word)
-           (looking-at "\\<"))
-      (objed-exchange-point-and-mark)
-    (call-interactively 'forward-word)))
-
-(defun objed--backward-word ()
-  "Backward word.
-
-Accommodate for `objed-extend'."
-  (interactive)
-  (if (and (eq last-command 'objed-extend)
-           (eq objed--object 'word)
-           (looking-back "\\>" 1))
-      (objed-exchange-point-and-mark)
-    (call-interactively 'backward-word)))
 
 (defun objed-quit-window-or-reformat ()
   "Quit window for objed.
@@ -660,10 +649,11 @@ selected one."
 
     ;; general movement
     (define-key map "s" (objed--call-and-switch
-                         objed--forward-word
+                         forward-word
                          word))
     (define-key map "r" (objed--call-and-switch
-                         objed--backward-word word))
+                         backward-word
+                         word))
 
     (define-key map "S" 'objed-move-word-forward)
     (define-key map "R" 'objed-move-word-backward)
@@ -677,12 +667,7 @@ selected one."
 
     (define-key map "p" (objed--call-and-switch previous-line line))
     (define-key map "n" (objed--call-and-switch
-                         next-line line
-                         (when (and (bolp)
-                                    (eq last-command 'objed-extend)
-                                    (eq objed--object 'line))
-                           (objed-exchange-point-and-mark)
-                           (goto-char (line-beginning-position)))))
+                         next-line line))
 
     (define-key map "P" 'objed-move-line-backward)
     (define-key map "N" 'objed-move-line-forward)
@@ -2102,6 +2087,7 @@ objed operation is used."
         (setq mark-active nil)
         (objed--init objed--object)
         (message "Install expand-region to expand on repeat."))
+    ;; when moving forward current obj shoul look like included in selection
     (unless objed--extend-cookie
       (setq objed--extend-cookie
             (face-remap-add-relative 'objed-hl
