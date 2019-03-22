@@ -2799,8 +2799,9 @@ If REPLACE is non-nil replace the region with the result."
             (if (not replace)
                 str
               (when str
-                (delete-region beg end)
-                (insert str)))))))))
+                (prog1 str
+                  (delete-region beg end)
+                  (insert str))))))))))
 
 
 ;; TODO: toggle like fill/unfill
@@ -2874,7 +2875,7 @@ If REPLACE is non-nil replace evaluated code with result."
   "Eval expression at point, fallback to defun.
 
 If REPLACE is non-nil replace evaluated code with result."
-  (interactive)
+  (interactive "P")
   (let* ((obj (cond ((objed--at-object-p 'bracket)
                        'bracket)
                     ((or (objed--at-object-p 'identifier)
@@ -2884,10 +2885,12 @@ If REPLACE is non-nil replace evaluated code with result."
          (odata (objed--get-object obj))
          (res (and odata
                    (apply 'objed--eval-func
-                     (append (objed--current odata) (list replace))))))
+                          (append (objed--current odata) (list replace))))))
+    (if replace
+        (objed--switch-to 'char)
       (when res
         (prog1 res
-          (objed--switch-to obj nil odata)))))
+          (objed--switch-to obj nil odata))))))
 
 
 (defun objed-pipe-region (beg end cmd &optional variant)
