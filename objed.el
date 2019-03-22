@@ -1743,7 +1743,11 @@ On repeat move to the previous instance of this object type. With
 postitive prefix argument ARG move to the nth previous object."
   (interactive "p")
   (if (objed--basic-p)
-      (objed-context-object)
+      (let ((pos (point)))
+        (objed-context-object)
+        (if (< (objed--beg) pos (objed--end))
+            (goto-char (objed--beg))
+          (objed--goto-previous (or arg 1))))
     (let ((pos (point)))
       (objed--goto-previous (or arg 1))
       (when (eq pos (point))
@@ -1757,8 +1761,11 @@ On repeat move to the next instance of this object type. With
 postitive prefix argument ARG move to the nth next object."
   (interactive "p")
   (if (objed--basic-p)
-      (progn (objed-context-object)
-             (goto-char (objed--end)))
+      (let ((pos (point)))
+        (objed-context-object)
+        (if (< (objed--beg) pos (objed--end))
+            (goto-char (objed--end))
+          (objed--goto-next (or arg 1))))
     ;; on init skip current
     (when (and (region-active-p)
                (eq last-command 'objed-extend))
@@ -1805,12 +1812,19 @@ postitive prefix argument ARG move to the nth next object."
 (defun objed-expand-context ()
   "Expand to objects based on context.
 
-Starts at the inner part of the object point is in or at. Any
-whitespace following point is skipped. Point moves to the start."
+Starts at the inner part of the object point is in or with the
+object point is at. Any whitespace following point is skipped.
+
+On expand move to start of object."
   (interactive)
   (if (objed--basic-p)
-      (progn (objed-context-object)
-             (objed-toggle-state))
+      (let ((pos (point)))
+        (save-excursion
+          (objed-context-object)
+          (when (< (objed--beg) pos (objed--end))
+            (objed-toggle-state)))
+        (when (< (objed--beg) (point) (objed--end))
+          (goto-char (objed--beg))))
     (if (objed--inner-p)
         (let ((curr (objed--current)))
           (objed-toggle-state)
@@ -1873,7 +1887,9 @@ back to `objed-initial-object' if no match found."
 
 ;;;###autoload
 (defun objed-beg-of-object-at-point ()
-  "Activate and move to beginning of object at point."
+  "Activate and move to beginning of object at point.
+
+On repeat move to previous."
   (interactive)
   (objed--init 'char)
   (when (objed-context-object)
@@ -1881,11 +1897,12 @@ back to `objed-initial-object' if no match found."
 
 ;;;###autoload
 (defun objed-end-of-object-at-point ()
-  "Activate and move to end of object at point."
+  "Activate and move to end of object at point.
+
+On repeat move to next."
   (interactive)
   (objed--init 'char)
-  (when (objed-context-object)
-    (goto-char (objed--end))))
+  (objed-current-or-next-context))
 
 ;;;###autoload
 (defun objed-until-beg-of-object-at-point ()
@@ -2018,7 +2035,8 @@ Update to object at current side."
   "Toggle state of object."
   (interactive)
   (when (eq objed--object 'sexp)
-    (objed-context-object))
+    (save-excursion
+      (objed-context-object)))
   (let ((sdiff (abs (- (point) (objed--beg))))
         (ediff (abs (- (point) (objed--end)))))
     (objed--reverse)
