@@ -3374,16 +3374,23 @@ multiple ones."
     (insert text)
     (not (= -1  (forward-line -1)))))
 
-(defun objed-exit-op (op &optional text range)
+(defun objed-exit-op (exit &optional text range)
   "Handle exit of an operation.
 
-OP is the operation (ignored for now). If TEXT is given it
-carries the textual content of the object the operation acted
-on and RANGE hold the object position data."
+EXIT is the operation name or exit code. If TEXT is given it
+carries the textual content of the object the operation acted on
+and RANGE hold the object position data."
   ;; TODO: improve exit behaviour for default operations
-  (let ((exitf (cdr (assq op objed--exit-alist))))
-    ;; (objed--update-current-object)
-    (cond ((functionp exitf)
+  (let ((exitf (cdr (assq exit objed--exit-alist))))
+    (cond ((eq 'keep exit)
+           (ignore))
+          ((eq 'current exit)
+           (objed--update-current-object
+            (objed-make-object :beg (car range)
+                               :end (cadr range))))
+          ((eq 'exit exit)
+           (objed--exit-objed))
+          ((functionp exitf)
            (funcall exitf text))
           ((eq 'current exitf)
            (objed--update-current-object
@@ -3393,7 +3400,7 @@ on and RANGE hold the object position data."
            (objed--exit-objed))
           (exitf
            (objed--switch-to exitf))
-          ((or (eq op 'ignore)
+          ((or (eq exit 'ignore)
                (bound-and-true-p multiple-cursors-mode)))
           (t
            (if (and text (objed--line-p text))
@@ -3404,9 +3411,12 @@ on and RANGE hold the object position data."
       (face-remap-remove-relative objed--extend-cookie)
       (setq objed--extend-cookie nil))
     (when (and range
-               (not (eq exitf 'current)))
+               (not (eq exitf 'current))
+               (not (eq exit 'current))
+               (not (eq exit 'keep)))
       (set-marker (car range) nil)
       (set-marker (cadr range) nil))))
+
 
 (defun objed-quit ()
   "Quit and deactivate.
@@ -3486,21 +3496,20 @@ Resets objed if appropriate."
 ;; * OP execution
 
 
-(defun objed--do (action &optional name)
+(defun objed--do (action &optional exit)
   "Execute ACTION on current object(s).
 
-NAME is the symbol used for current op and defaults to
-`this-command'.
-
-Return number of times ACTION got applied."
-  (let ((name (or name this-command)))
+Apply action to current object(s) and exit with EXIT which is the
+symbol used for op exit and defaults to `this-command' (see
+ON got applied."
+  (let ((exit (or exit this-command)))
     (cond (objed--marked-ovs
-           (objed--do-objects action name))
+           (objed--do-objects action exit))
           (t
-           (objed--do-object action name)))))
+           (objed--do-object action exit)))))
 
-(defun objed--do-object (action name)
-  "Apply ACTION for op named NAME on current object."
+(defun objed--do-object (action exit)
+  "Apply ACTION on current object and exit with EXIT."
   (let ((range (objed--current)))
     (when range
       (let ((text (apply #'buffer-substring range))
@@ -3508,10 +3517,10 @@ Return number of times ACTION got applied."
                          (set-marker (make-marker) (cadr range)))))
         (prog1 1
           (apply action range)
-          (objed-exit-op name text range))))))
+          (objed-exit-op exit text range))))))
 
-(defun objed--do-objects (action name)
-  "Apply ACTION for op named NAME on marked objects."
+(defun objed--do-objects (action exit)
+  "Apply ACTION on marked objects and exit with EXIT."
   (let ((ovs objed--marked-ovs)
         (appendp (memq action '(kill-region copy-region-as-kill)))
         (n 0))
@@ -3529,7 +3538,7 @@ Return number of times ACTION got applied."
     (prog1 n
       ;; always ?
       (setq objed--marked-ovs nil)
-      (objed-exit-op name))))
+      (objed-exit-op exit))))
 
 
 (defun objed--ov-sequence-p (ovs)
