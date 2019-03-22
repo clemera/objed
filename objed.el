@@ -845,7 +845,7 @@ Other single character keys are bound to `objed-undefined'."
 
     (define-key map "x" 'objed-eval-defun)
     (define-key map "e" 'objed-eval-exp)
-    (define-key map "i" 'objed-insert)
+    (define-key map "y" 'objed-insert)
     (define-key map "q"
       (objed-define-op nil objed-reformat-op ignore))
     (define-key map "r" ctl-x-r-map)
@@ -2471,7 +2471,7 @@ With prefix arg REG non nil ask for register."
   (cond ((eq real-last-command real-this-command)
          (set-register :objed-register
                        (objed--object-string))
-         (message "Copied to objed register, insert with x-i."))
+         (message "Copied to objed register, insert with x-y."))
         (reg
          (set-register (register-read-with-preview "Save to register: ")
                        (objed--object-string))
