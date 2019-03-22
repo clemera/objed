@@ -2748,8 +2748,7 @@ If REPLACE is non-nil replace the region with the result."
           (cond ((and (memq (car e-sexp) (list 'defvar 'defcustom 'defvar-local))
                       (consp (cdr e-sexp))
                       (boundp (cadr e-sexp)))
-                 ;; FIXME: Obey lexical-binding.
-                 (set (cadr e-sexp) (eval (car (cddr e-sexp)))))
+                 (set (cadr e-sexp) (eval (car (cddr e-sexp)) lexical-binding)))
                 ((eq (car e-sexp) 'defface)
                  (elisp--eval-defun-1 (macroexpand e-sexp)))
                 ((memq (car e-sexp) '(\, \,@))
