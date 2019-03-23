@@ -2977,23 +2977,13 @@ Apply function F on region before duplicating it. ARG is passed
 to F as third argument."
   (let* ((end (set-marker (make-marker) end))
          (reg (buffer-substring beg end)))
-    (apply f (list beg end arg))
     (goto-char end)
-    (if (or (eobp)
-            (= (line-number-at-pos beg)
-               (line-number-at-pos end)))
-        (newline)
-      (skip-chars-forward "\r\n" (1+ (point))))
-    (skip-chars-forward " \t")
-    (let ((pos (point)))
-      (save-excursion
-        (insert reg)
-        (indent-according-to-mode)
-        (save-excursion
-          (goto-char (objed--skip-forward pos 'ws))
-          (indent-according-to-mode))
-        (indent-region pos (point)))
-      (goto-char (objed--skip-forward pos 'ws)))))
+    (unless (bolp)
+      (newline-and-indent))
+    (save-excursion
+      (insert reg)
+      (apply f (list beg end arg)))
+    (skip-chars-forward " \t")))
 
 (defun objed-duplicate-down (beg end &optional arg)
   "Duplicate region between BEG and END below.
