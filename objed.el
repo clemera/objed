@@ -1835,9 +1835,9 @@ Default to sexp at point."
 
 
 (defun objed-shrink-context ()
-  "Toggle state of object.
+  "Shrink current object.
 
-Shrinks to inner objects on repeat if possible."
+Switches to inner object or object inside current one."
   (interactive)
   (if (eq objed--object 'sexp)
       (save-excursion
