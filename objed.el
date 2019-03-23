@@ -768,7 +768,6 @@ selected one."
     ;; zap to object, jump to objects with avy
     (define-key map "z" 'objed-ace)
     ;; swiper like object search
-    (define-key map (kbd "M-o") 'objed-occur)
     ;; TODO: start query replace in current object,
     ;; or for all
     (define-key map "%" 'objed-replace)
@@ -893,6 +892,7 @@ To define new operations see `objed-define-op'.")
     ;; choose via completion
     (define-key map (kbd "TAB") 'objed-object-x)
     (define-key map (kbd "SPC") 'objed-region-object)
+    (define-key map (kbd "C-s") 'objed-occur)
     ;; default objects
     (define-key map "c" 'objed-char-object)
     (define-key map "w" 'objed-word-object)
