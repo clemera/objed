@@ -2170,6 +2170,11 @@ non-nil the indentation block can contain empty lines."
            (cond ((looking-at "(defun")
                   (down-list 2)
                   (up-list 1)
+                  (objed--skip-ws)
+                  (when (objed--at-string-p)
+                    (forward-sexp 1)
+                    (objed--skip-ws))
+
                   (cons (point)
                         (progn (goto-char (point-max))
                                (down-list -1)
