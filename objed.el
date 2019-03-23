@@ -710,7 +710,7 @@ selected one."
     (define-key map "o" 'objed-expand-context)
 
     (define-key map "i" 'objed-del-insert)
-    (define-key map "t" 'objed-toggle-state)
+    (define-key map "t" 'objed-shrink-context)
     (define-key map "j" 'objed-toggle-side)
 
     ;; marking/unmarking
@@ -1714,11 +1714,27 @@ to an object containing the current one."
          (or (objed--switch-to 'defun 'inner)
              (objed--switch-to 'line 'inner))))))
 
+(defun objed--toggle-state ()
+  "Toggle state of object.
+
+Shrinks to inner objects on repeat if possible."
+  (interactive)
+  (when (eq objed--object 'sexp)
+    (save-excursion
+      (objed-context-object)))
+  (let ((sdiff (abs (- (point) (objed--beg))))
+        (ediff (abs (- (point) (objed--end)))))
+    (objed--reverse)
+    (goto-char (cond ((> ediff sdiff)
+                      (objed--beg))
+                     (t
+                      (objed--end))))))
+
 (defun objed-backward-until-context ()
   "Goto object inner beginning and activate part moved over."
   (interactive)
   (when (save-excursion (objed-context-object)
-                        (objed-toggle-state))
+                        (objed--toggle-state))
     (objed--change-to :iend (point) :end (point))
     (goto-char (objed--beg))))
 
@@ -1726,7 +1742,7 @@ to an object containing the current one."
   "Goto object inner end and activate part moved over."
   (interactive)
   (when (save-excursion (objed-context-object)
-                        (objed-toggle-state))
+                        (objed--toggle-state))
     (objed--change-to :ibeg (point) :beg (point))
     (goto-char (objed--end))))
 
@@ -1802,6 +1818,7 @@ postitive prefix argument ARG move to the nth next object."
              (objed--update-current-object bot)
              (objed--goto-char (objed--beg)))))))
 
+
 (defun objed-toggle-side ()
   "Move to other side of object.
 
@@ -1816,12 +1833,17 @@ Default to sexp at point."
             (t
              (goto-char (objed--beg)))))))
 
-(defun objed-toggle-state ()
-  "Toggle state of object."
+
+(defun objed-shrink-context ()
+  "Toggle state of object.
+
+Shrinks to inner objects on repeat if possible."
   (interactive)
-  (when (eq objed--object 'sexp)
-    (save-excursion
-      (objed-context-object)))
+  (if (eq objed--object 'sexp)
+      (save-excursion
+        (objed-context-object))
+    (if (objed--inner-p)
+        (objed--switch-to 'sexp)))
   (let ((sdiff (abs (- (point) (objed--beg))))
         (ediff (abs (- (point) (objed--end)))))
     (objed--reverse)
@@ -1829,6 +1851,7 @@ Default to sexp at point."
                       (objed--beg))
                      (t
                       (objed--end))))))
+
 
 
 (defun objed-expand-context ()
@@ -1845,13 +1868,13 @@ On expand move to start of object."
           (objed-context-object)
           (when (< (objed--skip-forward (objed--beg) 'ws)
                    pos (objed--end))
-            (objed-toggle-state)))
+            (objed--toggle-state)))
         (when (or (< (objed--beg) (point) (objed--end))
                   (< (point) (objed--beg)))
           (goto-char (objed--beg))))
     (if (objed--inner-p)
         (let ((curr (objed--current)))
-          (objed-toggle-state)
+          (objed--toggle-state)
           (when (equal curr (objed--current))
             (objed-context-object)
             (goto-char (objed--beg))))
@@ -1870,7 +1893,7 @@ Object is choosen based on context."
   (objed--toggle-ends
    (lambda ()
      (objed-context-object)
-     (objed-toggle-state))))
+     (objed--toggle-state))))
 
 
 ;; * General object commands
