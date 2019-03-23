@@ -738,8 +738,8 @@ selected one."
       (objed-define-op nil objed-indent ignore))
     (define-key map ";"
       (objed-define-op nil objed-comment-or-uncomment-region))
-    (define-key map (kbd "<S-return>")
-      (objed-define-op nil objed-comment-duplicate))
+
+
 
     (define-key map "$"
       (objed-define-op nil flyspell-region))
@@ -782,7 +782,11 @@ selected one."
     (define-key map (kbd "<C-return>")
       (objed-define-op
        nil objed-run-or-eval ignore))
+    (define-key map (kbd "<S-return>")
+      (objed-define-op nil objed-comment-duplicate))
     (define-key map (kbd "<M-return>")
+      (objed-define-op nil objed-duplicate-down))
+    (define-key map (kbd "<C-M-return>")
       'objed-insert-new-object)
     (define-key map "^" 'objed-raise)
     (define-key map "!" 'objed-execute)
