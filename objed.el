@@ -1802,6 +1802,34 @@ postitive prefix argument ARG move to the nth next object."
              (objed--update-current-object bot)
              (objed--goto-char (objed--beg)))))))
 
+(defun objed-toggle-side ()
+  "Move to other side of object.
+
+Default to sexp at point."
+  (interactive)
+  (if (use-region-p)
+      (exchange-point-and-mark)
+    (let ((sdiff (abs (- (point) (objed--beg))))
+          (ediff (abs (- (point) (objed--end)))))
+      (cond ((> ediff sdiff)
+             (goto-char (objed--end)))
+            (t
+             (goto-char (objed--beg)))))))
+
+(defun objed-toggle-state ()
+  "Toggle state of object."
+  (interactive)
+  (when (eq objed--object 'sexp)
+    (save-excursion
+      (objed-context-object)))
+  (let ((sdiff (abs (- (point) (objed--beg))))
+        (ediff (abs (- (point) (objed--end)))))
+    (objed--reverse)
+    (goto-char (cond ((> ediff sdiff)
+                      (objed--beg))
+                     (t
+                      (objed--end))))))
+
 
 (defun objed-expand-context ()
   "Expand to objects based on context.
@@ -2028,19 +2056,6 @@ bindings."
     (objed--switch-to 'identifier)
     (goto-char (objed--beg))))
 
-(defun objed-toggle-side ()
-  "Move to other side of object.
-
-Default to sexp at point."
-  (interactive)
-  (if (use-region-p)
-      (exchange-point-and-mark)
-    (let ((sdiff (abs (- (point) (objed--beg))))
-          (ediff (abs (- (point) (objed--end)))))
-      (cond ((> ediff sdiff)
-             (goto-char (objed--end)))
-            (t
-             (goto-char (objed--beg)))))))
 
 (defun objed-exchange-point-and-mark ()
   "Exchange point and mark.
@@ -2055,21 +2070,6 @@ Update to object at current side."
         (objed--skip-ws t)
       (objed--skip-ws))
     (objed--update-current-object)))
-
-
-(defun objed-toggle-state ()
-  "Toggle state of object."
-  (interactive)
-  (when (eq objed--object 'sexp)
-    (save-excursion
-      (objed-context-object)))
-  (let ((sdiff (abs (- (point) (objed--beg))))
-        (ediff (abs (- (point) (objed--end)))))
-    (objed--reverse)
-    (goto-char (cond ((> ediff sdiff)
-                      (objed--beg))
-                     (t
-                      (objed--end))))))
 
 
 (defvar objed--extend-cookie nil)
