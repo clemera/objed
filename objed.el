@@ -722,7 +722,7 @@ selected one."
     ;; "visual"
     (define-key map "v" 'objed-extend)
     (define-key map "@" 'objed-include-trailing-ws)
-    ;;(define-key map "-" 'objed-include-leading-ws)
+    (define-key map "`" 'objed-include-leading-ws)
 
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
