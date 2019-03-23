@@ -383,6 +383,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (declare-function electric-pair-post-self-insert-function "ext:electric")
 (declare-function which-key-description-order "ext:which-key")
 (declare-function which-key--create-buffer-and-show "ext:which-key")
+(declare-function which-key--hide-popup "ext:which-key")
 (declare-function avy--process "ext:avy")
 (declare-function avy--style-fn "ext:avy")
 (declare-function avy-goto-char "ext:avy")
@@ -1411,7 +1412,8 @@ matches IREGEX is not displayed."
              (if iregex
                  (append `(((nil . ,iregex) . t))
                          which-key-replacement-alist)
-               which-key-replacement-alist)))
+               (append objed--wk-replacement-alist
+                       which-key-replacement-alist))))
         (which-key--create-buffer-and-show nil map)))))
 
 ;; * Basic Movement, Block Objects (textblocks)
@@ -1853,7 +1855,6 @@ Switches to inner object or object inside current one."
                       (objed--end))))))
 
 
-
 (defun objed-expand-context ()
   "Expand to objects based on context.
 
@@ -1878,8 +1879,8 @@ On expand move to start of object."
           (when (equal curr (objed--current))
             (objed-context-object)
             (goto-char (objed--beg))))
-    (objed-context-object)
-    (goto-char (objed--beg)))))
+      (objed-context-object)
+      (goto-char (objed--beg)))))
 
 (defun objed-upto-context ()
   "Toggle between inner sides of object at point.
@@ -1931,6 +1932,17 @@ back to `objed-initial-object' if no match found."
          objed-initial-object))
     (when (objed-init-p)
       (objed--init (or obj 'char)))))
+
+;;;###autoload
+(defun objed-activate-object ()
+  "Query for object and activate with it."
+  (interactive)
+  (objed--maybe-which-key objed-object-map "Object:")
+  (let ((real-this-command (lookup-key objed-object-map (vector (read-key)))))
+    (when (fboundp #'which-key--hide-popup)
+      (which-key--hide-popup))
+    (when real-this-command
+      (call-interactively real-this-command))))
 
 ;;;###autoload
 (defun objed-beg-of-object-at-point ()
@@ -3640,6 +3652,7 @@ whitespace they build a sequence."
 (defvar objed-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-SPC") 'objed-activate)
+    (define-key map (kbd "M-o") 'objed-activate-object)
     (define-key map (kbd "M-(") 'objed-until-beg-of-object-at-point)
     (define-key map (kbd "M-)") 'objed-until-end-of-object-at-point)
     (define-key map (kbd "M-[") 'objed-beg-of-object-at-point)
