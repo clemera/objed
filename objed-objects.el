@@ -3,7 +3,7 @@
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
 ;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
-;; Version: 0.7.2
+;; Version: 0.8
 ;; Maintainer: Clemens Radermacher <clemera@posteo.net>
 ;; URL: https://github.com/clemera/objed
 
