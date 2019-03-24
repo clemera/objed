@@ -1646,13 +1646,13 @@ comments."
                                (and "." (* alnum))))
                        nil t))
 
-(objed-define-object nil mail
+(objed-define-object nil email
   :get-obj
   (bounds-of-thing-at-point 'email)
   :try-next
-  (re-search-forward  "@")
+  (re-search-forward "[a-z]@[a-z]")
   :try-prev
-  (re-search-backward  "@"))
+  (re-search-backward "[a-z]@[a-z]"))
 
 (objed-define-object nil url
   :get-obj
