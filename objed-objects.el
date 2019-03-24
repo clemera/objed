@@ -794,37 +794,6 @@ Position POS defaults to point."
                    (cdr (assq inv buffer-invisibility-spec)))
           (cl-return t))))))
 
-(defun objed--get-next (&optional from)
-  "Get next object from position or object.
-
-If FROM is a position search from there otherwise search starts
-from end of object FROM."
-  (let ((obj (or from objed--current-obj)))
-    (save-excursion
-      (when (and obj (not (objed--no-skipper-p)))
-        (if (integer-or-marker-p obj)
-            (goto-char obj)
-          (goto-char (objed--max obj))))
-      (unless (eobp)
-        (when (<= (point) (objed--beg))
-          (objed--skip-ws))
-        (objed--object :try-next)
-        (objed--get)))))
-
-(defun objed--get-prev (&optional from)
-  "Get previous object from position or object.
-
-If FROM is a position search from there otherwise search starts
-from beginning of object FROM."
-  (let ((obj (or from objed--current-obj)))
-    (save-excursion
-      (when obj
-        (if (integer-or-marker-p obj)
-            (goto-char obj)
-          (goto-char (objed--min obj))))
-      (unless (bobp)
-        (objed--object :try-prev)
-        (objed--get t)))))
 
 
 ;; * Object creation/manipulation
@@ -986,6 +955,40 @@ calculate the data of the object at current position using
               objed--current-obj odata)
       (prog1 nil
         (message "No %s found." o)))))
+
+(defun objed--get-next (&optional from)
+  "Get next object from position or object.
+
+If FROM is a position search from there otherwise search starts
+from end of object FROM."
+  (let ((obj (or from objed--current-obj)))
+    (save-excursion
+      (when (and obj (not (objed--no-skipper-p)))
+        (if (integer-or-marker-p obj)
+            (goto-char obj)
+          (goto-char (objed--max obj))))
+      (unless (eobp)
+        (when (<= (point) (objed--beg))
+          (objed--skip-ws))
+        (ignore-errors
+          (objed--object :try-next)
+          (objed--get))))))
+
+(defun objed--get-prev (&optional from)
+  "Get previous object from position or object.
+
+If FROM is a position search from there otherwise search starts
+from beginning of object FROM."
+  (let ((obj (or from objed--current-obj)))
+    (save-excursion
+      (when obj
+        (if (integer-or-marker-p obj)
+            (goto-char obj)
+          (goto-char (objed--min obj))))
+      (unless (bobp)
+        (ignore-errors
+        (objed--object :try-prev)
+        (objed--get t))))))
 
 
 (defun objed--distant-p (o)
