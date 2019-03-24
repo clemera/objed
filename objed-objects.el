@@ -979,7 +979,7 @@ calculate the data of the object at current position using
                              (objed--get t))
                        (error
                         (when tryb
-                          (objed--get t))))))))
+                          (ignore-errors (objed--get t)))))))))
     (if odata
         (setq objed--object o
               objed--obj-state (or state 'whole)
@@ -1453,20 +1453,30 @@ comments."
 
 (objed-define-object nil ace
   :get-obj
-  (let ((stripe (and (bound-and-true-p stripe-buffer-mode)
-                     stripe-buffer-mode)))
-    (when (fboundp 'stripe-buffer-mode)
-      (stripe-buffer-mode 1))
-  ;; TODO: buffer stripes
-    (unwind-protect
-        (objed-make-object
-         :beg (save-excursion (call-interactively 'avy-goto-line)
-                              (line-beginning-position))
-         :end (save-excursion (call-interactively 'avy-goto-line)
-                              (1+ (line-end-position))))
-      (unless (or stripe
-                  (not (fboundp 'stripe-buffer-mode)))
-        (stripe-buffer-mode -1)))))
+  (unless (eq objed--object 'ace-object)
+    (let ((stripe (and (bound-and-true-p stripe-buffer-mode)
+                       stripe-buffer-mode)))
+      (when (fboundp 'stripe-buffer-mode)
+        (stripe-buffer-mode 1))
+      (unwind-protect
+          (objed-make-object
+           :beg (save-excursion
+                  (call-interactively 'avy-goto-line)
+                  ;; indicate input
+                  (redisplay)
+                  (line-beginning-position))
+           :end (save-excursion
+                  (when (fboundp 'stripe-buffer-mode)
+                    (stripe-buffer-mode 1))
+                  (call-interactively 'avy-goto-line)
+                  (1+ (line-end-position))))
+        (unless (or stripe
+                    (not (fboundp 'stripe-buffer-mode)))
+          (stripe-buffer-mode -1)))))
+  :try-next
+  (user-error "Not possible")
+  :try-prev
+  (user-error "Not possible"))
 
 (objed-define-object nil trailing
   :atp
