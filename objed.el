@@ -746,10 +746,10 @@ selected one."
       (objed-define-op nil flyspell-region))
 
     ;; quote op
-    (define-key map "'"
-      (objed-define-op nil objed-electric-pair))
     (define-key map "\""
-      (objed-define-op nil objed-electric))
+      (objed-define-op nil objed-electric-pair))
+    ;; (define-key map "\""
+    ;;   (objed-define-op nil objed-electric))
 
     ;; direct object switches
     (define-key map "." 'objed-goto-next-identifier)
@@ -761,6 +761,7 @@ selected one."
     ;; prefix keys
     (define-key map "x" 'objed-op-map)
     (define-key map "c" 'objed-object-map)
+    (define-key map "'" 'objed-user-map)
 
     ;; special commands
     (define-key map "*" 'objed-mark-more)
@@ -885,6 +886,11 @@ To define new operations see `objed-define-op'.")
   (objed--reset--objed-buffer)
   (kill-buffer (current-buffer))
   (objed--init (or objed--object 'char)))
+
+(defvar objed-user-map
+  (let ((map (objed--define-prefix "'" 'objed-user-map)))
+    map)
+  "Keymap for custom user bindings.")
 
 
 (defvar objed-object-map
