@@ -1871,6 +1871,8 @@ object point is at. Any whitespace following point is skipped.
 
 On expand move to start of object."
   (interactive)
+  (unless objed--buffer
+    (objed--init 'char))
   (if (objed--basic-p)
       (let ((pos (point)))
         (save-excursion
