@@ -1853,7 +1853,9 @@ Switches to inner object or object inside current one."
       (save-excursion
         (objed-context-object))
     (if (objed--inner-p)
-        (objed--switch-to 'sexp)))
+        (save-excursion
+          (goto-char (objed--end))
+          (objed--switch-to 'sexp))))
   (let ((sdiff (abs (- (point) (objed--beg))))
         (ediff (abs (- (point) (objed--end)))))
     (objed--reverse)
