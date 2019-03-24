@@ -893,6 +893,8 @@ To define new operations see `objed-define-op'.")
     (define-key map (kbd "TAB") 'objed-object-x)
     (define-key map (kbd "SPC") 'objed-region-object)
     (define-key map (kbd "C-s") 'objed-occur)
+
+    (define-key map "o" 'objed-expand-context)
     ;; default objects
     (define-key map "c" 'objed-char-object)
     (define-key map "w" 'objed-word-object)
@@ -902,7 +904,7 @@ To define new operations see `objed-define-op'.")
     (define-key map "." 'objed-sentence-object)
     (define-key map "{" 'objed-paragraph-object)
     (define-key map "q" 'objed-textblock-object)
-    (define-key map "o" 'objed-sexp-object)
+    (define-key map "\"" 'objed-sexp-object)
 
     (define-key map "i" 'objed-indent-object)
     (define-key map "a" 'objed-block-object)
