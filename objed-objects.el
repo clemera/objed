@@ -967,9 +967,25 @@ STATE is the state for the object and defaults to whole. If ODATA
 is non-nil it is used as object position data, otherwise
 calculate the data of the object at current position using
 `objed--get'."
-  (setq objed--object o)
-  (setq objed--obj-state (or state 'whole))
-  (setq objed--current-obj (or odata (objed--get))))
+  (let ((odata (let* ((objed--object o)
+                      (objed--obj-state (or state 'whole))
+                      (tryb t))
+                 (or odata
+                     ;; FIXME: all default objects should throw an error
+                     ;; if try-next, try-prev fails.
+                     (condition-case nil
+                         (or (objed--get)
+                             (setq tryb nil)
+                             (objed--get t))
+                       (error
+                        (when tryb
+                          (objed--get t))))))))
+    (if odata
+        (setq objed--object o
+              objed--obj-state (or state 'whole)
+              objed--current-obj odata)
+      (prog1 nil
+        (message "No %s found." o)))))
 
 
 (defun objed--distant-p (o)

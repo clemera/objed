@@ -1230,13 +1230,13 @@ or object position data."
   ;; if anything went wrong make sure to start with clean state
   (when objed--buffer
     (objed--reset))
-  ;; (unless objed--buffer
-  (setq objed--current-obj nil)
-  (setq objed--obj-state 'whole)
 
+  ;; (setq objed--current-obj nil)
+  ;; (setq objed--obj-state 'whole)
   (setq objed--buffer (current-buffer))
   (add-hook 'pre-command-hook 'objed--push-state nil t)
   (add-hook 'post-command-hook 'objed--check-buffer)
+
   (pcase-dolist
       (`(,var . ,val)
        `((hl-line-range-function . objed-hl-function)
