@@ -31,6 +31,7 @@
 (declare-function avy--process "ext:avy")
 (declare-function avy--style-fn "ext:avy")
 (declare-function avy-goto-char "ext:avy")
+(declare-function stripe-buffer-mode "ext:stripe-buffer")
 
 (declare-function sgml-skip-tag-backward "ext:sgml-mode")
 (declare-function sgml-skip-tag-forward "ext:sgml-mode")
@@ -1436,12 +1437,20 @@ comments."
 
 (objed-define-object nil ace
   :get-obj
+  (let ((stripe (and (bound-and-true-p stripe-buffer-mode)
+                     stripe-buffer-mode)))
+    (when (fboundp 'stripe-buffer-mode)
+      (stripe-buffer-mode 1))
   ;; TODO: buffer stripes
-  (objed-make-object
-   :beg (save-excursion (call-interactively 'avy-goto-line)
-                        (line-beginning-position))
-   :end (save-excursion (call-interactively 'avy-goto-line)
-                        (1+ (line-end-position)))))
+    (unwind-protect
+        (objed-make-object
+         :beg (save-excursion (call-interactively 'avy-goto-line)
+                              (line-beginning-position))
+         :end (save-excursion (call-interactively 'avy-goto-line)
+                              (1+ (line-end-position))))
+      (unless (or stripe
+                  (not (fboundp 'stripe-buffer-mode)))
+        (stripe-buffer-mode -1)))))
 
 (objed-define-object nil trailing
   :atp
