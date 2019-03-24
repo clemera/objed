@@ -1436,11 +1436,12 @@ comments."
 
 (objed-define-object nil ace
   :get-obj
-  (let ((pos (1+ (point))))
-    (avy-goto-char (read-event "Ace to char: "))
-    (objed-make-object
-     :beg (point)
-     :end pos)))
+  ;; TODO: buffer stripes
+  (objed-make-object
+   :beg (save-excursion (call-interactively 'avy-goto-line)
+                        (line-beginning-position))
+   :end (save-excursion (call-interactively 'avy-goto-line)
+                        (1+ (line-end-position)))))
 
 (objed-define-object nil trailing
   :atp
