@@ -3497,6 +3497,9 @@ and RANGE hold the object position data."
            (objed--switch-to exitf))
           ((or (eq exit 'ignore)
                (bound-and-true-p multiple-cursors-mode)))
+          ((not objed--buffer)
+           ;; let op exit itself if it wants to
+           (ignore))
           (t
            (if (and text (objed--line-p text))
                (objed--init 'line)
