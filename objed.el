@@ -3553,7 +3553,8 @@ If region is active deactivate it first."
   "Check if current buffer is still the `objed--buffer'.
 
 Resets objed if appropriate."
-  (unless objed--with-allow-input
+  (unless (or objed--with-allow-input
+              (not objed--buffer))
     (when (not (eq (current-buffer) objed--buffer))
       (objed--reset--objed-buffer)
       (select-window (get-buffer-window (current-buffer)) t)
