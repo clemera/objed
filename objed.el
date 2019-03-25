@@ -2562,7 +2562,7 @@ With prefix arg REG non nil ask for register."
   (objed--exit-objed))
 
 (defvar objed--electric-event nil
-  "Saves the event used for `objed-electric'.")
+  "Saves the event used for `objed-electric-event'.")
 
 (defun objed-electric-pair (beg end)
   "Wrap region between BEG, END.
@@ -2579,10 +2579,10 @@ else query for key event and use `electric'."
         (insert left))
   (let ((event (or objed--electric-event
                    (setq objed--electric-event (read-event "Wrap with: ")))))
-    (objed-electric beg end event))))
+    (objed-electric-event beg end event))))
 
 
-(defun objed-electric (beg end &optional event)
+(defun objed-electric-event (beg end &optional event)
   "Wrap region between BEG and END using `elec-pair'.
 
 EVENT is used for wrapping according to
