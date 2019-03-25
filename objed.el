@@ -3518,6 +3518,8 @@ and RANGE hold the object position data."
           ((or (eq exit 'ignore)
                (bound-and-true-p multiple-cursors-mode)))
           ((not objed--buffer)
+           ;; FIXME: why stay map active after electric insertion?
+           (objed--exit-objed)
            ;; let op exit itself if it wants to
            (ignore))
           (t
