@@ -1741,21 +1741,32 @@ Shrinks to inner objects on repeat if possible."
                      (t
                       (objed--end))))))
 
-(defun objed-backward-until-context ()
-  "Goto object inner beginning and activate part moved over."
-  (interactive)
-  (when (save-excursion (objed-context-object)
-                        (objed--toggle-state))
-    (objed--change-to :iend (point) :end (point))
-    (goto-char (objed--beg))))
+(defun objed-backward-until-context (arg)
+  "Goto object inner beginning and activate part moved over.
 
-(defun objed-forward-until-context ()
-  "Goto object inner end and activate part moved over."
-  (interactive)
-  (when (save-excursion (objed-context-object)
-                        (objed--toggle-state))
-    (objed--change-to :ibeg (point) :beg (point))
-    (goto-char (objed--end))))
+At bracket or string self insert ARG times."
+  (interactive "p")
+  (if (or (objed--at-object-p 'bracket)
+          (objed--at-object-p 'string))
+      (self-insert-command arg)
+    (when (save-excursion
+            (objed-context-object)
+            (objed--toggle-state))
+      (objed--change-to :iend (point) :end (point))
+      (goto-char (objed--beg)))))
+
+(defun objed-forward-until-context (arg)
+  "Goto object inner end and activate part moved over.
+
+At bracket or string self insert ARG times."
+  (interactive "p")
+  (if (or (objed--at-object-p 'bracket)
+          (objed--at-object-p 'string))
+      (self-insert-command arg)
+    (when (save-excursion (objed-context-object)
+                          (objed--toggle-state))
+      (objed--change-to :ibeg (point) :beg (point))
+      (goto-char (objed--end)))))
 
 (defun objed-current-or-previous-context (&optional arg)
   "Move to end of object at point and activate it.
@@ -2578,7 +2589,8 @@ else query for key event and use `electric'."
         (goto-char beg)
         (insert left))
   (let ((event (or objed--electric-event
-                   (setq objed--electric-event (read-event "Wrap with: ")))))
+                   (setq objed--electric-event
+                         (read-event "Wrap with: ")))))
     (objed-electric-event beg end event))))
 
 
@@ -2607,6 +2619,14 @@ to sourround region string representation of event."
        (goto-char rbeg)
        (objed--skip-ws)
        (insert last-command-event)
+       ;; add space after wrapping with paren in lispy modes
+       (when (and (or (derived-mode-p 'lisp-mode)
+                      (derived-mode-p 'emacs-lisp-mode))
+                  (eq (car (electric-pair-syntax-info last-command-event))
+                      ?\())
+         (save-excursion
+           (insert " ")
+           (objed--reset)))
        (setq epos (point))
        (electric-pair-post-self-insert-function))
       ;; leave point like electric would for region
