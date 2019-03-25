@@ -1436,20 +1436,21 @@ Objects which are built by lines of text.")
 
 If IGNORE is non-nil it should be an object of
 `objed--block-objects' which should be ignored."
-  (let ((os (cond ((bound-and-true-p outline-minor-mode)
-                   objed--block-objects)
-                  ((eq major-mode 'org-mode)
+  (let ((os (cond ((eq major-mode 'org-mode)
                    (let ((os nil))
                      ;; TODO: sort by object size?
                      (dolist (o objed--block-objects (nreverse os))
                        (unless (memq o '(indent textblock block))
                          (push o os)))))
+                  ((and (derived-mode-p 'prog-mode)
+                        (objed--in-string-or-comment-p))
+                   objed--block-objects)
                   (t
                    ;; performance is poor on slow
                    ;; machines when searching after
                    ;; every char with objed--get in case
                    ;; there are no outlines/mode not active
-                   (remq 'section objed--block-objects)))))
+                   (remq 'textblock objed--block-objects)))))
     (remq ignore
           (if (save-excursion
                 (and (or (not (derived-mode-p 'text-mode))
