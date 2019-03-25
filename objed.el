@@ -219,7 +219,7 @@ function should return nil if objed should not initialize."
     (org-forward-sentence . sentence)
     (backward-sentence . sentence)
     (org-backward-sentence . sentence)
-    (org-backward-element . paragraph)
+    (org-backward-element . block)
     (beginning-of-defun . defun)
     (end-of-defun . defun)
     (outline-previous-visible-heading . section)
