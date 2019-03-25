@@ -1440,7 +1440,7 @@ If IGNORE is non-nil it should be an object of
                    (let ((os nil))
                      ;; TODO: sort by object size?
                      (dolist (o objed--block-objects (nreverse os))
-                       (unless (memq o '(indent textblock block))
+                       (unless (memq o '(indent textblock))
                          (push o os)))))
                   ((and (derived-mode-p 'prog-mode)
                         (objed--in-string-or-comment-p))
