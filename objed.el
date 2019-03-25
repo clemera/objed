@@ -1951,7 +1951,8 @@ back to `objed-initial-object' if no match found."
   (interactive)
   (objed--maybe-which-key objed-object-map "Object:")
   (let ((real-this-command (lookup-key objed-object-map (vector (read-key)))))
-    (when (fboundp #'which-key--hide-popup)
+    (when (and (bound-and-true-p which-key-mode)
+               (fboundp #'which-key--hide-popup))
       (which-key--hide-popup))
     (when real-this-command
       (call-interactively real-this-command))))

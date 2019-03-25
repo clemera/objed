@@ -67,37 +67,37 @@
 
 (eval-and-compile
   (defun objed--transform-pos-data (plist)
-  (let ((np nil)
-        (alt nil)
-        (make nil)
-        (skip nil))
-    (unless (and (plist-get plist :beg)
-                 (plist-get plist :end))
-      (user-error "Malformed macro"))
-    (dolist (item plist)
-      (if (memq item '(:beg :ibeg :end :iend))
-          (progn (push item alt)
-                 (setq skip t))
-        (if (and skip
-                 (not (keywordp item)))
-            (push item alt)
-          (push item np)
-          (setq skip nil))))
+    (let ((np nil)
+          (alt nil)
+          (make nil)
+          (skip nil))
+      (unless (and (plist-get plist :beg)
+                   (plist-get plist :end))
+        (user-error "Malformed macro"))
+      (dolist (item plist)
+        (if (memq item '(:beg :ibeg :end :iend))
+            (progn (push item alt)
+                   (setq skip t))
+          (if (and skip
+                   (not (keywordp item)))
+              (push item alt)
+            (push item np)
+            (setq skip nil))))
 
-    (setq np (nreverse np))
-    (setq alt (nreverse alt))
-    (dolist (el alt)
-      (when (keywordp el)
-        (progn
-          (push el make)
-          (push (plist-get alt el) make))))
-    (setq make (nreverse make))
-    (push 'objed-make-object make)
-    (append np (list :get-obj)
-            ;; TODO:save-mark-and-excursion still needed?
-            ;; is wrapped already?
-            (list (append (list 'save-mark-and-excursion)
-                          (list make))))))
+      (setq np (nreverse np))
+      (setq alt (nreverse alt))
+      (dolist (el alt)
+        (when (keywordp el)
+          (progn
+            (push el make)
+            (push (plist-get alt el) make))))
+      (setq make (nreverse make))
+      (push 'objed-make-object make)
+      (append np (list :get-obj)
+              ;; TODO:save-mark-and-excursion still needed?
+              ;; is wrapped already?
+              (list (append (list 'save-mark-and-excursion)
+                            (list make))))))
 
   (defun objed--get-arg-plist (keylst valid &optional wrapped)
     "Wraps any forms of keys in keylst in `progn' and returns property list.
@@ -126,7 +126,7 @@ property list where each key has an associated progn."
                  ;; objed--block-p: dont run objeds advices here...
                  (push `(let ((objed--block-p t))
                           (save-mark-and-excursion
-                           ,@(nreverse forms)))
+                            ,@(nreverse forms)))
                        wrapped)))
              (objed--get-arg-plist keylst valid wrapped))
             (keylst
