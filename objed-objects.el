@@ -303,7 +303,9 @@ defined."
                    res)
              (nreverse res)))
           (t
-           (let ((res (list 'progn)))
+           (let ((res (if package
+                          (list `',package 'with-eval-after-load)
+                        (list 'progn))))
 
              (when noskip
                (push `(put ',fname 'objed-no-skip t)
