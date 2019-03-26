@@ -537,8 +537,10 @@ update to given object."
     (cond (binding
            (funcall (cdr binding) name))
           (t
-           (when (objed--init name)
-             (goto-char (objed--beg)))))))
+           (if objed--buffer
+               (objed--switch-to name)
+             (objed--init name))
+           (goto-char (objed--beg))))))
 
 
 (defun objed--switch-to-object-for-cmd (cmd)
