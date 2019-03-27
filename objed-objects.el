@@ -1806,7 +1806,10 @@ non-nil the indentation block can contain empty lines."
                  (goto-char opos))
                (line-end-position))))
     (when (and beg end)
-      (cons beg end))))
+      (save-excursion
+        (goto-char beg)
+        (cons (line-beginning-position)
+               end)))))
 
 
 (objed-define-object nil indent
