@@ -1568,33 +1568,29 @@ comments."
   (objed--prev-symbol))
 
 
-
 (defun objed--at-sexp-p ()
   "Return sexp object if point at strutured expression."
-  (let ((opos (point))
-        (real-this-command 'forward-sexp))
-    (save-excursion
-      (cl-flet ((zigzag
-                 (arg)
-                 (ignore-errors
-                   (forward-sexp arg)
-                   (unless (eq opos (point))
-                     (prog1 (point)
-                       (forward-sexp (- arg)))))))
-        (let ((zigp nil))
-          (when (or (and (not (eobp))
-                         (or (memq (char-syntax (char-before)) (list ?\s ?>))
-                             (not (eq (char-syntax (char-after)) ?\")))
-                         (save-excursion
-                           (eq (point) (progn (setq zigp (zigzag 1))
-                                              (point)))))
-                    (and (not (bobp))
-                         (save-excursion
-                           (eq (point) (progn (setq zigp (zigzag -1))
-                                              (point))))))
-            (and zigp
-                 (cons (min (point) zigp)
-                       (max (point) zigp)))))))))
+  (let* ((opos (point))
+         (objed--block-p t)
+         (real-this-command 'forward-sexp)
+         (other nil)
+         (atp (or (save-excursion
+                    (ignore-errors
+                      (forward-sexp 1)
+                      (setq other (point))
+                      (forward-sexp -1)
+                      (= (point) opos)))
+                  (save-excursion
+                    (ignore-errors
+                      (forward-sexp -1)
+                      (setq other (point))
+                      (forward-sexp 1)
+                      (= (point) opos))))))
+
+    (when atp
+      (cons (min opos other)
+            (max opos other)))))
+
 
 (objed-define-object nil sexp
   :atp
@@ -1613,9 +1609,12 @@ comments."
       'identifier))
   :get-obj
   (let ((bounds (or (objed--at-sexp-p)
-                    (ignore-errors
-                      (forward-sexp -1)
-                      (objed--at-sexp-p)))))
+                    (save-excursion
+                      (ignore-errors
+                        (forward-sexp 1)
+                        (forward-sexp -1)
+                        (objed--at-sexp-p))))))
+
     (when bounds
       (objed-make-object
        :obounds bounds
