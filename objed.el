@@ -392,6 +392,9 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (declare-function electric-pair-syntax-info "ext:elec-pair")
 (declare-function hl-line-unhighlight "ext:hl-line")
 (declare-function hl-line-highlight "ext:hl-line")
+(declare-function mc/create-fake-cursor-at-point "ext:multiple-cursors")
+
+
 
 
 
@@ -2569,7 +2572,7 @@ With prefix arg REG non nil ask for register."
 (defun objed-del-insert ()
   "Delete current object and exit to insert state."
   (interactive)
-  (objed--do #'delete-region)
+  (objed--do #'delete-region 'mc)
   (objed--exit-objed))
 
 (defvar objed--electric-event nil
@@ -3450,6 +3453,10 @@ and RANGE hold the object position data."
   (let ((exitf (cdr (assq exit objed--exit-alist))))
     (cond ((eq 'keep exit)
            (ignore))
+          ((eq 'mc exit)
+           (when (fboundp 'mc/maybe-multiple-cursors-mode)
+             (mc/maybe-multiple-cursors-mode))
+           (objed--exit-objed))
           ((eq 'current exit)
            ;; use the markers for updated object
            (objed--update-current-object
@@ -3596,7 +3603,10 @@ ON got applied."
   "Apply ACTION on marked objects and exit with EXIT."
   (let ((ovs objed--marked-ovs)
         (appendp (memq action '(kill-region copy-region-as-kill)))
-        (n 0))
+        (n 0)
+        (mc (and (eq exit 'mc)
+                 (require 'multiple-cursors nil t)))
+        (pos (point)))
     (save-excursion
       (dolist (ov (nreverse (copy-sequence ovs)))
         (let ((beg (overlay-start ov))
@@ -3604,6 +3614,9 @@ ON got applied."
           (when (and beg end)
             (goto-char beg)
             (funcall action beg end)
+            (when (and mc
+                       (not (= pos (point))))
+              (mc/create-fake-cursor-at-point))
             (cl-incf n))
           (when appendp
             (setq last-command 'kill-region))
