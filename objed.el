@@ -392,6 +392,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (declare-function electric-pair-syntax-info "ext:elec-pair")
 (declare-function hl-line-unhighlight "ext:hl-line")
 (declare-function hl-line-highlight "ext:hl-line")
+(declare-function multiple-cursors-mode "ext:multiple-cursors")
 (declare-function mc/create-fake-cursor-at-point "ext:multiple-cursors")
 (declare-function mc/num-cursors "ext:multiple-cursors")
 
@@ -3455,7 +3456,7 @@ and RANGE hold the object position data."
     (cond ((eq 'keep exit)
            (ignore))
           ((eq 'mc exit)
-           (when (fboundp 'multiple-cursors-mode)
+           (when (boundp 'multiple-cursors-mode)
              (if (> (mc/num-cursors) 0)
                  (multiple-cursors-mode 1)
                (multiple-cursors-mode 0)))
