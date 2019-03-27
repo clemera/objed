@@ -3587,13 +3587,8 @@ ON got applied."
     (when range
       (let* ((text (apply #'buffer-substring range))
              (range (list (set-marker (make-marker) (car range))
-                          (set-marker (make-marker) (cadr range))))
-             (object (list range
-                           (list (set-marker (make-marker) (objed--alt-beg))
-                                 (set-marker (make-marker) (objed--alt-end))))))
+                          (set-marker (make-marker) (cadr range)))))
         (prog1 1
-          ;; update object with marker positions
-          (objed--update-current-object object)
           (apply action range)
           (objed-exit-op exit text range))))))
 
