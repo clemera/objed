@@ -1573,19 +1573,30 @@ comments."
   (let* ((opos (point))
          (objed--block-p t)
          (real-this-command 'forward-sexp)
+         (instring (objed--in-string-p nil t))
          (other nil)
-         (atp (or (save-excursion
-                    (ignore-errors
-                      (forward-sexp 1)
-                      (setq other (point))
-                      (forward-sexp -1)
-                      (= (point) opos)))
-                  (save-excursion
-                    (ignore-errors
-                      (forward-sexp -1)
-                      (setq other (point))
-                      (forward-sexp 1)
-                      (= (point) opos))))))
+         (atp (or (when (or (bobp)
+                            ;; prevent the annoying "feature" that sexp
+                            ;; movement works across strings
+                            (not instring)
+                            (not (eq (char-syntax (char-after)) ?\")))
+                    (save-excursion
+                      (ignore-errors
+                        (forward-sexp 1)
+                        (setq other (point))
+                        (forward-sexp -1)
+                        (= (point) opos))))
+                  (when (or (eobp)
+                            ;; prevent the annoying "feature" that sexp
+                            ;; movement works across strings
+                            (not instring)
+                            (not (eq (char-syntax (char-before)) ?\")))
+                    (save-excursion
+                         (ignore-errors
+                           (forward-sexp -1)
+                           (setq other (point))
+                           (forward-sexp 1)
+                           (= (point) opos)))))))
 
     (when atp
       (cons (min opos other)
