@@ -734,8 +734,6 @@ selected one."
 
     (define-key map "y" 'objed-yank)
 
-    (define-key map (kbd "C-x TAB") 'objed-indent-rigidly)
-
     (define-key map (kbd "\\")
       ;; dont exit
       (objed-define-op nil objed-indent ignore))
@@ -2657,52 +2655,6 @@ ARG is passed to `yank'. On repreat `yank-pop'."
     (indent-according-to-mode)
     (objed--update-current-object)))
 
-(defvar objed--indent-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "<C-right>") 'objed-indent-right)
-    (define-key map (kbd "<C-left>") 'objed-indent-left)
-    (define-key map (kbd "<left>") 'objed-indent-left)
-    (define-key map (kbd "<right>") 'objed-indent-right)
-    (define-key map (kbd "TAB") 'objed-indent)
-    (define-key map (kbd "<M-left>") 'objed-indent-to-left-tab-stop)
-    (define-key map (kbd "<M-right>") 'objed-indent-to-right-tab-stop)
-    map)
-  "Map used for indentation.")
-
-(defvar objed--indent-map-message
-  (concat "Indent object further with "
-          "\\<objed--indent-map>\\[objed-indent-right], "
-          "\\[objed-indent-left], \\[objed-indent-to-left-tab-stop], "
-          "\\[objed-indent-to-right-tab-stop], \\[objed-indent]."))
-
-(defvar objed--indent-commands
-  '(objed-indent
-    objed-indent-left
-    objed-indent-right
-    objed-indent-to-left-tab-stop
-    objed-indent-to-right-tab-stop)
-  "Commands for indentation.")
-
-(defun objed--indent (f &optional arg)
-  "Execute indent function F.
-
-If ARG is given pass it on to the indent function. Switches
-temporary to `objed--indent-map'"
-  ;; init
-  (unless (memq last-command
-                objed--indent-commands)
-    (goto-char (objed--beg))
-    (push-mark (objed--end) t)
-    (set-transient-map objed--indent-map t
-                       (let ((obj objed--object))
-                         (lambda () (objed--switch-to obj)))))
-  (if arg
-      (funcall f (region-beginning) (region-end) arg)
-    (funcall f (region-beginning) (region-end)))
-  (objed--switch-to 'region)
-  (message
-   (substitute-command-keys objed--indent-map-message)))
-
 (defun objed-indent (beg end)
   "Indent region between BEG and END.
 
@@ -2713,31 +2665,28 @@ Moves point over any whitespace afterwards."
 (defun objed-indent-left (arg)
   "Indent all lines in object leftward by ARG space."
   (interactive "p")
-  (objed--indent #'indent-rigidly (- arg)))
+  (objed--do (lambda (beg end)
+               (indent-rigidly beg end (- arg)))
+             'current))
 
 (defun objed-indent-right (arg)
   "Indent all lines in object rightward by ARG space."
   (interactive "p")
-  (objed--indent #'indent-rigidly arg))
+  (objed--do (lambda (beg end)
+               (indent-rigidly beg end arg))
+             'current))
 
 (defun objed-indent-to-left-tab-stop ()
   "Indent all lines in object lefttward to a tab stop."
   (interactive)
-  (objed--indent #'indent-rigidly-left-to-tab-stop))
+  (objed--do  #'indent-rigidly-left-to-tab-stop
+              'current))
 
 (defun objed-indent-to-right-tab-stop ()
   "Indent all lines in object rightward to a tab stop."
   (interactive)
-  (objed--indent #'indent-rigidly-right-to-tab-stop))
-
-(defun objed-indent-rigidly (_beg _end &optional arg)
-  "Similar to `indent-rigidly' but work on current object lines.
-
-Indent by ARG lines."
-  (interactive "r\nP")
-  (if arg
-      (objed--indent #'indent-rigidly (prefix-numeric-value arg))
-    (objed--indent #'ignore)))
+  (objed--do #'indent-rigidly-right-to-tab-stop
+             'current))
 
 (defun objed-move-object-forward ()
   "Move object forward.
@@ -3502,6 +3451,7 @@ and RANGE hold the object position data."
     (cond ((eq 'keep exit)
            (ignore))
           ((eq 'current exit)
+           ;; use the markers for updated object
            (objed--update-current-object
             (objed-make-object :beg (car range)
                                :end (cadr range))))
@@ -3635,10 +3585,15 @@ ON got applied."
   "Apply ACTION on current object and exit with EXIT."
   (let ((range (objed--current)))
     (when range
-      (let ((text (apply #'buffer-substring range))
-            (range (list (set-marker (make-marker) (car range))
-                         (set-marker (make-marker) (cadr range)))))
+      (let* ((text (apply #'buffer-substring range))
+             (range (list (set-marker (make-marker) (car range))
+                          (set-marker (make-marker) (cadr range))))
+             (object (list range
+                           (list (set-marker (make-marker) (objed--alt-beg))
+                                 (set-marker (make-marker) (objed--alt-end))))))
         (prog1 1
+          ;; update object with marker positions
+          (objed--update-current-object object)
           (apply action range)
           (objed-exit-op exit text range))))))
 
@@ -3659,7 +3614,8 @@ ON got applied."
             (setq last-command 'kill-region))
           (delete-overlay ov))))
     (prog1 n
-      ;; always ?
+      ;; TODO: configure exit behavior for
+      ;; multiple objects
       (setq objed--marked-ovs nil)
       (objed-exit-op exit))))
 
