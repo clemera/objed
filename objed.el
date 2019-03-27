@@ -3486,9 +3486,15 @@ and RANGE hold the object position data."
            ;; let op exit itself if it wants to
            (ignore))
           (t
-           (if (and text (objed--line-p text))
-               (objed--init 'line)
-             (objed--init 'char))))
+           (let ((co (and (= (car range) (cadr range)) ; object vanished
+                          (objed--get-continuation-object objed--object))))
+             (if co
+                 (objed--update-current-object co)
+               ;; stay active with most appr. obj
+               ;; use a line when we acted on lines
+               (if (and text (objed--line-p text))
+                   (objed--switch-to 'line)
+                 (objed--switch-to 'char))))))
     ;; cleanup
     (when objed--extend-cookie
       (face-remap-remove-relative objed--extend-cookie)
@@ -3499,6 +3505,18 @@ and RANGE hold the object position data."
                (not (eq exit 'keep)))
       (set-marker (car range) nil)
       (set-marker (cadr range) nil))))
+
+
+(defun objed--get-continuation-object (obj)
+  "Rerturn continuation object for object OBJ."
+  ;; objects which
+  (cond ((memq obj '(bracket string comment))
+         (let ((objed--object 'sexp))
+           (objed-make-object :beg (point)
+                              :end (objed--end (objed--get)))))
+        (t
+         (objed-make-object :beg (point)
+                            :end (objed--end (objed--get))))))
 
 
 (defun objed-quit ()
