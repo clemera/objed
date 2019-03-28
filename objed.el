@@ -734,8 +734,10 @@ selected one."
 
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
+    (define-key map "K" 'objed-kill)
     (define-key map "w" 'objed-copy)
     (define-key map "d" 'objed-delete)
+    (define-key map "D" 'objed-delete)
 
     (define-key map "y" 'objed-yank)
 
@@ -3508,15 +3510,15 @@ and RANGE hold the object position data."
 
 
 (defun objed--get-continuation-object (obj)
-  "Return continuation object for object OBJ."
+  "Return object for continuation OBJ."
   ;; white list
-  (cond ((memq obj '(word defun sentence))
-         (objed-make-object :beg (point)
-                            :end (objed--end (objed--get))))
-        (t
-         (objed--switch-to 'sexp)
-         (objed-make-object :beg (point)
-                            :end (objed--end)))))
+  (let ((shifted (memq 'shift (event-modifiers last-input-event))))
+    (unless (memq obj '(word defun sentence line))
+      (objed--switch-to 'sexp))
+    (objed-make-object :beg (if shifted (objed--beg (objed--get-prev))
+                              (point))
+                       :end (if shifted (point)
+                              (objed--end (objed--get))))))
 
 
 (defun objed-quit ()
