@@ -2503,15 +2503,32 @@ region command."
                     arg))))
     (objed--do cmd rcmd)))
 
-(defun objed-kill ()
-  "Kill objects."
-  (interactive)
-  (objed--do #'kill-region))
+(defun objed-kill (&optional times)
+  "Kill object(s).
 
-(defun objed-delete ()
-  "Delete objects."
+Kill marked objects or TIMES instances of current
+object (defaults to 1)."
+  (interactive "p")
+  (if objed--marked-ovs
+      (objed--do #'kill-region)
+    (let ((times (or times 1)))
+      (dotimes (_ times)
+        (objed--do #'kill-region)
+        (undo-boundary)
+        (setq last-command #'kill-region)))))
+
+(defun objed-delete (&optional times)
+  "Delete object(s).
+
+Delete marked objects or TIMES instances of current
+object (defaults to 1)."
   (interactive)
-  (objed--do #'delete-region))
+  (if objed--marked-ovs
+      (objed--do #'delete-region)
+    (let ((times (or times 1)))
+      (dotimes (_ times)
+        (objed--do #'delete-region)
+        (undo-boundary)))))
 
 
 (defvar objed--append-do-append nil)
