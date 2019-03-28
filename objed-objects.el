@@ -1524,7 +1524,12 @@ comments."
                (bounds-of-thing-at-point 'symbol))
     'identifier)
   :get-obj
-  (bounds-of-thing-at-point 'word)
+  (if (and (bound-and-true-p subword-mode)
+           (eq this-command 'forward-word))
+      (save-excursion
+        (forward-word -1)
+        (bounds-of-thing-at-point 'word))
+    (bounds-of-thing-at-point 'word))
   :try-next
   (re-search-forward  "\\<." nil t)
   :try-prev
