@@ -3458,7 +3458,7 @@ and RANGE hold the object position data."
           ((eq 'mc exit)
            (when (boundp 'multiple-cursors-mode)
              (if (> (mc/num-cursors) 1)
-                 (multiple-cursors-mode 1)
+                 (run-at-time 0 nil 'multiple-cursors-mode)
                (multiple-cursors-mode 0)))
            (objed--exit-objed))
           ((eq 'current exit)
@@ -3623,13 +3623,16 @@ ON got applied."
 
 (defun objed--do-objects (action exit)
   "Apply ACTION on marked objects and exit with EXIT."
-  (let ((ovs objed--marked-ovs)
-        (appendp (memq action '(kill-region copy-region-as-kill)))
-        (n 0)
-        (mc (and (eq exit 'mc)
-                 (require 'multiple-cursors nil t)))
-        (pos (point)))
+  (let* ((ovs objed--marked-ovs)
+         (appendp (memq action '(kill-region copy-region-as-kill)))
+         (n 0)
+         (mc (and (eq exit 'mc)
+                  (require 'multiple-cursors nil t)))
+         (pos (set-marker (make-marker) (overlay-start (car ovs)))))
+    ;; move to last ov
+    (goto-char pos)
     (save-excursion
+      ;; TODO: why not bottom up, was there a reason?
       (dolist (ov (nreverse (copy-sequence ovs)))
         (let ((beg (overlay-start ov))
               (end (overlay-end ov)))
