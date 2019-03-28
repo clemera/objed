@@ -124,6 +124,7 @@
 (require 'cl-lib)
 (require 'nadvice)
 (require 'face-remap)
+(require 'subword)
 
 (require 'objed-objects)
 
@@ -580,7 +581,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
        (setq this-command ',cmd)
        (call-interactively ',cmd)
        ,after
-       (objed--switch-to ',obj)
+       (objed--switch-to ',obj objed--obj-state)
        (when (or prb pre)
          (cond ((and prb
                      (= (point) (region-end)))
@@ -614,6 +615,10 @@ selected one."
                (objed--update-current-object)
                (message "Indented defun.")))
       (call-interactively nc))))
+
+(defun objed--point-in-periphery ()
+  "Return non-nil if point is in current lines periphery."
+  (<= (point) (save-excursion (back-to-indentation) (point))))
 
 (defvar objed-map
   (let ((map (make-sparse-keymap)))
@@ -673,9 +678,16 @@ selected one."
     (define-key map "F" 'objed-move-object-forward)
     (define-key map "B" 'objed-move-object-backward)
 
-    (define-key map "p" (objed--call-and-switch previous-line line))
+    (define-key map "p" (objed--call-and-switch
+                         previous-line line
+                         nil
+                         (when (objed--point-in-periphery)
+                           (back-to-indentation))))
     (define-key map "n" (objed--call-and-switch
-                         next-line line))
+                         next-line line
+                         nil
+                         (when (objed--point-in-periphery)
+                           (back-to-indentation))))
 
     (define-key map "P" 'objed-move-line-backward)
     (define-key map "N" 'objed-move-line-forward)
@@ -718,7 +730,7 @@ selected one."
     (define-key map "o" 'objed-expand-context)
 
     (define-key map "i" 'objed-del-insert)
-    (define-key map "t" 'objed-shrink-context)
+    (define-key map "t" 'objed-toggle-state)
     (define-key map "j" 'objed-toggle-side)
 
     ;; marking/unmarking
@@ -1862,26 +1874,16 @@ Default to sexp at point."
             (t
              (goto-char (objed--beg)))))))
 
-
-(defun objed-shrink-context ()
+(defun objed-toggle-state ()
   "Shrink current object.
 
 Switches to inner object or object inside current one."
   (interactive)
-  (if (eq objed--object 'sexp)
-      (save-excursion
-        (objed-context-object))
-    (if (objed--inner-p)
-        (save-excursion
-          (goto-char (objed--end))
-          (objed--switch-to 'sexp))))
-  (let ((sdiff (abs (- (point) (objed--beg))))
-        (ediff (abs (- (point) (objed--end)))))
-    (objed--reverse)
-    (goto-char (cond ((> ediff sdiff)
-                      (objed--beg))
-                     (t
-                      (objed--end))))))
+  (if (bound-and-true-p subword-mode)
+      (subword-mode -1)
+    (unless (objed--inner-p)
+      (subword-mode 1)))
+  (objed--toggle-state))
 
 
 (defun objed-expand-context ()

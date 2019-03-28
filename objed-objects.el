@@ -27,6 +27,8 @@
 
 ;; * Bytecomp
 
+(require 'subword)
+
 ;; info for byte-comp
 (declare-function avy--process "ext:avy")
 (declare-function avy--style-fn "ext:avy")
@@ -343,7 +345,7 @@ Positions are stored in a list of the form:
     ((object-start object-end)
      (inner-start inner-end))")
 
-(defvar objed--obj-state nil
+(defvar-local objed--obj-state nil
   "The state used to get object positions.
 
 Either the symbol `whole' or `inner'.")
@@ -1524,12 +1526,19 @@ comments."
                (bounds-of-thing-at-point 'symbol))
     'identifier)
   :get-obj
-  (if (and (bound-and-true-p subword-mode)
-           (eq this-command 'forward-word))
-      (save-excursion
-        (forward-word -1)
-        (bounds-of-thing-at-point 'word))
-    (bounds-of-thing-at-point 'word))
+  (objed-make-object
+   :obounds (if (bound-and-true-p subword-mode)
+                (let ((find-word-boundary-function-table subword-empty-char-table))
+                  (bounds-of-thing-at-point 'word))
+              (bounds-of-thing-at-point 'word))
+   :ibounds (if (and (bound-and-true-p subword-mode)
+                     (eq this-command 'forward-word))
+                    (save-excursion
+                      (forward-word -1)
+                      (bounds-of-thing-at-point 'word))
+              (let ((find-word-boundary-function-table
+                     subword-find-word-boundary-function-table))
+                (bounds-of-thing-at-point 'word))))
   :try-next
   (re-search-forward  "\\<." nil t)
   :try-prev
@@ -2128,7 +2137,12 @@ non-nil the indentation block can contain empty lines."
   :atp (or (looking-at "\\_<")
            (looking-back "\\_>" 1))
   :get-obj
-  (bounds-of-thing-at-point 'symbol)
+  (let ((bounds (bounds-of-thing-at-point 'symbol)))
+    (when bounds
+      (objed-make-object
+       :obounds bounds
+       :ibounds (bounds-of-thing-at-point 'word))))
+
   :try-next
   (objed--next-identifier)
   :try-prev
