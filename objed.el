@@ -3515,9 +3515,8 @@ and RANGE hold the object position data."
   (let ((shifted (memq 'shift (event-modifiers last-input-event))))
     (unless (memq obj '(word defun sentence line))
       (objed--switch-to 'sexp))
-    (objed-make-object :beg (if shifted (objed--beg (objed--get-prev))
-                              (point))
-                       :end (if shifted (point)
+    (objed-make-object :beg (point)
+                       :end (if shifted (objed--beg (objed--get-prev))
                               (objed--end (objed--get))))))
 
 
@@ -3620,7 +3619,11 @@ ON got applied."
              (range (list (set-marker (make-marker) (car range))
                           (set-marker (make-marker) (cadr range)))))
         (prog1 1
-          (apply action range)
+          ;; WHY: if passing the markers, prepend check
+          ;; in kill-region fails.
+          (funcall action
+                   (marker-position (car range))
+                   (marker-position (cadr range)))
           (objed-exit-op exit text range))))))
 
 (defun objed--do-objects (action exit)
