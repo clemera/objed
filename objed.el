@@ -3457,7 +3457,7 @@ and RANGE hold the object position data."
            (ignore))
           ((eq 'mc exit)
            (when (boundp 'multiple-cursors-mode)
-             (if (> (mc/num-cursors) 0)
+             (if (> (mc/num-cursors) 1)
                  (multiple-cursors-mode 1)
                (multiple-cursors-mode 0)))
            (objed--exit-objed))
