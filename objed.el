@@ -3509,14 +3509,14 @@ and RANGE hold the object position data."
 
 (defun objed--get-continuation-object (obj)
   "Return continuation object for object OBJ."
-  ;; objects which
-  (cond ((memq obj '(bracket string comment))
-         (setq objed--object 'sexp)
+  ;; white list
+  (cond ((memq obj '(word defun sentence))
          (objed-make-object :beg (point)
                             :end (objed--end (objed--get))))
         (t
+         (objed--switch-to 'sexp)
          (objed-make-object :beg (point)
-                            :end (objed--end (objed--get))))))
+                            :end (objed--end)))))
 
 
 (defun objed-quit ()
