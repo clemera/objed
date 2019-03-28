@@ -2514,7 +2514,6 @@ object (defaults to 1)."
     (let ((times (or times 1)))
       (dotimes (_ times)
         (objed--do #'kill-region)
-        (undo-boundary)
         (setq last-command #'kill-region)))))
 
 (defun objed-delete (&optional times)
@@ -2527,8 +2526,7 @@ object (defaults to 1)."
       (objed--do #'delete-region)
     (let ((times (or times 1)))
       (dotimes (_ times)
-        (objed--do #'delete-region)
-        (undo-boundary)))))
+        (objed--do #'delete-region)))))
 
 
 (defvar objed--append-do-append nil)
