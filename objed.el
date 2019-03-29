@@ -675,7 +675,7 @@ selected one."
                             (call-interactively 'forward-word))
                           (objed--switch-to 'word objed--obj-state)))
     (define-key map "r" (defun objed-backward-word ()
-                          "Call `forward-word' and switch to object word"
+                          "Call `backward-word' and switch to object word"
                           (interactive)
                           (if (objed--inner-p)
                               (let* ((subword-mode t)
