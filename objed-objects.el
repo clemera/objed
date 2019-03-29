@@ -1518,6 +1518,7 @@ comments."
   :try-prev
   (search-backward " " nil t))
 
+
 (objed-define-object nil word
   :atp
   (looking-at "\\<")
@@ -1527,17 +1528,15 @@ comments."
     'identifier)
   :get-obj
   (objed-make-object
-   :obounds (if (bound-and-true-p subword-mode)
-                (let ((find-word-boundary-function-table subword-empty-char-table))
-                  (bounds-of-thing-at-point 'word))
-              (bounds-of-thing-at-point 'word))
-   :ibounds (if (and (bound-and-true-p subword-mode)
-                     (eq this-command 'forward-word))
-                    (save-excursion
-                      (forward-word -1)
-                      (bounds-of-thing-at-point 'word))
-              (let ((find-word-boundary-function-table
-                     subword-find-word-boundary-function-table))
+   :obounds (bounds-of-thing-at-point 'word)
+   :ibounds (let* ((subword-mode t)
+                   (superword-mode nil)
+                   (find-word-boundary-function-table
+                    subword-find-word-boundary-function-table))
+              (if (eq this-command 'forward-word)
+                  (save-excursion
+                    (forward-word -1)
+                    (bounds-of-thing-at-point 'word))
                 (bounds-of-thing-at-point 'word))))
   :try-next
   (re-search-forward  "\\<." nil t)

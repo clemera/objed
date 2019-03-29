@@ -661,12 +661,32 @@ selected one."
     (define-key map "~" 'objed-undo-in-object)
 
     ;; general movement
-    (define-key map "s" (objed--call-and-switch
-                         forward-word
-                         word))
-    (define-key map "r" (objed--call-and-switch
-                         backward-word
-                         word))
+    (define-key map "s" (defun objed-forward-word ()
+                          "Call `forward-word' and switch to object word"
+                          (interactive)
+                          (if (objed--inner-p)
+                              (let* ((subword-mode t)
+                                     (superword-mode nil)
+                                     (find-word-boundary-function-table
+                                      subword-find-word-boundary-function-table))
+                                (setq this-command 'forward-word)
+                                (call-interactively 'forward-word))
+                            (setq this-command 'forward-word)
+                            (call-interactively 'forward-word))
+                          (objed--switch-to 'word objed--obj-state)))
+    (define-key map "r" (defun objed-backward-word ()
+                          "Call `forward-word' and switch to object word"
+                          (interactive)
+                          (if (objed--inner-p)
+                              (let* ((subword-mode t)
+                                     (superword-mode nil)
+                                     (find-word-boundary-function-table
+                                      subword-find-word-boundary-function-table))
+                                (setq this-command 'backward-word)
+                                (call-interactively 'backward-word))
+                            (setq this-command 'backward-word)
+                            (call-interactively 'backward-word))
+                          (objed--switch-to 'word objed--obj-state)))
 
     (define-key map "S" 'objed-move-word-forward)
     (define-key map "R" 'objed-move-word-backward)
@@ -1879,10 +1899,6 @@ Default to sexp at point."
 
 Switches to inner object or object inside current one."
   (interactive)
-  (if (bound-and-true-p subword-mode)
-      (subword-mode -1)
-    (unless (objed--inner-p)
-      (subword-mode 1)))
   (objed--toggle-state))
 
 
