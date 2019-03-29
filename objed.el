@@ -2233,7 +2233,7 @@ textual content of an object via the content object."
            (avy-style 'at-full)
            (avy-all-windows t)
            (posns (objed--collect-object-positions
-                   (window-start) (window-end))))
+                   (window-start) (window-end) (point))))
       (cond (posns
              (if (> (length posns) 1)
                  (avy--process
