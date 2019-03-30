@@ -409,13 +409,21 @@ OBJ is the object to use and defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (objed--apply #'max obj)))
 
+(defvar objed--basic-objects
+  '(sexp line identifier word char region buffer)
+  "Basic objects.
+
+Basic object are objects which have no next/previous or which
+have their own movement commands.")
+
+
 (defun objed--basic-p ()
   "Return non-nil if current object is a basic object.
 
 From basic objects `objed' starts expanding to context objects.
 Thus this should be objects which have their own movement
 commands."
-  (memq objed--object '(sexp line identifier word char region buffer)))
+  (memq objed--object objed--basic-objects))
 
 (defun objed--current (&optional obj)
   "Get the current range of interest.

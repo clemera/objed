@@ -1824,6 +1824,19 @@ postitive prefix argument ARG move to the nth previous object."
       (when (eq pos (point))
         (error "No previous %s" objed--object)))))
 
+(defun objed-previous (&optional arg)
+  "Move to ARG previous object of current type."
+  (interactive "p")
+  (let ((objed--basic-objects nil))
+    (objed-current-or-previous-context arg)))
+
+
+(defun objed-next (&optional arg)
+  "Move to ARG next object of current type."
+  (interactive "p")
+  (let ((objed--basic-objects nil))
+    (objed-current-or-next-context arg)))
+
 
 (defun objed-current-or-next-context (&optional arg)
   "Move to beginning of object at point and activate it.
