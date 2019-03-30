@@ -1080,8 +1080,7 @@ Use `objed-define-dispatch' to define a dispatch command.")
 
 (defun objed--ace-switch-object (name)
   "Switch to objed NAME using avy."
-  (let ((objed--object name))
-    (objed-ace)))
+  (objed-ace name))
 
 
 (defun objed--until (n &optional back)
@@ -2233,8 +2232,10 @@ textual content of an object via the content object."
 
 (defvar avy-all-windows)
 (defvar avy-action)
-(defun objed-ace ()
-  "Jump to an object with `avy'."
+(defun objed-ace (&optional obj)
+  "Jump to an object with `avy'.
+
+OBJ defaults to current object."
   (interactive)
   (if (eq objed--object 'char)
       (progn (call-interactively #'avy-goto-char)
@@ -2245,16 +2246,22 @@ textual content of an object via the content object."
     (let* ((avy-action #'goto-char)
            (avy-style 'at-full)
            (avy-all-windows t)
-           (posns (objed--collect-object-positions
-                   (window-start) (window-end) (point))))
-      (cond (posns
-             (if (> (length posns) 1)
-                 (avy--process
-                  posns (avy--style-fn avy-style))
-               (goto-char (caar posns)))
-             (objed--update-current-object))
-            (t
-             (message "No objects found."))))))
+           (posns (let* ((oo objed--object)
+                         (objed--object (or obj objed--object)))
+                    (objed--collect-object-positions
+                     (window-start) (window-end)
+                     (unless (eq oo objed--object)
+                       (point))))))
+        (cond (posns
+               (if (> (length posns) 1)
+                   (avy--process
+                    posns (avy--style-fn avy-style))
+                 (goto-char (caar posns)))
+               (if obj
+                   (objed--switch-to obj)
+                 (objed--update-current-object)))
+              (t
+               (message "No objects found."))))))
 
 (defvar ivy-sort-function-alist)
 (defun objed-occur ()
