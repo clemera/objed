@@ -1908,9 +1908,9 @@ Default to sexp at point."
              (goto-char (objed--beg)))))))
 
 (defun objed-toggle-state ()
-  "Shrink current object.
+  "Toggle object state.
 
-Switches to inner object or object inside current one."
+Switches between inner and whole object state."
   (interactive)
   (objed--toggle-state))
 
