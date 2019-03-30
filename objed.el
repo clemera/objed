@@ -1783,27 +1783,33 @@ Shrinks to inner objects on repeat if possible."
 
 At bracket or string self insert ARG times."
   (interactive "p")
-  (if (or (objed--at-object-p 'bracket)
-          (objed--at-object-p 'string))
-      (self-insert-command arg)
-    (when (save-excursion
-            (objed-context-object)
-            (objed--toggle-state))
-      (objed--change-to :iend (point) :end (point))
-      (goto-char (objed--beg)))))
+  (if (eq last-command this-command)
+      (progn (objed--toggle-state)
+             (goto-char (objed--beg)))
+    (if (or (objed--at-object-p 'bracket)
+            (objed--at-object-p 'string))
+        (self-insert-command arg)
+      (when (save-excursion
+              (objed-context-object)
+              (objed--toggle-state))
+        (objed--change-to :iend (point) :end (point))
+        (goto-char (objed--beg))))))
 
 (defun objed-forward-until-context (arg)
   "Goto object inner end and activate part moved over.
 
 At bracket or string self insert ARG times."
   (interactive "p")
-  (if (or (objed--at-object-p 'bracket)
-          (objed--at-object-p 'string))
-      (self-insert-command arg)
-    (when (save-excursion (objed-context-object)
-                          (objed--toggle-state))
-      (objed--change-to :ibeg (point) :beg (point))
-      (goto-char (objed--end)))))
+  (if (eq last-command this-command)
+      (progn (objed--toggle-state)
+             (goto-char (objed--end)))
+    (if (or (objed--at-object-p 'bracket)
+            (objed--at-object-p 'string))
+        (self-insert-command arg)
+      (when (save-excursion (objed-context-object)
+                            (objed--toggle-state))
+        (objed--change-to :ibeg (point) :beg (point))
+        (goto-char (objed--end))))))
 
 (defun objed-current-or-previous-context (&optional arg)
   "Move to end of object at point and activate it.
