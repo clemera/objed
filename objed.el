@@ -1778,38 +1778,42 @@ Shrinks to inner objects on repeat if possible."
       (objed-context-object)))
   (objed--reverse))
 
-(defun objed-backward-until-context (arg)
+(defun objed-backward-until-context ()
   "Goto object inner beginning and activate part moved over.
 
 At bracket or string self insert ARG times."
-  (interactive "p")
-  (if (eq last-command this-command)
+  (interactive)
+  (if (objed--inner-p)
       (progn (objed--toggle-state)
              (goto-char (objed--beg)))
-    (if (or (objed--at-object-p 'bracket)
-            (objed--at-object-p 'string))
-        (self-insert-command arg)
-      (when (save-excursion
-              (objed-context-object)
-              (objed--toggle-state))
-        (objed--change-to :iend (point) :end (point))
-        (goto-char (objed--beg))))))
+    (when (save-excursion
+            (prog1 (objed-context-object)
+              (unless (eq last-command this-command)
+                (objed--toggle-state))))
+      (unless (eq last-command this-command)
+        (objed--change-to :iend (point) :end (point)))
+      (when (eq (point) (objed--beg))
+        (objed-context-object))
+      (goto-char (objed--beg)))))
 
-(defun objed-forward-until-context (arg)
+
+(defun objed-forward-until-context ()
   "Goto object inner end and activate part moved over.
 
 At bracket or string self insert ARG times."
-  (interactive "p")
-  (if (eq last-command this-command)
+  (interactive)
+  (if (objed--inner-p)
       (progn (objed--toggle-state)
              (goto-char (objed--end)))
-    (if (or (objed--at-object-p 'bracket)
-            (objed--at-object-p 'string))
-        (self-insert-command arg)
-      (when (save-excursion (objed-context-object)
-                            (objed--toggle-state))
-        (objed--change-to :ibeg (point) :beg (point))
-        (goto-char (objed--end))))))
+    (when (save-excursion (prog1 (objed-context-object)
+                            (unless (eq last-command this-command)
+                              (objed--toggle-state))))
+      (if (eq last-command this-command)
+          (goto-char (objed--end))
+        (objed--change-to :ibeg (point) :beg (point)))
+      (when (eq (point) (objed--end))
+        (objed-context-object))
+      (goto-char (objed--end)))))
 
 (defun objed-current-or-previous-context (&optional arg)
   "Move to end of object at point and activate it.
