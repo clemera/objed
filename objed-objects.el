@@ -1148,6 +1148,7 @@ Uses FACE `objed-mark' by default. If KEEP is non-nil keep
 overlays without content."
   (let ((ov (make-overlay beg end)))
     (overlay-put ov 'objed t)
+    (overlay-put ov 'objed--object objed--object)
     (overlay-put ov 'face (or face 'objed-mark))
     (overlay-put ov 'evaporate (not keep))
     (overlay-put ov 'rear-nonsticky t)
