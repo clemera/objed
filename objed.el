@@ -1773,24 +1773,10 @@ to an object containing the current one."
   "Toggle state of object.
 
 Shrinks to inner objects on repeat if possible."
-  (interactive)
   (when (eq objed--object 'sexp)
     (save-excursion
       (objed-context-object)))
-  (let ((boo (eq (point) (objed--beg)))
-        (eoo (eq (point) (objed--end))))
-    (objed--reverse)
-    (cond (boo
-           (goto-char (objed--beg)))
-          ((and eoo
-                (not (eq objed--object 'line)))
-           (goto-char (objed--end)))
-          ((< (point) (objed--beg))
-           (goto-char (objed--beg)))
-          ((and
-            (> (point) (objed--beg))
-            (> (point) (objed--end)))
-           (goto-char (objed--end))))))
+  (objed--reverse))
 
 (defun objed-backward-until-context (arg)
   "Goto object inner beginning and activate part moved over.
@@ -1924,7 +1910,20 @@ Default to sexp at point."
 
 Switches between inner and whole object state."
   (interactive)
-  (objed--toggle-state))
+  (let ((boo (eq (point) (objed--beg)))
+        (eoo (eq (point) (objed--end))))
+    (objed--toggle-state)
+    (cond (boo
+           (goto-char (objed--beg)))
+          ((and eoo
+                (not (eq objed--object 'line)))
+           (goto-char (objed--end)))
+          ((< (point) (objed--beg))
+           (goto-char (objed--beg)))
+          ((and
+            (> (point) (objed--beg))
+            (> (point) (objed--end)))
+           (goto-char (objed--end))))))
 
 
 (defun objed-expand-context ()
@@ -1950,6 +1949,7 @@ On expand move to start of object."
     (if (objed--inner-p)
         (let ((curr (objed--current)))
           (objed--toggle-state)
+          (goto-char (objed--beg))
           (when (equal curr (objed--current))
             (objed-context-object)
             (goto-char (objed--beg))))
