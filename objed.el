@@ -1777,13 +1777,20 @@ Shrinks to inner objects on repeat if possible."
   (when (eq objed--object 'sexp)
     (save-excursion
       (objed-context-object)))
-  (let ((sdiff (abs (- (point) (objed--beg))))
-        (ediff (abs (- (point) (objed--end)))))
+  (let ((boo (eq (point) (objed--beg)))
+        (eoo (eq (point) (objed--end))))
     (objed--reverse)
-    (goto-char (cond ((> ediff sdiff)
-                      (objed--beg))
-                     (t
-                      (objed--end))))))
+    (cond (boo
+           (goto-char (objed--beg)))
+          ((and eoo
+                (not (eq objed--object 'line)))
+           (goto-char (objed--end)))
+          ((< (point) (objed--beg))
+           (goto-char (objed--beg)))
+          ((and
+            (> (point) (objed--beg))
+            (> (point) (objed--end)))
+           (goto-char (objed--end))))))
 
 (defun objed-backward-until-context (arg)
   "Goto object inner beginning and activate part moved over.
