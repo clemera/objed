@@ -1549,9 +1549,22 @@ comments."
                     (bounds-of-thing-at-point 'word))
                 (bounds-of-thing-at-point 'word))))
   :try-next
-  (re-search-forward  "\\<." nil t)
+  (if (objed--inner-p)
+      (let* ((subword-mode t)
+             (superword-mode nil)
+             (find-word-boundary-function-table
+              subword-find-word-boundary-function-table))
+        (forward-word 1)
+        (forward-word -1))
+    (re-search-forward  "\\<." nil t))
   :try-prev
-  (re-search-backward  ".\\>" nil t))
+  (if (objed--inner-p)
+      (let* ((subword-mode t)
+             (superword-mode nil)
+             (find-word-boundary-function-table
+              subword-find-word-boundary-function-table))
+        (forward-word -1))
+    (re-search-backward  ".\\>" nil t)))
 
 
 (defun objed--next-symbol ()
