@@ -987,6 +987,7 @@ Use `objed-define-dispatch' to define a dispatch command.")
 
 
 (objed-define-dispatch "#" objed--ace-switch-object)
+(objed-define-dispatch "=" objed--ace-switch-in-current)
 (objed-define-dispatch "-" objed--backward-until)
 (objed-define-dispatch "+" objed--forward-until)
 
@@ -1081,6 +1082,11 @@ Use `objed-define-dispatch' to define a dispatch command.")
 (defun objed--ace-switch-object (name)
   "Switch to objed NAME using avy."
   (objed-ace name))
+
+(defun objed--ace-switch-in-current (obj)
+  "Ace for OBJ inside current object."
+  (let ((reg (objed--current)))
+    (apply #'objed-ace (cons obj reg))))
 
 
 (defun objed--until (n &optional back)
@@ -2232,10 +2238,12 @@ textual content of an object via the content object."
 
 (defvar avy-all-windows)
 (defvar avy-action)
-(defun objed-ace (&optional obj)
+(defun objed-ace (&optional obj beg end)
   "Jump to an object with `avy'.
 
-OBJ defaults to current object."
+OBJ defaults to current object. BEG and END limit the region
+which should be searched for candidates and default to
+`window-start' and `window-end.'"
   (interactive)
   (if (eq objed--object 'char)
       (progn (call-interactively #'avy-goto-char)
@@ -2246,11 +2254,12 @@ OBJ defaults to current object."
     (let* ((avy-action #'goto-char)
            (avy-style 'at-full)
            (avy-all-windows t)
-           (posns (let* ((oo objed--object)
-                         (objed--object (or obj objed--object)))
+           (posns (let* ((objed--object (or obj objed--object))
+                         (beg (or beg (window-start)))
+                         (end (or end (window-end))))
                     (objed--collect-object-positions
-                     (window-start) (window-end)
-                     (unless (eq oo objed--object)
+                     beg end
+                     (when obj
                        (point))))))
         (cond (posns
                (if (> (length posns) 1)

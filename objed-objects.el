@@ -603,13 +603,15 @@ and after current object.
 
 The resulting list contains cons cells of the start positions of
 the objects and the current window."
-  (append (objed--collect-backward
-           (or fromp (objed--min))
-           beg)
-          (objed--collect-forward
-           (or fromp (if (objed--no-skipper-p)
-                         (objed--min) (objed--max)))
-           end)))
+  (save-restriction
+    (narrow-to-region beg end)
+    (append (objed--collect-backward
+             (or fromp (objed--min))
+             beg)
+            (objed--collect-forward
+             (or fromp (if (objed--no-skipper-p)
+                           (objed--min) (objed--max)))
+             end))))
 
 
 (defun objed--collect-object-lines ()
