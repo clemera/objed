@@ -181,8 +181,7 @@ See also `objed-disabled-p'"
 (defcustom objed-init-p-function #'objed-init-p
   "Function which tests if objed is allowed to initialize.
 
-This is only used for non-interactive initialization. The
-function should return nil if objed should not initialize."
+The function should return nil if objed should not initialize."
   :type 'function)
 
 
