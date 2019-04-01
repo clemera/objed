@@ -709,14 +709,14 @@ selected one."
                          (when (objed--point-in-periphery)
                            (back-to-indentation))))
 
-    (define-key map "P" 'objed-move-line-backward)
     (define-key map "N" 'objed-move-line-forward)
+    (define-key map "P" 'objed-move-line-backward)
 
 
     (define-key map "(" 'objed-backward-until-context)
     (define-key map ")" 'objed-forward-until-context)
-    (define-key map "[" 'objed-current-or-previous-context)
-    (define-key map "]" 'objed-current-or-next-context)
+    (define-key map "[" 'objed-current-or-previous-context) ;;objed-previous)
+    (define-key map "]" 'objed-current-or-next-context) ;;objed-next)
     (define-key map "{" (objed--call-and-switch backward-paragraph paragraph))
     (define-key map "}" (defun objed-forward-paragraph ()
                           (interactive)
@@ -1253,6 +1253,7 @@ See `objed-cmd-alist'."
   (and (eq (key-binding (kbd "C-n"))
            #'next-line)
        (not (minibufferp))
+       (not (active-minibuffer-window))
        (not (and (bobp)
                  (bound-and-true-p git-commit-mode)))
        (not (derived-mode-p 'comint-mode))
@@ -2014,8 +2015,14 @@ back to `objed-initial-object' if no match found."
        (if (assq last-command objed-cmd-alist)
            last-command
          objed-initial-object))
-    (when (objed-init-p)
-      (objed--init (or obj 'char)))))
+    (objed-init obj)))
+
+(defun objed-init (&optional obj)
+  "Function for activating objed by hooks.
+
+Initialize with OBJ which defaults to char."
+  (when (objed-init-p)
+    (objed--init (or obj 'char))))
 
 ;;;###autoload
 (defun objed-activate-object ()
