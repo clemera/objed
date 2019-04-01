@@ -164,6 +164,11 @@
 
 ;; * User Settings and Variables
 
+(defcustom objed-auto-init t
+  "Whether to enable automatic initialization in `objed-mode'."
+  :type 'boolean)
+
+
 (defcustom objed-disabled-modes '()
     "List of modes for which objed should stay disabled.
 
@@ -200,18 +205,12 @@ function should return nil if objed should not initialize."
     (backward-paragraph . paragraph)
     (forward-paragraph . paragraph)
     (fill-paragraph . textblock)
-    ;; TODO: add list object
-    ;; or recognize sexp type
-    ;; improve sexp nav...
     (down-list . sexp)
     (backward-up-list . sexp)
     (up-list . sexp)
     (forward-sexp . sexp)
     (backward-sexp . sexp)
     (indent-pp-sexp . bracket)
-    ;; just use inner line?
-    ;; TODO: on second press check all these:
-    ;;section defun bracket string line)
     (back-to-indentation . line)
     (org-beginning-of-line . line)
     (org-end-of-line . line)
@@ -240,13 +239,6 @@ function should return nil if objed should not initialize."
     ;; editing entry commands
     (yank . region)
     (yank-pop . region)
-    ;; misc
-    (which-key-C-h-dispatch . char)
-    (find-file . char)
-    ;; keep object of buffer if available...
-    (switch-to-buffer . nil)
-    (xref-find-definitions . nil)
-    (xref-pop-marker-stack . nil)
     )
   "Entry commands and associated objects."
   :type '(alist :key-type sexp
@@ -1204,6 +1196,7 @@ Useful for keeping the same popup when pressing undefined keys.")
 
 See `objed-cmd-alist'."
   (when (and objed-mode
+             (funcall objed-init-p-function)
              (not (minibufferp))
              (not objed--block-p)
              (eq real-this-command cmd)
@@ -1250,22 +1243,22 @@ See `objed-cmd-alist'."
 
 (defun objed-init-p ()
   "Default for `objed-init-p-function'."
-  (and (eq (key-binding (kbd "C-n"))
-           #'next-line)
-       (not (minibufferp))
-       (not (active-minibuffer-window))
-       (not (and (bobp)
-                 (bound-and-true-p git-commit-mode)))
-       (not (derived-mode-p 'comint-mode))
-       (not (and (bobp) (eobp)))
-       ;; only for modes which do not
-       ;; their their own modal setup
-       (or (memq (key-binding "f")
-                 '(self-insert-command
-                   org-self-insert-command
-                   outshine-self-insert-command
-                   outline-self-insert-command
-                   undefined)))))
+  (and (not (minibufferp))
+       (not (bobp))
+       ;; TODO: add variables for those
+       (or (memq  major-mode '(messages-buffer-mode help-mode))
+           (not (derived-mode-p 'comint-mode 'special-mode 'dired-mode)))))
+
+(defun objed-init (&optional obj)
+  "Function for activating objed by hooks.
+
+Initialize with OBJ which defaults to `objed--object'."
+  (when (funcall objed-init-p-function)
+    (objed--init (or obj objed--object 'char))))
+
+(defun objed--init-later (&rest _)
+  "Init after command loop returned to top level."
+  (run-at-time 0 nil #'objed-init))
 
 (defun objed--init (&optional sym)
   "Initialize `objed'.
@@ -2017,12 +2010,6 @@ back to `objed-initial-object' if no match found."
          objed-initial-object))
     (objed-init obj)))
 
-(defun objed-init (&optional obj)
-  "Function for activating objed by hooks.
-
-Initialize with OBJ which defaults to char."
-  (when (objed-init-p)
-    (objed--init (or obj 'char))))
 
 ;;;###autoload
 (defun objed-activate-object ()
@@ -3620,13 +3607,14 @@ If region is active deactivate it first."
 (defun objed--check-buffer ()
   "Check if current buffer is still the `objed--buffer'.
 
-Resets objed if appropriate."
+Reset and reinitilize objed if appropriate."
   (unless (or objed--with-allow-input
               (not objed--buffer))
     (when (not (eq (current-buffer) objed--buffer))
       (objed--reset--objed-buffer)
-      (select-window (get-buffer-window (current-buffer)) t)
-      (objed--init (or objed--object 'char)))))
+      (when (window-live-p (get-buffer-window (current-buffer)))
+        (with-selected-window (get-buffer-window (current-buffer))
+          (objed-init))))))
 
 (defun objed--reset--objed-buffer ()
   "Reset `objed--buffer'."
@@ -3817,9 +3805,28 @@ setting the user options `objed-use-which-key-if-available-p' and
                                          (require 'which-key nil t))
               objed--avy-avail-p (when objed-use-avy-if-available-p
                                    (require 'avy nil t)))
-        (objed--install-advices objed-cmd-alist t))
+        (when objed-auto-init
+          ;; interactive cmds
+          (objed--install-advices objed-cmd-alist t)
+          ;; auto entry cmds
+          (advice-add #'quit-window
+                      :after #'objed--init-later)
+          (advice-add #'rename-buffer
+                      :after #'objed--init-later)
+          (advice-add #'create-file-buffer
+                      :after #'objed--init-later)
+          (advice-add #'switch-to-buffer
+                      :after #'objed--init-later)))
     (remove-hook 'minibuffer-setup-hook 'objed--reset)
-    (objed--remove-advices objed-cmd-alist)))
+    (objed--remove-advices objed-cmd-alist)
+    (advice-remove #'quit-window
+                   #'objed--init-later)
+    (advice-remove #'rename-buffer
+                   #'objed--init-later)
+    (advice-remove #'create-file-buffer
+                   #'objed--init-later)
+    (advice-remove #'switch-to-buffer
+                   #'objed--init-later)))
 
 
 (defun objed--install-advices-for (cmds obj)
