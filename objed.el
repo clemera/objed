@@ -1250,22 +1250,26 @@ See `objed-cmd-alist'."
 
 (defun objed-init-p ()
   "Default for `objed-init-p-function'."
-  (and (eq (key-binding (kbd "C-n"))
-           #'next-line)
-       (not (minibufferp))
-       (not (active-minibuffer-window))
-       (not (and (bobp)
-                 (bound-and-true-p git-commit-mode)))
-       (not (derived-mode-p 'comint-mode))
-       (not (and (bobp) (eobp)))
-       ;; only for modes which do not
-       ;; their their own modal setup
-       (or (memq (key-binding "f")
-                 '(self-insert-command
-                   org-self-insert-command
-                   outshine-self-insert-command
-                   outline-self-insert-command
-                   undefined)))))
+  (when (window-live-p (get-buffer-window))
+    (with-current-buffer (window-buffer (selected-window))
+      (and (eq (key-binding (kbd "C-n"))
+               #'next-line)
+           (eq (key-binding "n")
+               #'self-insert-command)
+           (not (minibufferp))
+           (not (active-minibuffer-window))
+           (not (and (bobp)
+                     (bound-and-true-p git-commit-mode)))
+           (not (derived-mode-p 'comint-mode))
+           (not (and (bobp) (eobp)))
+           ;; only for modes which do not
+           ;; their their own modal setup
+           (or (memq (key-binding "f")
+                     '(self-insert-command
+                       org-self-insert-command
+                       outshine-self-insert-command
+                       outline-self-insert-command
+                       undefined)))))))
 
 (defun objed--init (&optional sym)
   "Initialize `objed'.
@@ -3623,10 +3627,9 @@ If region is active deactivate it first."
 Resets objed if appropriate."
   (unless (or objed--with-allow-input
               (not objed--buffer))
-    (when (not (eq (current-buffer) objed--buffer))
-      (objed--reset--objed-buffer)
-      (select-window (get-buffer-window (current-buffer)) t)
-      (objed--init (or objed--object 'char)))))
+    (when (or (not (eq (current-buffer) objed--buffer))
+              (not (get-buffer-window (current-buffer))))
+      (objed--reset--objed-buffer))))
 
 (defun objed--reset--objed-buffer ()
   "Reset `objed--buffer'."
