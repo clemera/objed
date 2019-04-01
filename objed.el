@@ -1776,7 +1776,8 @@ Shrinks to inner objects on repeat if possible."
 
 At bracket or string self insert ARG times."
   (interactive)
-  (if (objed--inner-p)
+  (if (and (objed--inner-p)
+           (not (objed--basic-p)))
       (progn (objed--toggle-state)
              (goto-char (objed--beg)))
     (when (save-excursion
@@ -1795,7 +1796,8 @@ At bracket or string self insert ARG times."
 
 At bracket or string self insert ARG times."
   (interactive)
-  (if (objed--inner-p)
+  (if (and (objed--inner-p)
+           (not (objed--basic-p)))
       (progn (objed--toggle-state)
              (goto-char (objed--end)))
     (when (save-excursion (prog1 (objed-context-object)
