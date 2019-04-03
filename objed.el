@@ -2725,6 +2725,8 @@ to sourround region string representation of event."
 
 ARG is passed to `yank'. On repreat `yank-pop'."
   (interactive "*P")
+  (when objed-append-mode
+    (objed-append-mode -1))
   (let ((start (point))
         (inhibit-message t))
     (if (eq last-command 'yank)
