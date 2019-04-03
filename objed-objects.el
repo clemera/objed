@@ -812,6 +812,12 @@ Position POS defaults to point."
 
 ;; * Object creation/manipulation
 
+(defun objed-make-empty-object (&optional pos)
+  "Return an empty object at POS which default to point."
+  (let ((pos (or pos (point))))
+    (list (list pos pos)
+          (list pos pos))))
+
 
 (cl-defun objed-make-object (&key obounds beg end ibounds ibeg iend)
   "Helper to create internal used object format from positions.
@@ -1457,10 +1463,10 @@ comments."
   :atp
   (looking-at ".")
   :get-obj
-  (list (list (point)
-              (if (eobp) (point) (1+ (point))))
-        (list (point)
-              (if (eobp) (point) (1+ (point)))))
+  (if (eobp)
+      (objed-make-empty-object)
+    (objed-make-object :beg (point)
+                       :end (1+ (point))))
   :try-next
   ;; current one is skipped, for chars this means we are already at
   ;; the next..
@@ -1537,17 +1543,19 @@ comments."
                (bounds-of-thing-at-point 'symbol))
     'identifier)
   :get-obj
-  (objed-make-object
-   :obounds (bounds-of-thing-at-point 'word)
-   :ibounds (let* ((subword-mode t)
-                   (superword-mode nil)
-                   (find-word-boundary-function-table
-                    subword-find-word-boundary-function-table))
-              (if (eq this-command 'forward-word)
-                  (save-excursion
-                    (forward-word -1)
-                    (bounds-of-thing-at-point 'word))
-                (bounds-of-thing-at-point 'word))))
+  (if (eobp)
+      (objed-make-empty-object)
+    (objed-make-object
+     :obounds (bounds-of-thing-at-point 'word)
+     :ibounds (let* ((subword-mode t)
+                     (superword-mode nil)
+                     (find-word-boundary-function-table
+                      subword-find-word-boundary-function-table))
+                (if (eq this-command 'forward-word)
+                    (save-excursion
+                      (forward-word -1)
+                      (bounds-of-thing-at-point 'word))
+                  (bounds-of-thing-at-point 'word)))))
   :try-next
   (if (objed--inner-p)
       (let* ((subword-mode t)
@@ -1773,8 +1781,7 @@ comments."
       (looking-back "^ *" (line-beginning-position)))
   :get-obj
   (if (eobp)
-      (list (list (point) (point))
-            (list (point) (point)))
+      (objed-make-empty-object)
     (objed-make-object :beg (line-beginning-position)
                        :end (save-excursion
                             ;; include hidden parts...
