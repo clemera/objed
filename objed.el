@@ -2554,6 +2554,8 @@ state is only restored correctly if the buffer was not modified."
 When `objed-append-mode' is active `objed-copy' and `objed-kill'
 will append kills to the `kill-ring'."
   :init-value nil
+  :global t
+  :require 'objed
   :lighter " >>")
 
 
