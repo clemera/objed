@@ -1457,11 +1457,10 @@ comments."
   :atp
   (looking-at ".")
   :get-obj
-  (objed-make-object
-   :beg (point)
-   :ibeg (point)
-   :end (if (eobp) (point) (1+ (point)))
-   :iend (if (eobp) (point) (1+ (point))))
+  (list (list (point)
+              (if (eobp) (point) (1+ (point))))
+        (list (point)
+              (if (eobp) (point) (1+ (point)))))
   :try-next
   ;; current one is skipped, for chars this means we are already at
   ;; the next..
@@ -1773,12 +1772,13 @@ comments."
   (or (looking-at "^")
       (looking-back "^ *" (line-beginning-position)))
   :get-obj
-  (objed-make-object :beg (line-beginning-position)
-                     :end (save-excursion
+  (if (eobp)
+      (list (list (point) (point))
+            (list (point) (point)))
+    (objed-make-object :beg (line-beginning-position)
+                       :end (save-excursion
                             ;; include hidden parts...
-                            (end-of-visible-line)
-                            (if (eobp)
-                                (point)
+                              (end-of-visible-line)
                               (1+ (point)))))
   :try-next
   (skip-chars-forward " \t\r\n")
