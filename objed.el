@@ -2548,6 +2548,15 @@ state is only restored correctly if the buffer was not modified."
 
 ;; * Operation definitions
 
+(define-minor-mode objed-append-mode
+  "Append kills on `objed-copy'.
+
+When `objed-append-mode' is active `objed-copy' and `objed-kill'
+will append kills to the `kill-ring'."
+  :init-value nil
+  :lighter " >>")
+
+
 (defun objed-op-x (&optional arg)
   "Choose and apply an operation from region commands with completion.
 
@@ -2568,12 +2577,17 @@ region command."
 Kill marked objects or TIMES instances of current
 object (defaults to 1)."
   (interactive "p")
+  (when objed-append-mode
+    (setq last-command 'kill-region))
   (if objed--marked-ovs
       (objed--do #'kill-region)
     (let ((times (or times 1)))
       (dotimes (_ times)
         (objed--do #'kill-region)
-        (setq last-command #'kill-region)))))
+        (setq last-command #'kill-region)))
+    (message (if objed-append-mode
+                 "Appended to `kill-ring'"
+               "Added to `kill-ring.'"))))
 
 (defun objed-delete (&optional times)
   "Delete object(s).
@@ -2586,18 +2600,6 @@ object (defaults to 1)."
     (let ((times (or times 1)))
       (dotimes (_ times)
         (objed--do #'delete-region)))))
-
-
-(defvar objed--append-do-append nil)
-
-(define-minor-mode objed-append-mode
-  "Append kills on `objed-copy'.
-
-When `objed-append-mode' is active `objed-copy' will append kills
-to the `kill-ring'."
-  :init-value nil
-  (if objed-append-mode
-      (setq objed--append-do-append nil)))
 
 (defun objed-insert (&optional read)
   "Insert stuff.
@@ -2626,8 +2628,7 @@ inserting objed-register (see `objed-copy')."
 On repeat add text to objed register.
 With prefix arg REG non nil ask for register."
   (interactive "P")
-  (when (and objed-append-mode
-             objed--append-do-append)
+  (when objed-append-mode
     ;; append on repeat
     (setq last-command 'kill-region))
   (objed--do #'copy-region-as-kill 'keep)
@@ -2641,11 +2642,9 @@ With prefix arg REG non nil ask for register."
          (message "Copied to register"))
 
         (t
-         (message (if (and objed-append-mode
-                           objed--append-do-append)
+         (message (if objed-append-mode
                       "Appended to `kill-ring'"
-                    "Copied to `kill-ring.'"))
-         (setq objed--append-do-append t))))
+                    "Copied to `kill-ring.'")))))
 
 (defun objed-del-insert ()
   "Delete current object and exit to insert state."
