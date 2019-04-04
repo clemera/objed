@@ -68,38 +68,91 @@
 
 
 (eval-and-compile
-  (defun objed--transform-pos-data (plist)
-    (let ((np nil)
-          (alt nil)
-          (make nil)
-          (skip nil))
-      (unless (and (plist-get plist :beg)
-                   (plist-get plist :end))
-        (user-error "Malformed macro"))
-      (dolist (item plist)
-        (if (memq item '(:beg :ibeg :end :iend))
-            (progn (push item alt)
-                   (setq skip t))
-          (if (and skip
-                   (not (keywordp item)))
-              (push item alt)
-            (push item np)
-            (setq skip nil))))
+  (defun objed--get-regex-object (bregex eregex)
+  "Return regex object if point is within region limited by BREGEX, EREGEX."
+  (let* ((obounds ())
+         (ibounds ())
+         (opos (point)))
+    (save-mark-and-excursion
+      (when (and (re-search-forward eregex nil t) ; possibly exit start
+                 (goto-char (or (match-beginning 1)
+                                (match-beginning 0)))
+                 ;; goto possible start
+                 (re-search-backward bregex nil t)
+                 (push (or (match-end 1)
+                           (match-end 0))
+                       ibounds)
+                 (push (or (match-beginning 1)
+                           (match-beginning 0))
+                       obounds)
+                 ;; goto possible end
+                 (goto-char (or (match-end 1)
+                                (match-end 0)))
+                 (re-search-forward eregex nil t)
+                 (push (or (match-beginning 1)
+                           (match-beginning 0))
+                       ibounds)
+                 (push (or (match-end 1)
+                           (match-end 0))
+                       obounds)
+                 ;; when point was within start and end
+                 (<= (cadr obounds) opos (car obounds)))
+        (list (nreverse obounds)
+              (nreverse ibounds))))))
 
-      (setq np (nreverse np))
-      (setq alt (nreverse alt))
-      (dolist (el alt)
-        (when (keywordp el)
-          (progn
-            (push el make)
-            (push (plist-get alt el) make))))
-      (setq make (nreverse make))
-      (push 'objed-make-object make)
-      (append np (list :get-obj)
-              ;; TODO:save-mark-and-excursion still needed?
-              ;; is wrapped already?
-              (list (append (list 'save-mark-and-excursion)
-                            (list make))))))
+  (defun objed--transform-pos-data (plist)
+    (cond  ((and (plist-get plist :beg)
+                 (plist-get plist :end))
+            (let ((np nil)
+                  (alt nil)
+                  (skip nil))
+              ;; filter :beg :end keywords
+              (dolist (item plist)
+                (if (memq item '(:beg :ibeg :end :iend))
+                    (progn (push item alt)
+                           (setq skip t))
+                  (if (and skip
+                           (not (keywordp item)))
+                      (push item alt)
+                    (push item np)
+                    (setq skip nil))))
+              ;; new and alternate plists
+              (setq np (nreverse np))
+              (setq alt (nreverse alt))
+
+              ;; merge ... :get-obj "regex search"
+              (if (and (stringp (plist-get plist :beg))
+                       (stringp (plist-get plist :end)))
+                  (let ((bregex (plist-get plist :beg))
+                        (eregex (plist-get plist :end)))
+                    (append np
+                            (list :try-prev)
+                            (list `(when (re-search-backward ,eregex)
+                                     (goto-char (match-beginning 0))))
+                            (list :try-next)
+                            (list `(when (re-search-forward ,bregex)
+                                     (goto-char (match-end 0))))
+                            (list :get-obj)
+                            (list
+                             `(objed--get-regex-object ,bregex
+                                                       ,eregex))))
+                ;; merge ... :get-obj (objed-make-object :beg ... :end...)
+                (let ((make nil))
+                  (dolist (el alt)
+                    (when (keywordp el)
+                      (progn
+                        (push el make)
+                        (push (plist-get alt el) make))))
+                  (setq make (nreverse make))
+                  (push 'objed-make-object make)
+                  (append np
+                          (list :get-obj)
+                          ;; TODO:save-mark-and-excursion still needed?
+                          ;; is wrapped already?
+                          (list (append (list 'save-mark-and-excursion)
+                                        (list make))))))))
+           (t
+            (user-error "Malformed macro"))))
 
   (defun objed--get-arg-plist (keylst valid &optional wrapped)
     "Wraps any forms of keys in keylst in `progn' and returns property list.
@@ -118,18 +171,23 @@ property list where each key has an associated progn."
                (push (pop keylst) forms))
              (push keyw wrapped)
              ;; allowed to move point
-             (if (memq vkeyw '(:try-next :try-prev :ref))
-                 (push `(let ((objed--block-p t)) ,@(nreverse forms))
-                       wrapped)
-               (if (memq vkeyw '(:beg :end :ibeg :iend))
-                   (push `(let ((objed--block-p t))
-                            ,@(nreverse forms))
-                         wrapped)
-                 ;; objed--block-p: dont run objeds advices here...
-                 (push `(let ((objed--block-p t))
-                          (save-mark-and-excursion
-                            ,@(nreverse forms)))
-                       wrapped)))
+             (cond ((memq vkeyw '(:try-next :try-prev :ref))
+                    (push `(let ((objed--block-p t)) ,@(nreverse forms))
+                          wrapped))
+                   ((memq vkeyw '(:beg :end :ibeg :iend))
+                    (if (and (not (cdr forms))
+                             (stringp (car forms)))
+                        (push (car forms) wrapped)
+                      (push `(let ((objed--block-p t))
+                               ,@(nreverse forms))
+                            wrapped)))
+                   (t
+                    ;; objed--block-p: dont run objeds advices here...
+                    (push `(let ((objed--block-p t))
+                             (save-mark-and-excursion
+                               ,@(nreverse forms)))
+                          wrapped)))
+
              (objed--get-arg-plist keylst valid wrapped))
             (keylst
              (error "Malformed Object. Keyword %s not recognized" keyw))
