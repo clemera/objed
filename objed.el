@@ -125,6 +125,7 @@
 (require 'nadvice)
 (require 'face-remap)
 (require 'subword)
+(require 'hl-line)
 
 (require 'objed-objects)
 
