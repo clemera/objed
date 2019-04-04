@@ -793,6 +793,8 @@ selected one."
     (define-key map "x" 'objed-op-map)
     (define-key map "c" 'objed-object-map)
     (define-key map "'" 'objed-user-map)
+    
+    (define-key map (kbd "M-g o") 'objed-occur)
 
     ;; special commands
     (define-key map "*" 'objed-mark-more)
@@ -929,7 +931,6 @@ To define new operations see `objed-define-op'.")
     ;; choose via completion
     (define-key map (kbd "TAB") 'objed-object-x)
     (define-key map (kbd "SPC") 'objed-region-object)
-    (define-key map (kbd "C-s") 'objed-occur)
 
     (define-key map "o" 'objed-expand-context)
     ;; default objects
