@@ -793,7 +793,7 @@ selected one."
     (define-key map "x" 'objed-op-map)
     (define-key map "c" 'objed-object-map)
     (define-key map "'" 'objed-user-map)
-    
+
     (define-key map (kbd "M-g o") 'objed-occur)
 
     ;; special commands
@@ -2703,14 +2703,7 @@ to sourround region string representation of event."
        (goto-char rbeg)
        (objed--skip-ws)
        (insert last-command-event)
-       ;; add space after wrapping with paren in lispy modes
-       (when (and (or (derived-mode-p 'lisp-mode)
-                      (derived-mode-p 'emacs-lisp-mode))
-                  (eq (car (electric-pair-syntax-info last-command-event))
-                      ?\())
-         (save-excursion
-           (insert " ")
-           (objed--reset)))
+       ;; todo: additional expansion/insertion
        (setq epos (point))
        (electric-pair-post-self-insert-function))
       ;; leave point like electric would for region
