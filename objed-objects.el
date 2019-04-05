@@ -70,13 +70,18 @@
 (eval-and-compile
   (require 'rx)
   (defun objed--get-regex-object (bregex eregex)
-  "Return regex object if point is within region limited by BREGEX, EREGEX.
+  "Return regex object between BREGEX and EREGEX.
 
-BREGEX is the regular expression for the start of the object. Anything
-in it's first regex group is considered to be part of the inner object.
+The inner object part will be the text between the matches for
+those two expressions.
 
-EREGEX is the regular expression for the end of the object. Anything
-in it's first regex group is considered to be part of the inner object."
+BREGEX is the regular expression for the start of the object. If
+the regular expressions contains a group, any text which is part
+of this group will belong to the inner object part.
+
+EREGEX is the regular expression for the end of the object. If
+the regular expressions contains a group, any text which is part
+of this group will belong to the inner object part."
   (let* ((obounds ())
          (ibounds ())
          (opos (point)))
@@ -185,20 +190,22 @@ property list where each key has an associated progn."
              (push keyw wrapped)
              ;; allowed to move point
              (cond ((memq vkeyw '(:try-next :try-prev :ref))
-                    (push `(let ((objed--block-p t)) ,@(nreverse forms))
+                    (push `(let ((objed--block-p t))
+                             ,@(nreverse forms))
                           wrapped))
                    ((memq vkeyw '(:beg :end :ibeg :iend))
                     (if (and (not (cdr forms))
                              (stringp (car forms)))
                         (push (car forms) wrapped)
-                      (if (eq (caar forms) 'rx)
+                      (if (and (not (cdr forms))
+                               (eq (caar forms) 'rx))
                           (push (macroexpand-1 (car forms))
                                 wrapped)
                         (push `(let ((objed--block-p t))
                                  ,@(nreverse forms))
                               wrapped))))
                    (t
-                    ;; objed--block-p: dont run objeds advices here...
+                    ;; objed--block-p: dont run objeds advices here
                     (push `(let ((objed--block-p t))
                              (save-mark-and-excursion
                                ,@(nreverse forms)))
@@ -244,9 +251,12 @@ there is no object at point the code should return nil.
 :beg, :ibeg, :end, :iend
 
 These keywords can be used instead of :get-obj above. The value
-for each is the code to run which should return point position
-for corresponding keyword. Point is allword to move. The code
-runs in the same order the keywords are provided.
+for each is the code to run which should return the point
+position corresponding to the keyword. Point is allword to move
+between the keyword expression. The code runs in the same order
+the keywords are provided. It is also possible to use only :beg
+and :end with regular expressions to define an object. See
+`objed--get-regex-object' for details of their format.
 
 :try-next (optional)
 
