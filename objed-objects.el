@@ -68,6 +68,7 @@
 
 
 (eval-and-compile
+  (require 'rx)
   (defun objed--get-regex-object (bregex eregex)
   "Return regex object if point is within region limited by BREGEX, EREGEX.
 
@@ -165,6 +166,7 @@ in it's first regex group is considered to be part of the inner object."
            (t
             (user-error "Malformed macro"))))
 
+
   (defun objed--get-arg-plist (keylst valid &optional wrapped)
     "Wraps any forms of keys in keylst in `progn' and returns property list.
 KEYLST is the list of keys and forms for object creation. VALID
@@ -189,9 +191,12 @@ property list where each key has an associated progn."
                     (if (and (not (cdr forms))
                              (stringp (car forms)))
                         (push (car forms) wrapped)
-                      (push `(let ((objed--block-p t))
-                               ,@(nreverse forms))
-                            wrapped)))
+                      (if (eq (caar forms) 'rx)
+                          (push (macroexpand-1 (car forms))
+                                wrapped)
+                        (push `(let ((objed--block-p t))
+                                 ,@(nreverse forms))
+                              wrapped))))
                    (t
                     ;; objed--block-p: dont run objeds advices here...
                     (push `(let ((objed--block-p t))
