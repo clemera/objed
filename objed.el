@@ -823,8 +823,8 @@ selected one."
       'objed-insert-new-object)
     ;; sp functionality
     (define-key map "^" 'objed-raise)
-    (define-key map (kbd "<C-left>") 'objed-forward-barf-sexp)
-    (define-key map (kbd "<C-right>") 'objed-forward-slurp-sexp)
+    (define-key map (kbd "<C-M-left>") 'objed-forward-barf-sexp)
+    (define-key map (kbd "<C-M-right>") 'objed-forward-slurp-sexp)
 
     (define-key map "!" 'objed-execute)
 
