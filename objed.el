@@ -731,7 +731,6 @@ selected one."
     (define-key map (kbd "<end>") 'objed-bottom-object)
     (define-key map "<" 'objed-top-object)
     (define-key map ">" 'objed-bottom-object)
-
     ;; block expansions
     (define-key map "h" 'objed-expand-block)
     (define-key map "a" 'objed-beg-of-block)
@@ -822,7 +821,11 @@ selected one."
       (objed-define-op nil objed-duplicate-down))
     (define-key map (kbd "<C-M-return>")
       'objed-insert-new-object)
+    ;; sp functionality
     (define-key map "^" 'objed-raise)
+    (define-key map (kbd "<C-left>") 'objed-forward-barf-sexp)
+    (define-key map (kbd "<C-right>") 'objed-forward-slurp-sexp)
+
     (define-key map "!" 'objed-execute)
 
     map)
@@ -3491,6 +3494,35 @@ If nil ‘eval-region’ is used instead.")
      (objed-make-object :beg (point)
                         :end (save-excursion (insert istring)
                                              (point))))))
+
+(defun objed-forward-slurp-sexp ()
+  "Slurp following sexp into current object."
+  (interactive)
+  (objed--markify-current-object)
+  (let ((iend (objed--iend))
+        (oend (objed--oend)))
+    (goto-char oend)
+    (let ((sexp (delete-and-extract-region
+                 (point)
+                 (scan-sexps (point) 1))))
+      (goto-char iend)
+      (insert sexp)
+      (set-marker iend (point))
+      (goto-char oend))))
+
+(defun objed-forward-barf-sexp ()
+  "Barf last sexp out of current object."
+  (interactive)
+  (objed--markify-current-object)
+  (let ((iend (objed--iend))
+        (oend (objed--oend)))
+    (goto-char iend)
+    (let ((sexp (delete-and-extract-region
+                 (point)
+                 (scan-sexps (point) -1))))
+      (goto-char oend)
+      (save-excursion
+        (insert sexp)))))
 
 
 (defun objed-execute ()

@@ -1007,6 +1007,21 @@ current object position data."
          (setq objed--current-obj range))))
 
 
+(defun objed--markify-current-object ()
+  "Convert current object into marker object."
+  (unless (markerp (objed--beg))
+    (objed--update-current-object
+     (objed-make-object
+      :ibeg (set-marker (make-marker)
+                        (objed--ibeg))
+      :beg (set-marker (make-marker)
+                       (objed--obeg))
+      :iend (set-marker (make-marker)
+                        (objed--iend))
+      :end (set-marker (make-marker)
+                       (objed--oend))))))
+
+
 (defun objed--switch-to (o &optional state odata)
   "Switch to object O.
 
