@@ -69,7 +69,13 @@
 
 (eval-and-compile
   (defun objed--get-regex-object (bregex eregex)
-  "Return regex object if point is within region limited by BREGEX, EREGEX."
+  "Return regex object if point is within region limited by BREGEX, EREGEX.
+
+BREGEX is the regular expression for the start of the object. Anything
+in it's first regex group is considered to be part of the inner object.
+
+EREGEX is the regular expression for the end of the object. Anything
+in it's first regex group is considered to be part of the inner object."
   (let* ((obounds ())
          (ibounds ())
          (opos (point)))
@@ -86,21 +92,19 @@
                          (match-beginning 0)))))
       (when (and  ;; goto possible start
                  (re-search-backward bregex nil t)
-                 (push (or (match-end 1)
+                 (push (or (match-beginning 1)
                            (match-end 0))
                        ibounds)
-                 (push (or (match-beginning 1)
-                           (match-beginning 0))
+                 (push (match-beginning 0)
                        obounds)
                  ;; goto possible end
                  (goto-char (or (match-end 1)
                                 (match-end 0)))
                  (re-search-forward eregex nil t)
-                 (push (or (match-beginning 1)
+                 (push (or (match-end 1)
                            (match-beginning 0))
                        ibounds)
-                 (push (or (match-end 1)
-                           (match-end 0))
+                 (push (match-end 0)
                        obounds)
                  ;; when point was within start and end
                  (<= (cadr obounds) opos (car obounds)))
