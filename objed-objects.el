@@ -74,9 +74,12 @@
          (ibounds ())
          (opos (point)))
     (save-mark-and-excursion
-      (when (and (re-search-forward eregex nil t) ; possibly exit start
-                 (goto-char (or (match-beginning 1)
-                                (match-beginning 0)))
+      (when (and (if (looking-at bregex)
+                   (re-search-forward bregex nil t)
+                   (re-search-forward eregex nil t)
+                   (goto-char (or (match-beginning 1)
+                                  (match-beginning 0)))) ; possibly exit start
+
                  ;; goto possible start
                  (re-search-backward bregex nil t)
                  (push (or (match-end 1)
