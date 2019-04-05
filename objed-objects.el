@@ -74,13 +74,17 @@
          (ibounds ())
          (opos (point)))
     (save-mark-and-excursion
-      (when (and (if (looking-at bregex)
-                   (re-search-forward bregex nil t)
-                   (re-search-forward eregex nil t)
-                   (goto-char (or (match-beginning 1)
-                                  (match-beginning 0)))) ; possibly exit start
-
-                 ;; goto possible start
+      ;; try to move into object when at boundary
+      (if (looking-at bregex)
+          (goto-char (or (match-end 1)
+                         (match-end 0)))
+        (if (looking-back eregex (line-beginning-position))
+            (goto-char (or (match-beginning 1)
+                           (match-beginning 0)))
+          (re-search-forward eregex nil t)
+          (goto-char (or (match-beginning 1)
+                         (match-beginning 0)))))
+      (when (and  ;; goto possible start
                  (re-search-backward bregex nil t)
                  (push (or (match-end 1)
                            (match-end 0))
