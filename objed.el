@@ -717,16 +717,6 @@ selected one."
                             (objed--skip-ws t))
                           (objed--switch-to 'paragraph)))
 
-    (define-key map (kbd "<C-left>") 'objed-indent-left)
-    (define-key map (kbd "<C-right>") 'objed-indent-right)
-    (define-key map (kbd "<M-right>") 'objed-indent-to-right-tab-stop)
-    (define-key map (kbd "<M-left>") 'objed-indent-to-left-tab-stop)
-    (define-key map (kbd " <S-left>") 'objed-move-object-backward)
-    (define-key map (kbd " <S-right>") 'objed-move-object-forward)
-    ;; for some objects up down is more intuitive
-    (define-key map (kbd " <S-up>") 'objed-move-object-backward)
-    (define-key map (kbd " <S-down>") 'objed-move-object-forward)
-
     (define-key map (kbd "<home>") 'objed-top-object)
     (define-key map (kbd "<end>") 'objed-bottom-object)
     (define-key map "<" 'objed-top-object)
@@ -811,6 +801,7 @@ selected one."
 
     (define-key map "|"
       (objed-define-op nil objed-ipipe))
+    (define-key map "!" 'objed-execute)
 
     (define-key map (kbd "<C-return>")
       (objed-define-op
@@ -821,12 +812,25 @@ selected one."
       (objed-define-op nil objed-duplicate-down))
     (define-key map (kbd "<C-M-return>")
       'objed-insert-new-object)
-    ;; sp functionality
+
     (define-key map "^" 'objed-raise)
+    ;; move things
+    (define-key map (kbd "<C-left>") 'objed-indent-left)
+    (define-key map (kbd "<C-right>") 'objed-indent-right)
+    (define-key map (kbd "<M-right>") 'objed-indent-to-right-tab-stop)
+    (define-key map (kbd "<M-left>") 'objed-indent-to-left-tab-stop)
+
     (define-key map (kbd "<C-M-left>") 'objed-forward-barf-sexp)
     (define-key map (kbd "<C-M-right>") 'objed-forward-slurp-sexp)
+    (define-key map (kbd "<C-S-left>") 'objed-forward-barf-sexp)
+    (define-key map (kbd "<C-S-right>") 'objed-forward-slurp-sexp)
 
-    (define-key map "!" 'objed-execute)
+    (define-key map (kbd " <S-left>") 'objed-move-object-backward)
+    (define-key map (kbd " <S-right>") 'objed-move-object-forward)
+    ;; for some objects up down is more intuitive
+    (define-key map (kbd " <S-up>") 'objed-move-object-backward)
+    (define-key map (kbd " <S-down>") 'objed-move-object-forward)
+
 
     map)
   "Keymap for commands when `objed' is active.")
