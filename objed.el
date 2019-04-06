@@ -707,7 +707,6 @@ selected one."
 
     (define-key map "(" 'objed-backward-until-context)
     (define-key map ")" 'objed-forward-until-context)
-    (define-key map "O" 'objed-current-or-previous-context)
     (define-key map "[" 'objed-previous) ;; objed-current-or-previous-context
     (define-key map "]" 'objed-next) ;; objed-current-or-next-context
     (define-key map "{" (objed--call-and-switch backward-paragraph paragraph))
@@ -730,6 +729,7 @@ selected one."
 
     ;; context expansions
     (define-key map "o" 'objed-expand-context)
+    (define-key map "O" 'objed-current-or-previous-context)
 
     (define-key map "i" 'objed-del-insert)
     (define-key map "t" 'objed-toggle-state)
