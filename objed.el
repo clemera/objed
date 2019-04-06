@@ -1258,12 +1258,13 @@ See `objed-cmd-alist'."
        (or (memq  major-mode '(messages-buffer-mode help-mode))
            (not (derived-mode-p 'comint-mode 'special-mode 'dired-mode)))))
 
-(defun objed-init (&rest _)
+(defun objed-init (&optional obj)
   "Function for activating objed by hooks or advices.
 
-Initialize with `objed--object' or char if unset."
+Initialize with OBJ which defaults to `objed--object' which falls
+back to char if unset."
   (when (funcall objed-init-p-function)
-    (objed--init (or objed--object 'char))))
+    (objed--init (or obj objed--object 'char))))
 
 (defun objed--init-later (&rest _)
   "Init after command loop returned to top level."
@@ -2017,8 +2018,7 @@ back to `objed-initial-object' if no match found."
        (if (assq last-command objed-cmd-alist)
            last-command
          objed-initial-object))
-    (let ((objed--object obj))
-      (objed-init))))
+    (objed-init obj)))
 
 
 ;;;###autoload
