@@ -707,8 +707,9 @@ selected one."
 
     (define-key map "(" 'objed-backward-until-context)
     (define-key map ")" 'objed-forward-until-context)
-    (define-key map "[" 'objed-current-or-previous-context) ;;objed-previous)
-    (define-key map "]" 'objed-current-or-next-context) ;;objed-next)
+    (define-key map "O" 'objed-current-or-previous-context)
+    (define-key map "[" 'objed-previous) ;; objed-current-or-previous-context
+    (define-key map "]" 'objed-next) ;; objed-current-or-next-context
     (define-key map "{" (objed--call-and-switch backward-paragraph paragraph))
     (define-key map "}" (defun objed-forward-paragraph ()
                           (interactive)
@@ -1831,23 +1832,28 @@ postitive prefix argument ARG move to the nth previous object."
         (if (< (objed--beg) pos (objed--end))
             (goto-char (objed--beg))
           (objed--goto-previous (or arg 1))))
-    (let ((pos (point)))
-      (objed--goto-previous (or arg 1))
-      (when (eq pos (point))
-        (error "No previous %s" objed--object)))))
+    (objed-previous arg)))
 
 (defun objed-previous (&optional arg)
   "Move to ARG previous object of current type."
   (interactive "p")
-  (let ((objed--basic-objects nil))
-    (objed-current-or-previous-context arg)))
+  (let ((pos (point)))
+    (objed--goto-previous (or arg 1))
+    (when (eq pos (point))
+      (error "No previous %s" objed--object))))
 
 
 (defun objed-next (&optional arg)
   "Move to ARG next object of current type."
   (interactive "p")
-  (let ((objed--basic-objects nil))
-    (objed-current-or-next-context arg)))
+  ;; on init skip current
+  (when (and (region-active-p)
+             (eq last-command 'objed-extend))
+    (exchange-point-and-mark))
+  (let ((pos (point)))
+    (objed--goto-next (or arg 1))
+    (when (eq pos (point))
+      (error "No next %s" objed--object))))
 
 
 (defun objed-current-or-next-context (&optional arg)
@@ -1862,14 +1868,7 @@ postitive prefix argument ARG move to the nth next object."
         (if (< (objed--beg) pos (objed--end))
             (goto-char (objed--end))
           (objed--goto-next (or arg 1))))
-    ;; on init skip current
-    (when (and (region-active-p)
-               (eq last-command 'objed-extend))
-      (exchange-point-and-mark))
-    (let ((pos (point)))
-      (objed--goto-next (or arg 1))
-      (when (eq pos (point))
-        (error "No next %s" objed--object)))))
+    (objed-next arg)))
 
 (defun objed-top-object ()
   "Go to first instance of current object type."
