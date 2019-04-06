@@ -1258,23 +1258,39 @@ See `objed-cmd-alist'."
        (or (memq  major-mode '(messages-buffer-mode help-mode))
            (not (derived-mode-p 'comint-mode 'special-mode 'dired-mode)))))
 
-(defun objed-init (&optional obj)
-  "Function for activating objed by hooks or advices.
+(defun objed-init (&optional obj fallback)
+  "Function for activating objed by hooks.
 
 Initialize with OBJ which defaults to `objed--object' which falls
-back to char if unset."
+back to char if unset. For meaning of FALLBACK see
+`objed--init'."
   (when (funcall objed-init-p-function)
-    (objed--init (or obj objed--object 'char))))
+    (objed--init (or obj objed--object 'char)
+                 fallback)))
 
 (defun objed--init-later (&rest _)
   "Init after command loop returned to top level."
   (run-at-time 0 nil #'objed-init))
 
-(defun objed--init (&optional sym)
+(defun objed--init-later-with (obj fallback)
+  "Return a closure for later init.
+
+The returned function can be used for command advices.
+For the meaning of OBJ and FALLBACK see `objed-init'."
+  (lambda (&rest _)
+    (run-at-time 0 nil #'objed-init obj fallback)))
+
+(defun objed--init (&optional sym fallback)
   "Initialize `objed'.
 
 SYM is a symbol (command or object symbol) used to initialize
-or object position data."
+or object position data.
+
+FALLBACK if given is a symbol defining the fallback object which
+will be used if object is not found at current position.
+
+By default if the object isn't found at point any next and after
+that any previous instance of this object is used."
   ;; if anything went wrong make sure to start with clean state
   (when objed--buffer
     (objed--reset))
@@ -1319,9 +1335,15 @@ or object position data."
 
   ;; init object
   (prog1 (cond ((commandp sym)
+                ;; TODO: fallback here, too
                 (objed--switch-to-object-for-cmd sym))
                ((symbolp sym)
-                (objed--switch-to sym))
+                (if fallback
+                    (let ((obatp (objed--inside-object-p sym)))
+                      (if obatp
+                          (objed--update-current-object obatp)
+                        (objed--switch-to fallback)))
+                  (objed--switch-to sym)))
                (t
                 (unless objed--object
                   (setq objed--object 'char))
