@@ -1254,6 +1254,9 @@ See `objed-cmd-alist'."
   "Default for `objed-init-p-function'."
   (and (not (minibufferp))
        (not (bobp))
+       ;; don't interfere with other special modes
+       ;; like hydra
+       (not overriding-terminal-local-map)
        ;; TODO: add variables for those
        (or (memq  major-mode '(messages-buffer-mode help-mode))
            (not (derived-mode-p 'comint-mode 'special-mode 'dired-mode)))))
@@ -3908,13 +3911,13 @@ If DO-NOT-SAVE is non-nil don't store ALIST entries in
       (advice-add (car cmd2obj) :before 'objed--save-start-position)))
 
 (defun objed--remove-advices (alist)
-    "Remove advices accroding to ALIST.
+  "Remove advices accroding to ALIST.
 
 See `objed-cmd-alist'."
-    (dolist (cmd2obj alist)
-      (advice-remove (car cmd2obj)
-                     (apply-partially #'objed--activate (car cmd2obj)))
-      (advice-remove (car cmd2obj) 'objed--save-start-position)))
+  (dolist (cmd2obj alist)
+    (advice-remove (car cmd2obj)
+                   (apply-partially #'objed--activate (car cmd2obj)))
+    (advice-remove (car cmd2obj) 'objed--save-start-position)))
 
 
 (provide 'objed)
