@@ -1765,8 +1765,9 @@ comments."
   (let ((bounds (or (objed--at-sexp-p)
                     (save-excursion
                       (ignore-errors
-                        (forward-sexp 1)
-                        (forward-sexp -1)
+                        (let ((real-this-command 'forward-sexp))
+                          (forward-sexp 1)
+                          (forward-sexp -1))
                         (objed--at-sexp-p))))))
 
     (when bounds

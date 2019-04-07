@@ -1029,7 +1029,8 @@ Use `objed-define-dispatch' to define a dispatch command.")
                             (eq (char-syntax (char-after)) ?\"))
                           (setq stringp (objed--in-string-p nil t)))
                      (not (ignore-errors
-                            (call-interactively 'forward-sexp)
+                            (let ((real-this-command 'forward-sexp))
+                              (call-interactively 'forward-sexp))
                             t))))
       (if stringp
           (progn (goto-char stringp)
@@ -1049,7 +1050,8 @@ Use `objed-define-dispatch' to define a dispatch command.")
                             (eq (char-syntax (char-before)) ?\"))
                           (setq stringp (objed--in-string-p nil t)))
                      (not (ignore-errors
-                            (call-interactively 'backward-sexp)
+                            (let ((real-this-command 'forward-sexp))
+                              (call-interactively 'backward-sexp))
                             t))))
       (if stringp
           (goto-char stringp)
