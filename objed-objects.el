@@ -1763,12 +1763,16 @@ comments."
       'identifier))
   :get-obj
   (let ((bounds (or (objed--at-sexp-p)
+                    ;; for commands which are not symetric
+                    ;; like C-M-f at beg of python funtions
                     (save-excursion
                       (ignore-errors
-                        (let ((real-this-command 'forward-sexp))
+                        (let* ((pos (point))
+                               (real-this-command 'forward-sexp))
                           (forward-sexp 1)
-                          (forward-sexp -1))
-                        (objed--at-sexp-p))))))
+                          (when (/= pos (point))
+                            (cons pos
+                                  (point)))))))))
 
     (when bounds
       (objed-make-object
