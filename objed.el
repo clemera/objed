@@ -590,8 +590,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 if KILL is non-nil kill the buffer. WINDOW defaults to the
 selected one."
   (interactive)
-  (let* ((overriding-terminal-local-map nil)
-         (nc (key-binding "q" nil t)))
+  (let ((nc (let ((overriding-terminal-local-map nil))
+              (key-binding "q" nil t))))
     (if (and (string-match "insert" (symbol-name nc))
              (not buffer-read-only))
         (cond ((and (not (eq last-command this-command))
@@ -606,6 +606,7 @@ selected one."
                (indent-region (objed--beg) (objed--end))
                (objed--update-current-object)
                (message "Indented defun.")))
+      (objed--reset)
       (call-interactively nc))))
 
 (defun objed--point-in-periphery ()
