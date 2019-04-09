@@ -198,8 +198,10 @@ The function should return nil if objed should not initialize."
     (next-line . line)
     (beginning-of-buffer . buffer)
     (end-of-buffer . buffer)
-    (scroll-up-command . line)
-    (scroll-down-command . line)
+    (scroll-up-command . char)
+    (scroll-down-command . char)
+    (View-scroll-half-page-forward . char)
+    (View-scroll-half-page-backward . char)
     (move-to-window-line-top-bottom . line)
     (imenu . line)
     (backward-paragraph . paragraph)
@@ -637,8 +639,6 @@ selected one."
     (define-key map (kbd "C-SPC") 'set-mark-command)
     (define-key map (kbd "C-x C-x") 'objed-exchange-point-and-mark)
     ;; TODO: birdview mode/scroll mode
-    (define-key map (kbd "C-v") 'scroll-up-command)
-    (define-key map "\ev" 'scroll-down-command)
 
     (define-key map (kbd "C-h k") 'objed-describe-key)
     (when objed-use-which-key-if-available-p
