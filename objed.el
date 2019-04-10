@@ -1816,13 +1816,7 @@ to an object containing the current one."
           'identifier))))
 
 (defun objed--toggle-state ()
-  "Toggle state of object.
-
-Shrinks to inner objects on repeat if possible."
-  (when (eq objed--object 'sexp)
-    (let ((fallback (objed--sexp-fallback)))
-      (when fallback
-        (objed--switch-to fallback))))
+  "Toggle state of object."
   (objed--reverse))
 
 (defun objed-backward-until-context ()
@@ -1967,6 +1961,10 @@ Default to sexp at point."
 
 Switches between inner and whole object state."
   (interactive)
+  (when (eq objed--object 'sexp)
+    (let ((fallback (objed--sexp-fallback)))
+      (when fallback
+        (objed--switch-to fallback))))
   (let ((boo (eq (point) (objed--beg)))
         (eoo (eq (point) (objed--end))))
     (objed--toggle-state)
