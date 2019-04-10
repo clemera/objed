@@ -951,7 +951,7 @@ To define new operations see `objed-define-op'.")
     (define-key map "." 'objed-sentence-object)
     (define-key map "{" 'objed-paragraph-object)
     (define-key map "q" 'objed-textblock-object)
-    (define-key map "\"" 'objed-sexp-object)
+    (define-key map "x" 'objed-sexp-object)
 
     (define-key map "i" 'objed-indent-object)
     (define-key map "a" 'objed-block-object)
