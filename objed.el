@@ -1801,13 +1801,28 @@ to an object containing the current one."
          (or (objed--switch-to 'defun 'inner)
              (objed--switch-to 'line 'inner))))))
 
+
+(defun objed--sexp-fallback (&optional pos)
+  "Return fallback object for sexp at POS."
+  (let ((pos (or pos (point))))
+    (goto-char pos)
+    (or (objed--at-p '(bracket string tag))
+        (and (or (not (= 0 (skip-syntax-forward "'")))
+                 (not (= 0 (skip-syntax-backward "'"))))
+             (objed--at-p '(bracket string)))
+        (if (equal (bounds-of-thing-at-point 'symbol)
+                   (objed--bounds))
+            'word
+          'identifier))))
+
 (defun objed--toggle-state ()
   "Toggle state of object.
 
 Shrinks to inner objects on repeat if possible."
   (when (eq objed--object 'sexp)
-    (save-excursion
-      (objed-context-object)))
+    (let ((fallback (objed--sexp-fallback)))
+      (when fallback
+        (objed--switch-to fallback))))
   (objed--reverse))
 
 (defun objed-backward-until-context ()

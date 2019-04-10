@@ -1773,20 +1773,7 @@ comments."
                           (when (/= pos (point))
                             (cons pos
                                   (point)))))))))
-
-    (when bounds
-      (objed-make-object
-       :obounds bounds
-       :ibounds (when bounds
-                  (goto-char (car bounds))
-                  ;; include leading punctuation
-                  (skip-syntax-forward ".'")
-                  (let ((beg (point)))
-                    (goto-char (cdr bounds))
-                    (with-syntax-table text-mode-syntax-table
-                      (skip-syntax-backward "."))
-                    (skip-syntax-backward " .'")
-                    (cons beg (point)))))))
+    bounds)
   :try-next
   (or (ignore-errors
         (forward-sexp 1)
