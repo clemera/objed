@@ -2535,7 +2535,7 @@ non-nil the indentation block can contain empty lines."
            (match-beginning 1)
          (org-table-beginning-of-field 1)
          (point))
-  :end (if (looking-at "\\( *\\) |")
+  :end (if (looking-at "\\( *\\) ?|")
            (match-end 1)
          (org-table-end-of-field 1)
          (point))
