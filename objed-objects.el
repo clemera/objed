@@ -2528,7 +2528,21 @@ non-nil the indentation block can contain empty lines."
       (setf (cdr bounds) (point))
       (objed-make-object :obounds bounds :ibounds ibounds))))
 
-
+(declare-function org-table-beginning-of-field "ext:org")
+(declare-function org-table-end-of-field "ext:org")
+(objed-define-object org field
+  :beg (if (looking-back "| ?\\( *\\)" (line-beginning-position))
+           (match-beginning 1)
+         (org-table-beginning-of-field 1)
+         (point))
+  :end (if (looking-at "\\( *\\) |")
+           (match-end 1)
+         (org-table-end-of-field 1)
+         (point))
+  :try-next
+  (org-table-end-of-field 1)
+  :try-prev
+  (org-table-beginning-of-field 1))
 
 (defvar comint-prompt-regexp)
 (declare-function comint-next-prompt "ext:comint")
