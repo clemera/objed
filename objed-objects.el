@@ -1555,6 +1555,20 @@ comments."
       begin)))
 
 
+(defun objed--get-align-section ()
+  "Get region bounds of current align section."
+  (require 'align)
+  (let ((olddef (symbol-function 'align-region)))
+    (cl-letf (((symbol-function 'align-region)
+               (lambda (beg end &rest args)
+                 (if (and beg end)
+                     (throw 'region (cons beg end))
+                   (apply olddef beg end
+                          args)))))
+      (catch 'region
+        (align nil nil)))))
+
+
 ;; * Object definitions
 
 
