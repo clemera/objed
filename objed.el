@@ -1595,15 +1595,18 @@ See also `objed--block-objects'."
                      (let ((as (car (nthcdr 3 a)))
                            (bs (car (nthcdr 3 b))))
                        (equal as bs))))))
-  (when blocks
-     (let ((sdiff (abs (- (point) (objed--beg))))
-           (ediff (abs (- (point) (objed--end)))))
-       (objed--restore-state (pop blocks))
-       (goto-char (cond ((or (> ediff sdiff)
-                             init)
-                         (objed--beg))
-                        (t
-                         (objed--end)))))))))
+    (if (and init
+             (not (eq objed--object 'line)))
+        (objed--switch-to 'line)
+      (when blocks
+        (let ((sdiff (abs (- (point) (objed--beg))))
+              (ediff (abs (- (point) (objed--end)))))
+          (objed--restore-state (pop blocks))
+          (goto-char (cond ((or (> ediff sdiff)
+                                init)
+                            (objed--beg))
+                           (t
+                            (objed--end))))))))))
 
 
 
