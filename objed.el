@@ -741,11 +741,16 @@ selected one."
     ;; mark upwards
     (define-key map "M" 'objed-toggle-mark-backward)
     ;; (define-key map "M" 'objed-unmark-all)
+    ;; Use h block expansion now
+    ;; TODO: bind l to something else
+    (define-key map "l" 'objed-line-object)
+
 
     ;; "visual"
     (define-key map "v" 'objed-extend)
-    (define-key map "@" 'objed-include-trailing-ws)
-    (define-key map "`" 'objed-include-leading-ws)
+    ;; TODO: more general include expansion?
+    (define-key map "@" 'objed-include-leading-ws)
+    (define-key map "_" 'objed-include-trailing-ws)
 
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
@@ -762,8 +767,6 @@ selected one."
     (define-key map ";"
       (objed-define-op nil objed-comment-or-uncomment-region))
 
-
-
     (define-key map "$"
       (objed-define-op nil flyspell-region))
 
@@ -776,14 +779,15 @@ selected one."
     ;; direct object switches
     (define-key map "." 'objed-goto-next-identifier)
     (define-key map "," 'objed-goto-prev-identifier)
-    (define-key map "_" 'objed-toggle-indentifier-place)
-    (define-key map "l" 'objed-line-object)
+    ;; (define-key map "_" 'objed-toggle-indentifier-place)
     ;;(define-key map "%" 'objed-contents-object)
 
     ;; prefix keys
     (define-key map "x" 'objed-op-map)
     (define-key map "c" 'objed-object-map)
+    ;; for custom user object and op commands
     (define-key map "'" 'objed-user-map)
+    (define-key map "-" 'objed-other-user-map)
 
     (define-key map (kbd "M-g o") 'objed-occur)
 
@@ -934,6 +938,11 @@ To define new operations see `objed-define-op'.")
     map)
   "Keymap for custom user bindings.")
 
+(defvar objed-other-user-map
+  (let ((map (objed--define-prefix "-" 'objed-user-map)))
+    map)
+  "Keymap for custom user bindings.")
+
 
 (defvar objed-object-map
   (let ((map (objed--define-prefix "c" 'objed-object-map)))
@@ -990,8 +999,8 @@ Use `objed-define-dispatch' to define a dispatch command.")
 
 (objed-define-dispatch "#" objed--ace-switch-object)
 (objed-define-dispatch "=" objed--ace-switch-in-current)
-(objed-define-dispatch "-" objed--backward-until)
-(objed-define-dispatch "+" objed--forward-until)
+(objed-define-dispatch "`" objed--backward-until)
+(objed-define-dispatch "´" objed--forward-until)
 
 (defun objed--backward-until (name)
   "Activate part from point backward until object NAME."
