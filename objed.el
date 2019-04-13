@@ -1606,7 +1606,8 @@ See also `objed--block-objects'."
                        (equal as bs))))))
     (if (and init
              (not (eq objed--object 'line)))
-        (objed--switch-to 'line)
+        (progn (objed--switch-to 'line)
+               (goto-char (objed--beg)))
       (when blocks
         (let ((sdiff (abs (- (point) (objed--beg))))
               (ediff (abs (- (point) (objed--end)))))
@@ -1645,11 +1646,17 @@ See also `objed--block-objects'."
                          (>= as (point))))))))
   (cond ((or (eq last-command this-command)
              (eq last-command 'move-beginning-of-line))
-         (when blocks
-           (let ((end (objed--end)))
-             (objed--restore-state (pop blocks))
-             (objed--change-to :end end :iend end)
-             (goto-char (objed--beg)))))
+         (if (and (eq objed--object 'line)
+                  (objed--inner-p)
+                  (not (bolp))
+                  (objed--point-in-periphery))
+             (progn (objed--toggle-state)
+                    (goto-char (objed--beg)))
+           (when blocks
+             (let ((end (objed--end)))
+               (objed--restore-state (pop blocks))
+               (objed--change-to :end end :iend end)
+               (goto-char (objed--beg))))))
         (t
          (objed--switch-to 'line
                            (unless (<= (point)
