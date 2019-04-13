@@ -1554,19 +1554,30 @@ comments."
               (nth 4 sp))
       begin)))
 
-
-(defun objed--get-align-section ()
-  "Get region bounds of current align section."
+(defvar align-region-separate)
+(defvar align-mode-rules-list)
+(defvar align-rules-list)
+(defvar align-exclude-rules-list)
+(defvar align-mode-exclude-rules-list)
+(declare-function align-region "ext:align")
+(defun objed--get-align-sections ()
+  "Get region bounds of align sections."
   (require 'align)
-  (let ((olddef (symbol-function 'align-region)))
-    (cl-letf (((symbol-function 'align-region)
-               (lambda (beg end &rest args)
-                 (if (and beg end)
-                     (throw 'region (cons beg end))
-                   (apply olddef beg end
-                          args)))))
-      (catch 'region
-        (align nil nil)))))
+  (let ((separator
+         (or (if (and (symbolp align-region-separate)
+                      (boundp align-region-separate))
+                 (symbol-value align-region-separate)
+               align-region-separate)
+             'entire))
+        (regions ()))
+    (align-region nil nil separator
+                  (or align-mode-rules-list align-rules-list)
+                  (or align-mode-exclude-rules-list align-exclude-rules-list)
+                  (lambda (beg end mode)
+                    (when (consp mode)
+                      (push (cons beg end)
+                            regions))))
+    regions))
 
 
 ;; * Object definitions
