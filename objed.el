@@ -1801,24 +1801,15 @@ Repeated calls will continue guessing objects and try to expand
 to an object containing the current one."
   ;; stop with defun for now
   (unless (eq objed--object 'defun)
-    (let ((objed--context-objects
-           ;; TODO: docstrings as well
-           (if (or (and (objed--in-comment-p)
-                        (not (objed--at-comment-p)))
-                   (and (derived-mode-p 'text-mode)
-                        ;; sentences in p tags?
-                        (not (derived-mode-p 'sgml-mode))))
-               (append (list 'sentence) objed--context-objects)
-             objed--context-objects))
-          (s nil))
+    (let ((s nil))
       ;; TODO: make direction, position dependend and stay at beg/end?
       (if (setq s (objed--get-context-state objed--context-objects))
-        (progn (objed--restore-state s)
-               (force-mode-line-update)
-               (goto-char (objed--beg)))
+          (progn (objed--restore-state s)
+                 (force-mode-line-update)
+                 (goto-char (objed--beg)))
         ;; fallback if nothing else found
-         (or (objed--switch-to 'defun 'inner)
-             (objed--switch-to 'line 'inner))))))
+        (or (objed--switch-to 'defun 'inner)
+            (objed--switch-to 'line 'inner))))))
 
 
 (defun objed--sexp-fallback (&optional pos)
