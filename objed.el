@@ -1546,7 +1546,8 @@ If IGNORE is non-nil it should be an object of
                             ;; for textblocks (parag. inside comments)
                             (objed--in-comment-p))))
               (progn (unless (eolp) (objed--skip-ws))
-                     (append  os (list 'comment)))
+                     (append (remq 'textblock  os)
+                             (list 'comment 'textblock)))
             os))))
 
 (defun objed--get-blocks (ignore collf &optional istate)
