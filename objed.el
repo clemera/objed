@@ -1528,7 +1528,8 @@ If IGNORE is non-nil it should be an object of
                        (unless (memq o '(indent textblock))
                          (push o os)))))
                   ((and (derived-mode-p 'prog-mode)
-                        (objed--in-string-or-comment-p))
+                        (or (objed--in-string-or-comment-p)
+                            (objed--at-comment-p)))
                    objed--block-objects)
                   (t
                    ;; performance is poor on slow
