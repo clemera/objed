@@ -1659,6 +1659,19 @@ comments."
   (search-backward " " nil t))
 
 
+(defun objed--inner-word-bounds ()
+  "Return bounds of subword at point."
+  (let* ((subword-mode t)
+         (superword-mode nil)
+         (find-word-boundary-function-table
+          subword-find-word-boundary-function-table))
+    (if (eq this-command 'forward-word)
+        (save-excursion
+          (forward-word -1)
+          (bounds-of-thing-at-point 'word))
+      (bounds-of-thing-at-point 'word))))
+
+
 (objed-define-object nil word
   :atp
   (looking-at "\\<")
@@ -1669,17 +1682,15 @@ comments."
   :get-obj
   (if (eobp)
       (objed-make-empty-object)
-    (objed-make-object
-     :obounds (bounds-of-thing-at-point 'word)
-     :ibounds (let* ((subword-mode t)
-                     (superword-mode nil)
-                     (find-word-boundary-function-table
-                      subword-find-word-boundary-function-table))
-                (if (eq this-command 'forward-word)
-                    (save-excursion
-                      (forward-word -1)
-                      (bounds-of-thing-at-point 'word))
-                  (bounds-of-thing-at-point 'word)))))
+    (if (objed--inner-p)
+        ;; don't confuse objed-next/prev which
+        ;; use the outer bounds for navigation
+        ;; but a word can contain multiple innner words
+        (objed-make-object
+         :obounds (objed--inner-word-bounds))
+      (objed-make-object
+         :obounds (bounds-of-thing-at-point 'word)
+         :ibounds (objed--inner-word-bounds))))
   :try-next
   (if (objed--inner-p)
       (let* ((subword-mode t)

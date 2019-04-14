@@ -265,7 +265,7 @@ be used to restore previous states."
     reposition-window
     eval-defun
     eval-last-sexp
-    kmacro-start-macro
+    kmacro-start-macrop
     kmacro-start-macro-or-insert-counter
     kmacro-end-or-call-macro
     kmacro-call-macro
@@ -1980,6 +1980,11 @@ Switches between inner and whole object state."
   (let ((boo (eq (point) (objed--beg)))
         (eoo (eq (point) (objed--end))))
     (objed--toggle-state)
+    ;; for words force update because
+    ;; a word can contain multiple inner
+    ;; objects (CamelCaseSubWords)
+    (when (eq objed--object 'word)
+      (objed--update-current-object))
     (cond (boo
            (goto-char (objed--beg)))
           ((and eoo
