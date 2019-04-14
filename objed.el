@@ -1571,12 +1571,9 @@ order. ISTATE is the object state to use and defaults to whole."
                      (objed--get-current-state))
                states))
        (pop os))
-    ;; TODO: use size of object for sorting
+     ;; use start pos for sorting...
     (dolist (ps (sort states (lambda (a b)
-                               ;; ensure line comes first
-                               (and t;(not (eq (cadr (cddr a)) 'line))
-                                    ;; TODO: when eq sort with opposite end
-                                    (<= (car a) (car b)))))
+                               (<= (car a) (car b))))
                 nos)
       (push (cdr ps) nos)))))
 
@@ -3677,13 +3674,24 @@ and RANGE hold the object position data."
 
 (defun objed--get-continuation-object (obj)
   "Return object for continuation OBJ."
-  ;; white list
   (let ((shifted (memq 'shift (event-modifiers last-input-event))))
-    (unless (memq obj '(word defun sentence line))
-      (objed--switch-to 'sexp))
-    (objed-make-object :beg (point)
-                       :end (if shifted (objed--beg (objed--get-prev))
-                              (objed--end (objed--get))))))
+    (when (cond ((memq obj '(word defun sentence line))
+                 ;; keepers
+                 t)
+                ((memq obj (append objed--block-objects (list 'comment)))
+                 ;; line based ones
+                 (objed--switch-to 'line))
+                (t
+                 ;; sexp as default for others
+                 (objed--switch-to 'sexp)))
+      (let* ((objd (if shifted (objed--get-prev)
+                     (objed--get)))
+             (end (and objd
+                      (if shifted (objed--beg objd)
+                        (objed--end objd)))))
+        (when end
+          (objed-make-object :beg (point)
+                             :end end))))))
 
 
 (defun objed-quit ()
