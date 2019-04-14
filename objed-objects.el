@@ -1540,8 +1540,9 @@ comments."
   (let* ((bounds nil)
          (ibounds (cond ((setq bounds (objed--bounds-of-string-at-point))
                          (objed--inner-string bounds))
-                       ((setq bounds (objed--bounds-of-comment-at-point))
-                        (objed--inner-comment-block)))))
+                        ((setq bounds (objed--bounds-of-comment-at-point))
+                         ;; include trailing ws
+                         (objed--comment-block)))))
     (when ibounds
       (narrow-to-region (car ibounds) (cdr ibounds)))))
 
