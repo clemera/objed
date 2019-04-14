@@ -2298,7 +2298,10 @@ non-nil the indentation block can contain empty lines."
     (when bounds
       (objed-make-object
        :obounds bounds
-       :ibounds (bounds-of-thing-at-point 'word))))
+       :ibounds (save-excursion
+                  ;; use the symbol prefix by default
+                  (goto-char (car bounds))
+                  (bounds-of-thing-at-point 'word)))))
 
   :try-next
   (objed--next-identifier)
