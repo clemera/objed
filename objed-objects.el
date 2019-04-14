@@ -2301,7 +2301,7 @@ non-nil the indentation block can contain empty lines."
        :ibounds (save-excursion
                   ;; use the symbol prefix by default
                   (goto-char (car bounds))
-                  (bounds-of-thing-at-point 'word)))))
+                  (objed--inner-word-bounds)))))
 
   :try-next
   (objed--next-identifier)
