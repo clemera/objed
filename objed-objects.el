@@ -1747,6 +1747,25 @@ comments."
   (objed--prev-symbol))
 
 
+(objed-define-object nil subword
+  :get-obj
+  (objed--inner-word-bounds)
+  :try-next
+  (let* ((subword-mode t)
+         (superword-mode nil)
+         (find-word-boundary-function-table
+          subword-find-word-boundary-function-table))
+    (forward-word 1)
+    (forward-word -1))
+  :try-prev
+  (let* ((subword-mode t)
+         (superword-mode nil)
+         (find-word-boundary-function-table
+          subword-find-word-boundary-function-table))
+    (forward-word -1)))
+
+
+
 (defun objed--at-sexp-p ()
   "Return sexp object if point at strutured expression."
   (let* ((opos (point))
