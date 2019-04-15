@@ -243,6 +243,7 @@ The function should return nil if objed should not initialize."
     (yank-pop . region)
     ;; misc
     (kill-buffer . char)
+    (kill-this-buffer . char)
     )
   "Entry commands and associated objects."
   :type '(alist :key-type sexp
