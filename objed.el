@@ -3909,25 +3909,24 @@ setting the user options `objed-use-which-key-if-available-p' and
         (when objed-auto-init
           ;; interactive cmds
           (objed--install-advices objed-cmd-alist t)
-          ;; auto entry cmds
-          (advice-add #'quit-window
-                      :after #'objed--init-later)
-          (advice-add #'rename-buffer
-                      :after #'objed--init-later)
-          (advice-add #'create-file-buffer
-                      :after #'objed--init-later)
-          (advice-add #'switch-to-buffer
-                      :after #'objed--init-later)))
+          (dolist (f '(quit-window
+                       create-file-buffer
+                       rename-buffer
+                       switch-to-buffer
+                       display-buffer
+                       pop-to-buffer))
+            ;; auto entry cmds
+            (advice-add f :after #'objed--init-later))))
     (remove-hook 'minibuffer-setup-hook 'objed--reset)
     (objed--remove-advices objed-cmd-alist)
-    (advice-remove #'quit-window
-                   #'objed--init-later)
-    (advice-remove #'rename-buffer
-                   #'objed--init-later)
-    (advice-remove #'create-file-buffer
-                   #'objed--init-later)
-    (advice-remove #'switch-to-buffer
-                   #'objed--init-later)))
+    (dolist (f '(quit-window
+                 create-file-buffer
+                 rename-buffer
+                 switch-to-buffer
+                 display-buffer
+                 pop-to-buffer))
+      ;; auto entry cmds
+      (advice-remove f #'objed--init-later))))
 
 
 (defun objed--install-advices-for (cmds obj)
