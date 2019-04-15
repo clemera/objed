@@ -627,10 +627,10 @@ selected one."
       (define-key map (kbd (format "C-%c" n)) 'digit-argument))
     ;; common emacs keys
     (define-key map (kbd "C-g") 'objed-quit)
+    (define-key map (kbd "C-h b") 'objed-show-top-level)
     ;; TODO: switch with q, so quit window is qq?
     (define-key map "g" 'objed-quit)
     (define-key map "q" 'objed-quit-window-or-reformat)
-    (define-key map (kbd "?") 'objed-show-top-level)
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
     ;; for quick access
@@ -654,6 +654,10 @@ selected one."
     (define-key map "~" 'objed-undo-in-object)
 
     ;; general movement
+    (define-key map "l" (objed--call-and-switch right-char char))
+    (define-key map "h" (objed--call-and-switch left-char char))
+    (define-key map "L" 'objed-move-char-forward)
+    (define-key map "H" 'objed-move-char-backward)
     (define-key map "s" (defun objed-forward-word ()
                           "Call `forward-word' and switch to object word"
                           (interactive)
@@ -687,7 +691,6 @@ selected one."
     (define-key map "f" (objed--call-and-switch objed--forward-sexp sexp))
     (define-key map "b" (objed--call-and-switch objed--backward-sexp sexp))
 
-    ;; TODO: move sexp
     (define-key map "F" 'objed-move-object-forward)
     (define-key map "B" 'objed-move-object-backward)
 
@@ -704,7 +707,6 @@ selected one."
 
     (define-key map "N" 'objed-move-line-forward)
     (define-key map "P" 'objed-move-line-backward)
-
 
     (define-key map "(" 'objed-backward-until-context)
     (define-key map ")" 'objed-forward-until-context)
@@ -723,10 +725,9 @@ selected one."
     (define-key map "<" 'objed-top-object)
     (define-key map ">" 'objed-bottom-object)
     ;; block expansions
-    (define-key map "h" 'objed-expand-block)
     (define-key map "a" 'objed-beg-of-block)
     (define-key map "e" 'objed-end-of-block)
-
+    (define-key map "v" 'objed-expand-block)
 
     ;; context expansions
     (define-key map "o" 'objed-expand-context)
@@ -741,16 +742,10 @@ selected one."
     ;; mark upwards
     (define-key map "M" 'objed-toggle-mark-backward)
     ;; (define-key map "M" 'objed-unmark-all)
-    ;; Use h block expansion now
-    ;; TODO: bind l to something else
-    (define-key map "l" 'objed-line-object)
 
-
-    ;; "visual"
-    (define-key map "v" 'objed-extend)
-    ;; TODO: more general include expansion?
-    (define-key map "@" 'objed-include-leading-ws)
-    (define-key map "_" 'objed-include-trailing-ws)
+    (define-key map "@" 'objed-extend)
+    (define-key map "-" 'objed-include-leading-ws)
+    (define-key map "+" 'objed-include-trailing-ws)
 
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
@@ -779,15 +774,14 @@ selected one."
     ;; direct object switches
     (define-key map "." 'objed-goto-next-identifier)
     (define-key map "," 'objed-goto-prev-identifier)
-    ;; (define-key map "_" 'objed-toggle-indentifier-place)
-    ;;(define-key map "%" 'objed-contents-object)
+    (define-key map "_" 'objed-toggle-indentifier-place)
 
     ;; prefix keys
     (define-key map "x" 'objed-op-map)
     (define-key map "c" 'objed-object-map)
     ;; for custom user object and op commands
     (define-key map "'" 'objed-user-map)
-    (define-key map "-" 'objed-other-user-map)
+    (define-key map "?" 'objed-other-user-map)
 
     (define-key map (kbd "M-g o") 'objed-occur)
 
@@ -939,7 +933,7 @@ To define new operations see `objed-define-op'.")
   "Keymap for custom user bindings.")
 
 (defvar objed-other-user-map
-  (let ((map (objed--define-prefix "-" 'objed-user-map)))
+  (let ((map (objed--define-prefix "?" 'objed-user-map)))
     map)
   "Keymap for custom user bindings.")
 
@@ -970,6 +964,7 @@ To define new operations see `objed-define-op'.")
     (define-key map "s" 'objed-string-object)
     (define-key map ";" 'objed-comment-object)
     (define-key map "=" 'objed-face-object)
+    (define-key map "%" 'objed-contents-object)
 
     (define-key map "t" 'objed-tag-object)
     (define-key map "f" 'objed-file-object)
