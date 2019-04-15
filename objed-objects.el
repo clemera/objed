@@ -1933,7 +1933,9 @@ comments."
                        :end (save-excursion
                             ;; include hidden parts...
                               (end-of-visible-line)
-                              (1+ (point)))))
+                              (if (eobp)
+                                  (point)
+                                (1+ (point))))))
   :try-next
   (skip-chars-forward " \t\r\n")
   :try-prev
