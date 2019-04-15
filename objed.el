@@ -1087,8 +1087,10 @@ Use `objed-define-dispatch' to define a dispatch command.")
                (goto-char (point-min))))
         ;; objed-mark-object
         (let ((n (objed--do-all 'objed--mark-object)))
-          (prog1 (and (> n 1) n)
-            (message "Marked %s %ss in %s." n objed--object name)))))))
+          (if (> n 1)
+              n
+            (prog1 nil
+              (objed-unmark-all))))))))
 
 (defun objed--ace-switch-object (name)
   "Switch to objed NAME using avy."
@@ -2450,10 +2452,20 @@ previous objects."
 First try to mark more in current defun after that mark more in
 current buffer."
   (interactive)
-  (cond ((eq last-command this-command)
-         (objed--mark-all-inside 'buffer))
-        (t
-         (objed--mark-all-inside 'defun))))
+  (let* ((n nil)
+         (msg (cond ((and (eq last-command this-command)
+                          (setq n (objed--mark-all-inside 'buffer)))
+                     (format "Marked %s %ss in %s." n objed--object 'buffer))
+                    ((setq n (objed--mark-all-inside 'defun))
+                     (format "Marked %s %ss in %s." n objed--object 'defun))
+                    ((setq n (objed--mark-all-inside 'buffer))
+                     (format "Marked %s %ss in %s." n objed--object 'buffer))
+                    (t
+                     "No other objects to mark."))))
+    ;; wait for redisplay
+    (run-at-time 0.1 nil
+                 #'message msg)))
+
 
 (defun objed-last ()
   "Resume to last state.
@@ -2609,7 +2621,8 @@ state is only restored correctly if the buffer was not modified."
           (when ovps
             (objed--mark-ovps ovps))))
     (prog1 nil
-      (when (called-interactively-p 'any)
+      (when (and (called-interactively-p 'any)
+                 (eq real-this-command 'objed-last))
         (message "No previous state to restore.")))))
 
 
