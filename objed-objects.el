@@ -2441,6 +2441,32 @@ non-nil the indentation block can contain empty lines."
                                (down-list -1)
                                (point)))))))))))
 
+
+(objed-define-object css-mode defun
+  :mode css-mode
+  :atp
+  (looking-at "^[^[:space:]]")
+  :try-next
+  (search-forward "{")
+  :try-prev
+  (search-backward "{")
+  :get-obj
+  (let* ((pos (point))
+         (end (and (search-forward "}" nil t) (point)))
+         (beg (and end
+                   (search-backward "{" nil t)
+                   (or (and (re-search-backward "^ *$" nil t)
+                            (1+ (match-end 0)))
+                       (and (re-search-backward "^" nil t)
+                            (line-beginning-position))))))
+    (when (and beg end
+               (<= beg pos end))
+      (objed-make-object
+       :beg beg
+       :ibeg (search-forward "{")
+       :end end
+       :iend (1- end)))))
+
 (objed-define-object nil tag
   :atp
   (and (derived-mode-p 'sgml-mode)
