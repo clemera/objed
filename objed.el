@@ -1802,8 +1802,13 @@ to an object containing the current one."
                  (force-mode-line-update)
                  (goto-char (objed--beg)))
         ;; fallback if nothing else found
-        (or (objed--switch-to 'defun 'inner)
-            (objed--switch-to 'line 'inner))))))
+        (let ((fallback (objed--get-object 'defun 'whole)))
+          (if (and fallback
+                   (< (objed--alt-beg fallback)
+                      (objed--beg)))
+              (objed--switch-to 'defun 'inner)
+            (or (objed--switch-to 'defun 'whole)
+                (objed--switch-to 'line 'inner))))))))
 
 
 (defun objed--sexp-fallback (&optional pos)
