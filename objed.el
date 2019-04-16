@@ -3695,7 +3695,7 @@ and RANGE hold the object position data."
 (defun objed--get-continuation (obj)
   "Return continuation data for OBJ."
   (let ((shifted (memq 'shift (event-modifiers last-input-event)))
-        (no (cond ((memq obj '(word defun sentence line paragraph))
+        (no (cond ((memq obj '(char word defun sentence line paragraph))
                    ;; keepers
                    objed--object)
                   ((memq obj (append objed--block-objects (list 'comment)))
