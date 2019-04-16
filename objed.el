@@ -750,7 +750,7 @@ selected one."
     ;; TODO: second + include more
     (define-key map "+" 'objed-include-trailing-ws)
     ;; (define-key map "" 'objed-include-leading-ws)
-    
+
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
     (define-key map "K" 'objed-kill)
@@ -3692,7 +3692,7 @@ and RANGE hold the object position data."
 (defun objed--get-continuation-object (obj)
   "Return object for continuation OBJ."
   (let ((shifted (memq 'shift (event-modifiers last-input-event))))
-    (when (cond ((memq obj '(word defun sentence line))
+    (when (cond ((memq obj '(word defun sentence line paragraph))
                  ;; keepers
                  t)
                 ((memq obj (append objed--block-objects (list 'comment)))
