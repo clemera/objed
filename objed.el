@@ -578,7 +578,10 @@ BEFORE and AFTER are forms to execute before/after calling the command."
        (setq this-command ',cmd)
        (call-interactively ',cmd)
        ,after
-       (objed--switch-to ',obj objed--obj-state)
+       (objed--switch-to ',obj
+                         (if (eq objed--object ',obj)
+                             objed--obj-state
+                           'whole))
        (when (or prb pre)
          (cond ((and prb
                      (= (point) (region-end)))
@@ -675,7 +678,10 @@ selected one."
                                 (call-interactively 'forward-word))
                             (setq this-command 'forward-word)
                             (call-interactively 'forward-word))
-                          (objed--switch-to 'word objed--obj-state)))
+                          (objed--switch-to 'word
+                                            (if (eq objed--object 'word)
+                                                objed--obj-state
+                                              'whole))))
     (define-key map "r" (defun objed-backward-word ()
                           "Call `backward-word' and switch to object word"
                           (interactive)
@@ -688,13 +694,18 @@ selected one."
                                 (call-interactively 'backward-word))
                             (setq this-command 'backward-word)
                             (call-interactively 'backward-word))
-                          (objed--switch-to 'word objed--obj-state)))
+                          (objed--switch-to 'word
+                                            (if (eq objed--object 'word)
+                                                objed--obj-state
+                                              'whole))))
 
     (define-key map "S" 'objed-move-word-forward)
     (define-key map "R" 'objed-move-word-backward)
 
-    (define-key map "f" (objed--call-and-switch objed--forward-sexp sexp))
-    (define-key map "b" (objed--call-and-switch objed--backward-sexp sexp))
+    (define-key map "f" (objed--call-and-switch
+                         objed--forward-sexp sexp))
+    (define-key map "b" (objed--call-and-switch
+                         objed--backward-sexp sexp))
 
     (define-key map "F" 'objed-move-object-forward)
     (define-key map "B" 'objed-move-object-backward)
