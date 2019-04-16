@@ -630,7 +630,7 @@ selected one."
       (define-key map (kbd (format "C-%c" n)) 'digit-argument))
     ;; common emacs keys
     (define-key map (kbd "C-g") 'objed-quit)
-    (define-key map (kbd "C-h b") 'objed-show-top-level)
+    (define-key map (kbd "?") 'objed-show-top-level)
     ;; TODO: switch with q, so quit window is qq?
     (define-key map "g" 'objed-quit)
     (define-key map "q" 'objed-quit-window-or-reformat)
@@ -747,9 +747,10 @@ selected one."
     ;; (define-key map "M" 'objed-unmark-all)
 
     (define-key map "@" 'objed-extend)
-    (define-key map "-" 'objed-include-leading-ws)
+    ;; TODO: second + include more
     (define-key map "+" 'objed-include-trailing-ws)
-
+    ;; (define-key map "" 'objed-include-leading-ws)
+    
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
     (define-key map "K" 'objed-kill)
@@ -784,7 +785,7 @@ selected one."
     (define-key map "c" 'objed-object-map)
     ;; for custom user object and op commands
     (define-key map "'" 'objed-user-map)
-    (define-key map "?" 'objed-other-user-map)
+    (define-key map "-" 'objed-other-user-map)
 
     (define-key map (kbd "M-g o") 'objed-occur)
 
@@ -936,7 +937,7 @@ To define new operations see `objed-define-op'.")
   "Keymap for custom user bindings.")
 
 (defvar objed-other-user-map
-  (let ((map (objed--define-prefix "?" 'objed-user-map)))
+  (let ((map (objed--define-prefix "-" 'objed-user-map)))
     map)
   "Keymap for custom user bindings.")
 
