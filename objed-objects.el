@@ -1217,12 +1217,12 @@ OBJ defaults to `objed--current-obj'."
   "Move to the next object.
 
 With postitive prefix argument ARG move to the nth next object."
-  (let ((arg (or arg 1)))
-    (dotimes (_ arg)
-      (let ((obj (objed--get-next)))
-        (when obj
-          (objed--update-current-object obj)
-          (objed--goto-char (objed--beg obj)))))))
+  (let ((arg (or arg 1))
+        (obj nil))
+    (dotimes (_ arg obj)
+      (when (setq obj  (objed--get-next))
+        (objed--update-current-object obj)
+        (objed--goto-char (objed--beg obj))))))
 
 
 (defun objed--goto-previous (&optional arg)
@@ -1230,12 +1230,12 @@ With postitive prefix argument ARG move to the nth next object."
 
 With postitive prefix argument ARG move to the nth previous
 object."
-  (let ((arg (or arg 1)))
-    (dotimes (_ arg)
-      (let ((obj (objed--get-prev)))
-        (when obj
-          (objed--update-current-object obj)
-          (objed--goto-char (objed--beg obj)))))))
+  (let ((arg (or arg 1))
+        (obj nil))
+    (dotimes (_ arg obj)
+      (when (setq obj (objed--get-prev))
+        (objed--update-current-object obj)
+        (objed--goto-char (objed--beg obj))))))
 
 (defun objed--make-object-overlay (&optional obj)
   "Create an overlay to mark current object.

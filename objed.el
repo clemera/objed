@@ -604,11 +604,13 @@ selected one."
              (not buffer-read-only))
         (progn
           (when (eq last-command this-command)
-            (objed-next))
-          (cond ((or (eq major-mode 'fundamental-mode)
-                     (derived-mode-p 'text-mode)
-                     (objed--at-comment-p)
-                     (objed--in-string-or-comment-p))
+            (or (objed--goto-next)
+                (objed--switch-to 'defun)))
+          (cond ((and (not (eq objed--object 'defun))
+                      (or (eq major-mode 'fundamental-mode)
+                          (derived-mode-p 'text-mode)
+                          (objed--at-comment-p)
+                          (objed--in-string-or-comment-p)))
                  (call-interactively 'fill-paragraph)
                  (objed--switch-to 'textblock)
                  (message "Filled paragraph."))
@@ -3720,7 +3722,9 @@ and RANGE hold the object position data."
                   ((memq obj '(char word defun sentence line paragraph))
                    ;; keepers
                    objed--object)
-                  ((memq obj (append objed--block-objects (list 'comment)))
+                  ((memq obj (append objed--block-objects
+                                     (list 'comment
+                                           'region)))
                    ;; liners
                    'line)
                   (t
