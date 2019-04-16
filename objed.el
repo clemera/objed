@@ -3671,7 +3671,6 @@ and RANGE hold the object position data."
            (ignore))
           (t
            (let ((co (and (= (car range) (cadr range)) ; object vanished
-                          (not (objed--inner-p))
                           (objed--get-continuation objed--object))))
              (if co
                  (apply #'objed--switch-to co)
@@ -3695,7 +3694,11 @@ and RANGE hold the object position data."
 (defun objed--get-continuation (obj)
   "Return continuation data for OBJ."
   (let ((shifted (memq 'shift (event-modifiers last-input-event)))
-        (no (cond ((memq obj '(char word defun sentence line paragraph))
+        (no (cond ((and (objed--inner-p)
+                        ;; balanced objects
+                        (memq objed--object '(string bracket defun)))
+                   nil)
+                  ((memq obj '(char word defun sentence line paragraph))
                    ;; keepers
                    objed--object)
                   ((memq obj (append objed--block-objects (list 'comment)))
@@ -3704,17 +3707,18 @@ and RANGE hold the object position data."
                   (t
                    ;; sexp as default
                    'sexp))))
-    (let* ((objed--object no)
-           (objd (if shifted (objed--get-prev)
-                   (objed--get)))
-           (end (and objd
-                     (if shifted (objed--beg objd)
-                       (objed--end objd)))))
-      (when end
-        (list no
-              objed--obj-state
-              (objed-make-object :beg (point)
-                                 :end end))))))
+    (when no
+      (let* ((objed--object no)
+             (objd (if shifted (objed--get-prev)
+                     (objed--get)))
+             (end (and objd
+                       (if shifted (objed--beg objd)
+                         (objed--end objd)))))
+        (when end
+          (list no
+                objed--obj-state
+                (objed-make-object :beg (point)
+                                   :end end)))))))
 
 
 (defun objed-quit ()
