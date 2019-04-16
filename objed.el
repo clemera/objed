@@ -955,7 +955,7 @@ To define new operations see `objed-define-op'.")
     (define-key map " " 'objed-region-object)
 
     (define-key map "." 'objed-sentence-object)
-    (define-key map "{" 'objed-paragraph-object)
+    (define-key map "p" 'objed-paragraph-object)
     (define-key map "q" 'objed-textblock-object)
     (define-key map "x" 'objed-sexp-object)
 
@@ -976,7 +976,7 @@ To define new operations see `objed-define-op'.")
 
     (define-key map "*" 'objed-section-object)
     (define-key map "[" 'objed-page-object)
-    (define-key map "p" 'objed-output-object)
+    (define-key map "n" 'objed-output-object)
     (define-key map "h" 'objed-buffer-object)
     (define-key map "z" 'objed-ace-object)
     map)
