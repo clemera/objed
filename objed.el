@@ -3671,9 +3671,10 @@ and RANGE hold the object position data."
            (ignore))
           (t
            (let ((co (and (= (car range) (cadr range)) ; object vanished
-                          (objed--get-continuation-object objed--object))))
+                          (not (objed--inner-p))
+                          (objed--get-continuation objed--object))))
              (if co
-                 (objed--update-current-object co)
+                 (apply #'objed--switch-to co)
                ;; stay active with most appr. obj
                ;; use a line when we acted on lines
                (if (and text (objed--line-p text))
@@ -3691,26 +3692,29 @@ and RANGE hold the object position data."
       (set-marker (cadr range) nil))))
 
 
-(defun objed--get-continuation-object (obj)
-  "Return object for continuation OBJ."
-  (let ((shifted (memq 'shift (event-modifiers last-input-event))))
-    (when (cond ((memq obj '(word defun sentence line paragraph))
-                 ;; keepers
-                 t)
-                ((memq obj (append objed--block-objects (list 'comment)))
-                 ;; line based ones
-                 (objed--switch-to 'line))
-                (t
-                 ;; sexp as default for others
-                 (objed--switch-to 'sexp)))
-      (let* ((objd (if shifted (objed--get-prev)
-                     (objed--get)))
-             (end (and objd
-                      (if shifted (objed--beg objd)
-                        (objed--end objd)))))
-        (when end
-          (objed-make-object :beg (point)
-                             :end end))))))
+(defun objed--get-continuation (obj)
+  "Return continuation data for OBJ."
+  (let ((shifted (memq 'shift (event-modifiers last-input-event)))
+        (no (cond ((memq obj '(word defun sentence line paragraph))
+                   ;; keepers
+                   objed--object)
+                  ((memq obj (append objed--block-objects (list 'comment)))
+                   ;; liners
+                   'line)
+                  (t
+                   ;; sexp as default
+                   'sexp))))
+    (let* ((objed--object no)
+           (objd (if shifted (objed--get-prev)
+                   (objed--get)))
+           (end (and objd
+                     (if shifted (objed--beg objd)
+                       (objed--end objd)))))
+      (when end
+        (list no
+              objed--obj-state
+              (objed-make-object :beg (point)
+                                 :end end))))))
 
 
 (defun objed-quit ()
