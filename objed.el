@@ -1574,7 +1574,7 @@ order. ISTATE is the object state to use and defaults to whole."
   (objed--save-state
      (let ((os (objed--get-block-objects-for-context ignore))
            (states nil)
-           (oos nil)
+           (oos (list (objed--current)))
            (nos nil))
      (while os
        (when (and (ignore-errors
@@ -1666,8 +1666,12 @@ See also `objed--block-objects'."
              (progn (objed--toggle-state)
                     (goto-char (objed--beg)))
            (when blocks
-             (let ((end (objed--end)))
+             (let ((pos (point))
+                   (end (objed--end)))
                (objed--restore-state (pop blocks))
+               (while (and (eq pos (objed--beg))
+                           blocks)
+                 (objed--restore-state (pop blocks)))
                (objed--change-to :end end :iend end)
                (goto-char (objed--beg))))))
         (t
@@ -1707,8 +1711,12 @@ See also `objed--block-objects'."
     (cond ((or (eq last-command this-command)
                (eq last-command 'move-end-of-line))
            (when blocks
-             (let ((beg (objed--beg)))
+             (let ((pos (point))
+                   (beg (objed--beg)))
                (objed--restore-state (pop blocks))
+               (while (and (eq pos (objed--end))
+                           blocks)
+                 (objed--restore-state (pop blocks)))
                (objed--change-to :beg beg :ibeg beg)
                (goto-char (objed--end)))))
           (t
