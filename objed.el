@@ -593,10 +593,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
 
 (defun objed-quit-window-or-reformat ()
-  "Quit window for objed.
-
-if KILL is non-nil kill the buffer. WINDOW defaults to the
-selected one."
+  "Quit window for objed."
   (interactive)
   (let ((nc (let ((overriding-terminal-local-map nil))
               (key-binding "q" nil t))))
