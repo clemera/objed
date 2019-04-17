@@ -2856,17 +2856,12 @@ Moves point over any whitespace afterwards."
 (defun objed-open-line ()
   "Open line."
   (interactive)
-  (back-to-indentation)
-  (if electric-indent-inhibit
-      (let ((indent (buffer-substring (line-beginning-position)
-                                      (point))))
-        (save-excursion
-          (insert "\n")
-          (insert indent)))
+  (let ((indent (current-column)))
     (save-excursion
-      (newline)
-      (indent-according-to-mode)))
+      (insert "\n")
+      (insert (make-string indent ?\s))))
   (objed--reset))
+
 
 (defun objed-move-window-line-up ()
   "Move window line up."
