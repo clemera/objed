@@ -1852,6 +1852,13 @@ to an object containing the current one."
             'word
           'identifier))))
 
+
+(defun objed--switch-to-sexp-fallback (&optional pos)
+  "Switch to sexp fallback at POS."
+  (let ((fallback (objed--sexp-fallback pos)))
+    (when fallback
+      (objed--switch-to fallback))))
+
 (defun objed--toggle-state ()
   "Toggle state of object."
   (objed--reverse))
@@ -1999,9 +2006,7 @@ Default to sexp at point."
 Switches between inner and whole object state."
   (interactive)
   (when (eq objed--object 'sexp)
-    (let ((fallback (objed--sexp-fallback)))
-      (when fallback
-        (objed--switch-to fallback))))
+    (objed--switch-to-sexp-fallback))
   (let ((boo (eq (point) (objed--beg)))
         (eoo (eq (point) (objed--end))))
     (objed--toggle-state)
@@ -3610,6 +3615,8 @@ If nil ‘eval-region’ is used instead.")
 (defun objed-forward-slurp-sexp ()
   "Slurp following sexp into current object."
   (interactive)
+  (when (eq objed--object 'sexp)
+    (objed--switch-to-sexp-fallback))
   (objed--markify-current-object)
   (let ((iend (objed--iend))
         (oend (objed--oend)))
@@ -3625,6 +3632,8 @@ If nil ‘eval-region’ is used instead.")
 (defun objed-forward-barf-sexp ()
   "Barf last sexp out of current object."
   (interactive)
+  (when (eq objed--object 'sexp)
+    (objed--switch-to-sexp-fallback))
   (objed--markify-current-object)
   (let ((iend (objed--iend))
         (oend (objed--oend)))
