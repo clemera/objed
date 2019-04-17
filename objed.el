@@ -833,10 +833,10 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     (define-key map "^" 'objed-raise)
     ;; move windows
-    (define-key map (kbd "<left>") 'objed-move-window-line-left)
-    (define-key map (kbd "<right>") 'objed-move-window-line-right)
-    (define-key map (kbd "<up>") 'objed-move-window-line-up)
-    (define-key map (kbd "<down>") 'objed-move-window-line-down)
+    (define-key map (kbd "<s-left>") 'objed-move-window-line-left)
+    (define-key map (kbd "<s-right>") 'objed-move-window-line-right)
+    (define-key map (kbd "<s-up>") 'objed-move-window-line-up)
+    (define-key map (kbd "<s-down>") 'objed-move-window-line-down)
 
     ;; move text
     (define-key map (kbd "<C-left>") 'objed-indent-left)
