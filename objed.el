@@ -832,7 +832,13 @@ BEFORE and AFTER are forms to execute before/after calling the command."
       'objed-insert-new-object)
 
     (define-key map "^" 'objed-raise)
-    ;; move things
+    ;; move windows
+    (define-key map (kbd "<left>") 'objed-move-window-line-left)
+    (define-key map (kbd "<right>") 'objed-move-window-line-right)
+    (define-key map (kbd "<up>") 'objed-move-window-line-up)
+    (define-key map (kbd "<down>") 'objed-move-window-line-down)
+
+    ;; move text
     (define-key map (kbd "<C-left>") 'objed-indent-left)
     (define-key map (kbd "<C-right>") 'objed-indent-right)
     (define-key map (kbd "<M-right>") 'objed-indent-to-right-tab-stop)
@@ -2861,6 +2867,53 @@ Moves point over any whitespace afterwards."
       (newline)
       (indent-according-to-mode)))
   (objed--reset))
+
+(defun objed-move-window-line-up ()
+  "Move window line up."
+  (interactive)
+  (cond ((and (window-in-direction 'above)
+              (window-in-direction 'below))
+         (shrink-window 1))
+        ((window-in-direction 'above)
+         (enlarge-window 1))
+        ((window-in-direction 'below)
+         (shrink-window 1))))
+
+(defun objed-move-window-line-down ()
+  "Move window line down."
+  (interactive)
+  (cond ((and (window-in-direction 'above)
+              (window-in-direction 'below))
+         (enlarge-window 1))
+        ((window-in-direction 'above)
+         (shrink-window 1))
+        ((window-in-direction 'below)
+         (enlarge-window 1))))
+
+
+(defun objed-move-window-line-left ()
+  "Move window line to the left."
+  (interactive)
+  (cond ((and (window-in-direction 'left)
+              (window-in-direction 'right))
+         (shrink-window-horizontally 1))
+        ((window-in-direction 'left)
+         (enlarge-window-horizontally 1))
+        ((window-in-direction 'right)
+         (shrink-window-horizontally 1))))
+
+(defun objed-move-window-line-right ()
+  "Move window line to the right."
+  (interactive)
+  (cond ((and (window-in-direction 'left)
+              (window-in-direction 'right))
+         (enlarge-window-horizontally 1))
+        ((window-in-direction 'left)
+         (shrink-window-horizontally 1))
+        ((window-in-direction 'right)
+         (enlarge-window-horizontally 1))))
+
+
 (defun objed-indent-left (arg)
   "Indent all lines in object leftward by ARG space."
   (interactive "p")
