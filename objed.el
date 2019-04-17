@@ -3842,6 +3842,12 @@ Reset and reinitilize objed if appropriate."
   ;; things that need to be reset in objed buffer
   (when (buffer-live-p objed--buffer)
     (with-current-buffer objed--buffer
+      ;; safety check
+      ;; TODO: prevent this from happening
+      (unless (and (markerp (objed--beg))
+                   (eq (marker-buffer (objed--beg))
+                       (current-buffer)))
+        (setq objed--current-obj nil))
       ;; reset object as well?
       ;;(setq objed--object nil)
       (when objed--marked-ovs
