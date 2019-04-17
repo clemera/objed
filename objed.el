@@ -635,6 +635,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; common emacs keys
     (define-key map (kbd "C-g") 'objed-quit)
     (define-key map (kbd "?") 'objed-show-top-level)
+    (define-key map (kbd "C-o") 'objed-open-line)
+
     ;; TODO: switch with q, so quit window is qq?
     (define-key map "g" 'objed-quit)
     (define-key map "q" 'objed-quit-window-or-reformat)
@@ -2840,6 +2842,20 @@ Moves point over any whitespace afterwards."
   (interactive "r")
   (indent-region beg end))
 
+(defun objed-open-line ()
+  "Open line."
+  (interactive)
+  (back-to-indentation)
+  (if electric-indent-inhibit
+      (let ((indent (buffer-substring (line-beginning-position)
+                                      (point))))
+        (save-excursion
+          (insert "\n")
+          (insert indent)))
+    (save-excursion
+      (newline)
+      (indent-according-to-mode)))
+  (objed--reset))
 (defun objed-indent-left (arg)
   "Indent all lines in object leftward by ARG space."
   (interactive "p")
