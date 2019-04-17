@@ -1853,17 +1853,20 @@ to an object containing the current one."
         (and (or (not (= 0 (skip-syntax-forward "'")))
                  (not (= 0 (skip-syntax-backward "'"))))
              (objed--at-p '(bracket string)))
-        (if (equal (bounds-of-thing-at-point 'symbol)
-                   (objed--bounds))
-            'word
-          'identifier))))
+        (cond ((or (looking-at "\\<[a-z]")
+                   (looking-back "[a-z]\\>" (1- (point))))
+               'word)
+              ((or (looking-at "\\_<[a-z]")
+                   (looking-back "[a-z]\\_>" (1- (point))))
+               'identifier)))))
 
 
-(defun objed--switch-to-sexp-fallback (&optional pos)
+(defun objed--maybe-switch-to-sexp-fallback (&optional pos)
   "Switch to sexp fallback at POS."
-  (let ((fallback (objed--sexp-fallback pos)))
-    (when fallback
-      (objed--switch-to fallback))))
+  (when (eq objed--object 'sexp)
+    (let ((fallback (objed--sexp-fallback pos)))
+      (when fallback
+        (objed--switch-to fallback)))))
 
 (defun objed--toggle-state ()
   "Toggle state of object."
@@ -2011,8 +2014,8 @@ Default to sexp at point."
 
 Switches between inner and whole object state."
   (interactive)
-  (when (eq objed--object 'sexp)
-    (objed--switch-to-sexp-fallback))
+  (unless (objed--inner-p)
+    (objed--maybe-switch-to-sexp-fallback))
   (let ((boo (eq (point) (objed--beg)))
         (eoo (eq (point) (objed--end))))
     (objed--toggle-state)
@@ -3663,8 +3666,10 @@ If nil ‘eval-region’ is used instead.")
 (defun objed-forward-slurp-sexp ()
   "Slurp following sexp into current object."
   (interactive)
-  (when (eq objed--object 'sexp)
-    (objed--switch-to-sexp-fallback))
+  (unless (memq last-command
+                '(objed-forward-slurp-sexp
+                  objed-forward-barf-sexp))
+    (objed--maybe-switch-to-sexp-fallback))
   (objed--markify-current-object)
   (let ((iend (objed--iend))
         (oend (objed--oend)))
@@ -3680,8 +3685,10 @@ If nil ‘eval-region’ is used instead.")
 (defun objed-forward-barf-sexp ()
   "Barf last sexp out of current object."
   (interactive)
-  (when (eq objed--object 'sexp)
-    (objed--switch-to-sexp-fallback))
+  (unless (memq last-command
+                '(objed-forward-slurp-sexp
+                  objed-forward-barf-sexp))
+    (objed--maybe-switch-to-sexp-fallback))
   (objed--markify-current-object)
   (let ((iend (objed--iend))
         (oend (objed--oend)))

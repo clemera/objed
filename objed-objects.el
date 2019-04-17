@@ -1829,7 +1829,11 @@ comments."
                           (when (/= pos (point))
                             (cons pos
                                   (point)))))))))
-    bounds)
+    (when bounds
+      (objed-make-object
+       :obounds bounds
+       :ibeg (1+ (car bounds))
+       :iend (1- (cdr bounds)))))
   :try-next
   (or (ignore-errors
         (forward-sexp 1)
