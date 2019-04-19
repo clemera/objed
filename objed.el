@@ -1353,9 +1353,7 @@ that any previous instance of this object is used."
      objed--saved-vars)
     (set (make-local-variable var) val))
 
-  (when objed-use-hl-p
-    (unless (boundp 'hl-line-mode)
-      (require 'hl-line))
+  (when objed-use-hl
     (setq objed--hl-line-keep-p
           hl-line-mode)
     (unless objed--hl-cookie
