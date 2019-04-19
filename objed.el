@@ -1353,14 +1353,15 @@ that any previous instance of this object is used."
      objed--saved-vars)
     (set (make-local-variable var) val))
 
-  (unless (or (setq objed--hl-line-keep-p
-                    (bound-and-true-p hl-line-mode))
-              (not sym)
-              (not objed-use-hl-p))
+  (when objed-use-hl-p
     (unless (boundp 'hl-line-mode)
       (require 'hl-line))
-    (setq objed--hl-cookie
-          (face-remap-add-relative 'hl-line 'objed-hl))
+    (setq objed--hl-line-keep-p
+          hl-line-mode)
+    (unless objed--hl-cookie
+      (setq objed--hl-cookie
+            (face-remap-add-relative 'hl-line
+                                     'objed-hl)))
     (hl-line-mode 1))
 
   ;; init cursor
@@ -3863,12 +3864,13 @@ Reset and reinitilize objed if appropriate."
         (setq objed--marked-ovs nil))
 
       (when objed--extend-cookie
-        (face-remap-remove-relative
-         objed--extend-cookie)
+        (face-remap-remove-relative objed--extend-cookie)
         (setq objed--extend-cookie nil))
 
       (when objed--hl-cookie
-        (face-remap-remove-relative objed--hl-cookie))
+        (face-remap-remove-relative objed--hl-cookie)
+        (setq objed--hl-cookie nil))
+
       (when objed-modeline-hint-p
         (funcall objed-modeline-setup-func objed-mode-line-format 'reset))
 
