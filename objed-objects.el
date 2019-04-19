@@ -2498,11 +2498,17 @@ non-nil the indentation block can contain empty lines."
   :try-prev
   (search-backward ">" nil t))
 
-
+(defvar hl-line-overlay)
 (defun objed--what-face (&optional pos)
   "Return face at POS."
   (let* ((pos (or pos (point)))
-         (face (get-text-property pos 'face)))
+         (ov (car (overlays-at (point) t)))
+         (face (or (and ov
+                        ;; exclude hl line
+                        (not (eq hl-line-overlay ov))
+                        (overlay-get ov  'face))
+                   (get-char-property pos 'read-face-name)
+                   (get-text-property pos 'face))))
      (unless (keywordp (car-safe face)) (list face))))
 
 (defvar objed--last-face nil)
