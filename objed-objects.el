@@ -2576,6 +2576,51 @@ non-nil the indentation block can contain empty lines."
                      (objed--what-face)))
     (forward-char -1)))
 
+(defvar flycheck-mode)
+(defvar flymake-mode)
+(declare-function flycheck-overlays-at "ext:flycheck")
+(declare-function flycheck-next-error "ext:flycheck")
+(declare-function flycheck-previous-error "ext:flycheck")
+(declare-function flymake--overlays "ext:flymake")
+(declare-function flymake-goto-next-error "ext:flymake")
+(declare-function flymake-goto-prev-error "ext:flymake")
+(defun objed--get-error-bounds ()
+  "Return linter error at point."
+  (cond ((bound-and-true-p flycheck-mode)
+         (let ((ov (car (flycheck-overlays-at (point)))))
+           (when ov
+             (cons (overlay-start ov)
+                   (overlay-end ov)))))
+        (flymake-mode
+         (let ((ov (car (flymake--overlays :beg (point)))))
+           (when ov
+             (cons (overlay-start ov)
+                   (overlay-end ov)))))))
+
+(defun objed--next-error ()
+  "Goto next linter error."
+  (cond ((bound-and-true-p flycheck-mode)
+         (flycheck-next-error))
+        (flymake-mode
+         (flymake-goto-next-error))))
+
+(defun objed--previous-error ()
+  "Goto previous linter error."
+  (cond (flycheck-mode
+         (flycheck-previous-error))
+        (flymake-mode
+         (flymake-goto-prev-error))))
+
+
+(objed-define-object nil error
+  :get-obj
+  (objed--get-error-bounds)
+  ;; TODO: search for next same face as current...
+  :try-next
+  (objed--next-error)
+  :try-prev
+  (objed--previous-error))
+
 
 (declare-function org-mark-element "ext:org")
 
