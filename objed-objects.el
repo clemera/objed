@@ -792,9 +792,13 @@ objects can throw an error."
                  (let ((f (if dir  '> '<))
                        (step (if dir -1 1)))
                    (unless (funcall stop)
-                     (forward-char step)
                      (let ((pos (point)))
                        (objed--object darg)
+                       ;; if point has not moved
+                       ;; fallback to move one char
+                       ;; in right direction
+                       (when (= (point) pos)
+                         (forward-char step))
                        ;; check for valid move direction to avoid inf. loop if
                        ;; the code of object misbehaves
                        (when (funcall f (point) pos)
@@ -2622,7 +2626,6 @@ non-nil the indentation block can contain empty lines."
 (objed-define-object nil error
   :get-obj
   (objed--get-error-bounds)
-  ;; TODO: search for next same face as current...
   :try-next
   (objed--next-error)
   :try-prev
