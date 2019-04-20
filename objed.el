@@ -901,8 +901,7 @@ Other single character keys are bound to `objed-undefined'."
     (define-key map "e" 'objed-eval-exp)
     (define-key map "y" 'objed-insert)
     (define-key map "i" 'insert-file)
-    (define-key map "q"
-      (objed-define-op nil objed-reformat-op ignore))
+    (define-key map "q" 'read-only-mode)
     (define-key map "r" ctl-x-r-map)
     (define-key map "n" 'objed-narrow)
 
