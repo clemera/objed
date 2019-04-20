@@ -2578,6 +2578,7 @@ non-nil the indentation block can contain empty lines."
 
 (defvar flycheck-mode)
 (defvar flymake-mode)
+(defvar flymake-wrap-around)
 (declare-function flycheck-overlays-at "ext:flycheck")
 (declare-function flycheck-next-error "ext:flycheck")
 (declare-function flycheck-previous-error "ext:flycheck")
@@ -2594,6 +2595,10 @@ non-nil the indentation block can contain empty lines."
         (flymake-mode
          (let ((ov (car (flymake--overlays :beg (point)))))
            (when ov
+             (run-at-time 0 nil
+                          #'message
+                          (funcall (overlay-get ov 'help-echo)
+                                   (selected-window) ov (point)))
              (cons (overlay-start ov)
                    (overlay-end ov)))))))
 
@@ -2602,14 +2607,16 @@ non-nil the indentation block can contain empty lines."
   (cond ((bound-and-true-p flycheck-mode)
          (flycheck-next-error))
         (flymake-mode
-         (flymake-goto-next-error))))
+         (let ((flymake-wrap-around nil))
+           (flymake-goto-next-error 1)))))
 
 (defun objed--previous-error ()
   "Goto previous linter error."
-  (cond (flycheck-mode
+  (cond ((bound-and-true-p flycheck-mode)
          (flycheck-previous-error))
         (flymake-mode
-         (flymake-goto-prev-error))))
+         (let ((flymake-wrap-around nil))
+           (flymake-goto-prev-error 1)))))
 
 
 (objed-define-object nil error
