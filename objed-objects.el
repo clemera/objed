@@ -1890,9 +1890,9 @@ comments."
   :get-obj
   (bounds-of-thing-at-point 'email)
   :try-next
-  (re-search-forward "[a-z]@[a-z]")
+  (re-search-forward "[a-z0-9!#$%&'*+/=?^_`{|}~-]@[a-z0-9]")
   :try-prev
-  (re-search-backward "[a-z]@[a-z]"))
+  (re-search-backward "[a-z0-9!#$%&'*+/=?^_`{|}~-]@[a-z0-9]"))
 
 (objed-define-object nil url
   :get-obj
