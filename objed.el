@@ -3737,7 +3737,7 @@ and RANGE hold the object position data."
     (cond ((eq 'keep exit)
            (ignore))
           ((eq 'mc exit)
-           (when (boundp 'multiple-cursors-mode)
+           (when (fboundp 'multiple-cursors-mode)
              (if (> (mc/num-cursors) 1)
                  (run-at-time 0 nil 'multiple-cursors-mode)
                (multiple-cursors-mode 0)))
