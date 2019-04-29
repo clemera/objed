@@ -635,7 +635,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; common emacs keys
     (define-key map (kbd "C-g") 'objed-quit)
     (define-key map (kbd "?") 'objed-show-top-level)
-    (define-key map (kbd "C-o") 'objed-open-line)
+    ;; (define-key map (kbd "C-o") 'objed-open-line)
 
     ;; TODO: switch with q, so quit window is qq?
     (define-key map "g" 'objed-quit)
