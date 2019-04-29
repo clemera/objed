@@ -3996,7 +3996,7 @@ whitespace they build a sequence."
 (defvar objed-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-SPC") 'objed-activate)
-    (define-key map (kbd "M-o") 'objed-activate-object)
+    (define-key map (kbd "M-#") 'objed-activate-object)
     (define-key map (kbd "M-(") 'objed-until-beg-of-object-at-point)
     (define-key map (kbd "M-)") 'objed-until-end-of-object-at-point)
     (define-key map (kbd "M-[") 'objed-beg-of-object-at-point)
