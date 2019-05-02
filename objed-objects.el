@@ -438,7 +438,7 @@ Either the symbol `whole' or `inner'.")
 (defvar objed--marked-ovs nil
   "List of overlays of marked objects.")
 
-;; * Get object positions
+;; * Internal object access functions
 
 (defun objed--inside-object-p (obj)
   "Return non-nil if point point inside object OBJ."
@@ -450,7 +450,6 @@ Either the symbol `whole' or `inner'.")
     (when (and obj (not (objed--distant-p obj)))
       obj)))
 
-
 (defun objed--beg (&optional obj)
   "Get beginning position of object.
 
@@ -459,7 +458,6 @@ defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (caar obj)))
 
-
 (defun objed--end (&optional obj)
   "Get end position of object.
 
@@ -467,6 +465,18 @@ Ignores current object state. OBJ is the object to use and
 defaults to `objed--current-obj'."
   (let ((obj (or obj objed--current-obj)))
     (cadr (car obj))))
+
+(defun objed--object-at-point (obj &optional state)
+  "Return object data for OBJ and STATE a point.
+
+Does return nil when there is no such object."
+  (let* ((objed--object obj)
+         (objed--obj-state (or state 'whole))
+         (o (ignore-errors (objed--object :get-obj))))
+    (when o
+      (if (eq state 'inner)
+          (nreverse o)
+        o))))
 
 (defun objed--other (&optional obj)
   "Return object position opposite to point.
@@ -524,6 +534,7 @@ otherwise the its the head of object OBJ which defaults to
                         (region-end)))))
           (t
            (car obj)))))
+
 
 (defun objed--bounds (&optional obj)
   "Get the current object bounds.
@@ -895,6 +906,34 @@ Position POS defaults to point."
                    (consp buffer-invisibility-spec)
                    (cdr (assq inv buffer-invisibility-spec)))
           (cl-return t))))))
+
+;; * Public access functions for objects
+
+(defun objed-bounds-at-point (obj &optional state)
+  "Return beg and end position of object at point.
+
+The positions are returned as a cons: (beg . end). OBJ is a
+symbol of a known object. STATE is either `whole' or `inner' and
+defaults to `whole'.
+
+Does return nil when there is no such object at point."
+  (let ((o (objed--object-at-point obj state)))
+    (when o
+      (cons (objed--beg o)
+            (objed--end o)))))
+
+
+(defun objed-bounds-at (pos obj &optional state)
+  "Return beg and end position of object at POS.
+
+The positions are returned as a cons: (beg . end). OBJ is a
+symbol of a known object. STATE is either `whole' or `inner' and
+defaults to `whole'.
+
+Does return nil when there is no such object at point."
+  (save-excursion
+    (goto-char pos)
+    (objed-bounds-at-point obj state)))
 
 
 
