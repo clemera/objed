@@ -1283,6 +1283,13 @@ See `objed-cmd-alist'."
       (objed--change-to :beg (mark) :ibeg (mark))
     (objed--change-to :beg pos :ibeg pos)))
 
+(defun objed--insert-keys-rebound-p ()
+  "Return non-nil when any self insertion key is rebound."
+  (cl-dolist (char (string-to-list "abcdefghijklmnopqrstuvwxyz"))
+    (let ((binding (key-binding (vector char))))
+      (when (not (string-match "insert" (symbol-name binding)))
+        (cl-return binding)))))
+
 (defun objed-init-p ()
   "Default for `objed-init-p-function'."
   (and (not (minibufferp))
@@ -1290,9 +1297,17 @@ See `objed-cmd-alist'."
        ;; don't interfere with other special modes
        ;; like hydra
        (not overriding-terminal-local-map)
+       ;; don't activate when completing the regular Emacs way
+       (not (get-buffer-window "*Completions*" 0))
+       ;; FIXME: temp workaround for starting commit
+       ;; message in insertion mode
+       (not (eq last-command 'magit-commit-create))
+       ;; dont activate when insertion keys are bound to non insert commands
+       (not (objed--insert-keys-rebound-p))
        ;; TODO: add variables for those
        (or (memq  major-mode '(messages-buffer-mode help-mode))
            (not (derived-mode-p 'comint-mode 'special-mode 'dired-mode)))))
+
 
 (defun objed-init (&optional obj fallback)
   "Function for activating objed by hooks.
