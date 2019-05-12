@@ -631,13 +631,18 @@ OBJ is the object to use and defaults to `objed--current-obj'."
        pos
      (objed--skip-forward pos 'ws))))
 
-(defun objed--collect-backward (pos min &optional ends)
+(defun objed--collect-backward (pos min &optional collf)
   "Collect object positions in backward direction.
 
-Start from position POS and stop at MIN position. The resulting
-list contains cons cells of the start positions of the objects
-and the current window. If ENDS is non-nil collect end positions
-instead."
+Start from position POS and stop at MIN position.
+
+The returned list contains cons cells of the start positions of
+the objects and the current window. If COLLF is t collect the
+end positions instead. Leading or trailing ws are ignored by
+default.
+
+If COLLF is function it recieves the object as argument and
+should return the data to collect."
   (let ((cw (get-buffer-window))
         (sobj nil)
         (posns nil)
@@ -650,20 +655,30 @@ instead."
                   (not (equal obj sobj)))
         (setq sobj obj)
         (goto-char (setq pos (objed--beg obj)))
-        (push (cons (if ends
-                        (objed--skip-backward
-                         (objed--max obj) 'ws)
-                      (objed--skip-forward pos 'ws))
-                    cw)
-              posns))
+        (cond ((and collf
+                    (not (eq collf t)))
+               (push (funcall collf obj) posns))
+              (t
+               (push (cons (if (eq collf t)
+                               (objed--skip-backward
+                                (objed--max obj) 'ws)
+                             (objed--skip-forward pos 'ws))
+                           cw)
+                     posns))))
       posns)))
 
-(defun objed--collect-forward (pos max)
+(defun objed--collect-forward (pos max &optional collf)
   "Collect object positions in forward direction.
 
-Start from position POS and stop at MAX position. The resulting
-list contains cons cells of the start positions of the objects
-and the current window."
+Start from position POS and stop at MAX position.
+
+The returned list contains cons cells of the start positions of
+the objects and the current window. If COLLF is t collect the
+end positions instead. Leading or trailing ws are ignored by
+default.
+
+If COLLF is function it recieves the object as argument and
+should return the data to collect."
   (let ((cw (get-buffer-window))
         (sobj nil)
         (posns nil)
@@ -677,10 +692,16 @@ and the current window."
         (setq sobj obj)
         (if (objed--no-skipper-p)
             (goto-char (setq pos (objed--beg obj)))
-        (goto-char (setq pos (objed--end obj))))
-        (push (cons (objed--skip-forward (objed--beg obj) 'ws)
-                    cw)
-              posns)))
+          (goto-char (setq pos (objed--end obj))))
+        (cond ((and collf  (not (eq collf t)))
+               (push (funcall collf obj) posns))
+              (t
+               (push (cons (if (eq collf t)
+                               (objed--skip-backward
+                                (objed--max obj) 'ws)
+                             (objed--skip-forward (objed--beg obj) 'ws))
+                           cw)
+                     posns)))))
     (setq posns (nreverse posns))))
 
 (defun objed--no-skipper-p ()
@@ -688,7 +709,7 @@ and the current window."
   (get (objed--name2func objed--object)
        'objed-no-skip))
 
-(defun objed--collect-object-positions (beg end &optional fromp)
+(defun objed--collect-object-positions (beg end &optional fromp collf)
   "Collect object positions.
 
 Returns object positions between BEG and END.
@@ -696,18 +717,42 @@ Returns object positions between BEG and END.
 If FROMP is non-nil collect from that position otherwise collect before
 and after current object.
 
-The resulting list contains cons cells of the start positions of
-the objects and the current window."
+By default the returned list contains cons cells of the start
+positions of the objects and the current window.
+
+COLLF has the same meaning as for `objed--collect-forward' and
+`objed--collect-backward'."
   (save-restriction
     (narrow-to-region beg end)
     (append (objed--collect-backward
              (or fromp (objed--min))
-             beg)
+             beg collf)
             (objed--collect-forward
              (or fromp (if (objed--no-skipper-p)
                            (objed--min) (objed--max)))
-             end))))
+             end collf))))
 
+(defun objed--map (fun &optional obj beg end)
+  "Call FUN with object data for each object of current type.
+
+Return a list of the results.
+
+If OBJ is on-nil it should be the symbol of the object type to
+search for. By default search the whole buffer, alternatively
+provide BEG and END position for region to search."
+  (let ((objed--object (or obj objed--object)))
+    (objed--collect-object-positions
+     (or beg (point-min))
+     (or end (point-max))
+     (point) fun)))
+
+(defun objed--objects (&optional obj beg end)
+  "Return list of all objects of current type.
+
+If OBJ is on-nil it should be the symbol of the object type to
+search for. By default search the whole buffer, alternatively
+provide BEG and END position for region to search."
+  (objed--map #'identity obj beg end))
 
 (defun objed--collect-object-lines ()
   "Collect first lines of objects before and after current object.
@@ -936,7 +981,6 @@ Does return nil when there is no such object at point."
     (objed-bounds-at-point obj state)))
 
 
-
 ;; * Object creation/manipulation
 
 (defun objed-make-empty-object (&optional pos)
@@ -1130,8 +1174,9 @@ from end of object FROM."
             (goto-char obj)
           (goto-char (objed--max obj))))
       (unless (eobp)
-        (when (<= (point) (objed--beg))
-          (objed--skip-ws))
+        (when (and (not (number-or-marker-p from))
+                   (<= (point) (objed--beg obj)))
+            (objed--skip-ws))
         (ignore-errors
           (objed--object :try-next)
           (objed--get))))))
