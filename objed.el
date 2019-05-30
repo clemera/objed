@@ -1299,6 +1299,8 @@ See `objed-cmd-alist'."
        (not overriding-terminal-local-map)
        ;; don't activate when completing the regular Emacs way
        (not (get-buffer-window "*Completions*" 0))
+       ;; don't activate during a company completion
+       (not (bound-and-true-p company-candidates))
        ;; FIXME: temp workaround for starting commit
        ;; message in insertion mode
        (not (eq last-command 'magit-commit-create))
