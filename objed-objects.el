@@ -2432,7 +2432,8 @@ non-nil the indentation block can contain empty lines."
                       (buffer-substring (car bds) (cdr bds)))))
         (when bds
           (goto-char (cdr bds)))
-        (if (re-search-forward (format "\\_<%s\\_>" sym) nil t)
+        (if (re-search-forward (format "\\_<%s\\_>"
+                                       (regexp-quote sym)) nil t)
             (goto-char (match-beginning 0))
           (goto-char (car bds))
           (when (or (eq real-this-command #'objed-next-identifier)
@@ -2449,7 +2450,8 @@ non-nil the indentation block can contain empty lines."
         (when bds
           (when (looking-back "\\_>" 1)
             (goto-char (car bds)))
-          (if (re-search-backward (format "\\_<%s\\_>" sym) nil t)
+          (if (re-search-backward (format "\\_<%s\\_>"
+                                          (regexp-quote sym)) nil t)
               (goto-char (match-beginning 0))
             (goto-char (car bds))
             (when (or (eq real-this-command #'objed-prev-identifier)
