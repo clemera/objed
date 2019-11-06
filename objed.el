@@ -190,6 +190,9 @@ The function should return nil if objed should not initialize."
   "Hook that runs after objed initialized."
   :type 'hook)
 
+(defcustom objed-exit-hook '()
+  "Hook that runs when objed exits."
+  :type 'hook)
 
 (defcustom objed-cmd-alist
   '((left-char . char)
@@ -3939,7 +3942,8 @@ Reset and reinitilize objed if appropriate."
           (if (consp setting)
               (set (car setting) (cdr setting))
             (kill-local-variable setting))))
-      (remove-hook 'pre-command-hook 'objed--push-state t))))
+      (remove-hook 'pre-command-hook 'objed--push-state t)
+      (run-hooks 'objed-exit-hook))))
 
 (defun objed--reset ()
   "Reset variables and state information."
