@@ -186,6 +186,11 @@ The function should return nil if objed should not initialize."
   :type 'function)
 
 
+(defcustom objed-init-hook '(objed-init-mode-line objed-init-which-key)
+  "Hook that runs after objed initialized."
+  :type 'hook)
+
+
 (defcustom objed-cmd-alist
   '((left-char . char)
     (right-char . char)
@@ -1436,12 +1441,20 @@ that any previous instance of this object is used."
                              #'objed--keep-transient-p
                              #'objed--reset))
 
-    (when objed-modeline-hint-p
-      (funcall objed-modeline-setup-func objed-mode-line-format))
-    ;; show which key after redisplay if active
-    (when objed-auto-wk-top-level-p
-      (run-at-time 0 nil #'objed-show-top-level))))
+    (run-hooks 'objed-init-hook)))
 
+(defun objed-init-mode-line ()
+  "Init mode line."
+  ;; FIXME: obsolete and remove the variable users should use init hook
+  (when objed-modeline-hint-p
+    (funcall objed-modeline-setup-func objed-mode-line-format)))
+
+(defun objed-init-which-key ()
+  "Show top level help."
+  ;; FIXME: obsolete and remove the variable users should use init hook
+  ;; show which key after redisplay if active
+  (when objed-auto-wk-top-level-p
+    (run-at-time 0 nil #'objed-show-top-level)))
 
 (defun objed--setup-mode-line (format &optional reset)
   "Default function to setup the mode line hint.
