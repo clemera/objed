@@ -683,9 +683,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; TODO: birdview mode/scroll mode
 
     (define-key map (kbd "C-h k") 'objed-describe-key)
-    (when objed-use-which-key-if-available
-      (define-key map (kbd "C-h n") 'which-key-show-next-page-cycle)
-      (define-key map (kbd "C-h p") 'which-key-show-previous-page-cycle))
+    (define-key map (kbd "C-h n") 'which-key-show-next-page-cycle)
+    (define-key map (kbd "C-h p") 'which-key-show-previous-page-cycle)
 
     (define-key map (kbd "C-M-w") 'objed-append-mode)
     ;; use uppercase as C-M replacement
@@ -1179,8 +1178,6 @@ search backwards."
   (interactive)
   (let ((msg (format "%s is undefined"
                      (key-description (this-single-command-keys)))))
-    ;;(if (not objed--which-key-avail-p)
-    ;; (objed--maybe-which-key objed-map msg t))))
     (message msg)))
 
 (defvar objed--look-around nil
@@ -1217,12 +1214,6 @@ and end postion will be used for toggle."
 
 
 ;; * Init active state
-
-(defvar objed--which-key-avail-p nil
-  "Whether `which-key' package is available.")
-
-(defvar objed--avy-avail-p nil
-  "Whether `avy' package is available.")
 
 (defvar objed--saved-vars nil
   "Variables to save and restore.")
@@ -1572,9 +1563,8 @@ Waits `which-key-idle-delay' before displaying the popup unless
 NOWAIT is non-nil. IREGEX is a regular expressions of bindings to
 ignore in `which-key' popup. Any binding whose description
 matches IREGEX is not displayed."
-  (when (and objed--which-key-avail-p
-             ;; let the user deactivate later as well...
-             objed-use-which-key-if-available
+  (when (and objed-use-which-key-if-available
+             (require 'which-key nil t)
              (bound-and-true-p which-key-mode)
              (or nowait (sit-for which-key-idle-delay)))
     (prog1 t
@@ -2420,22 +2410,22 @@ OBJ defaults to current object. BEG and END limit the region
 which should be searched for candidates and default to
 `window-start' and `window-end.'"
   (interactive)
-  (if (eq objed--object 'char)
-      (progn (call-interactively #'avy-goto-char)
-             (objed--update-current-object))
-    (unless (and objed--avy-avail-p
-                 objed-use-avy-if-available)
+  (when objed-use-avy-if-available
+    (unless (require 'avy nil t)
       (user-error objed--avy-err-msg))
-    (let* ((avy-action #'goto-char)
-           (avy-style 'at-full)
-           (avy-all-windows t)
-           (posns (let* ((objed--object (or obj objed--object))
-                         (beg (or beg (window-start)))
-                         (end (or end (window-end))))
-                    (objed--collect-object-positions
-                     beg end
-                     (when obj
-                       (point))))))
+    (if (eq objed--object 'char)
+        (progn (call-interactively #'avy-goto-char)
+               (objed--update-current-object))
+      (let* ((avy-action #'goto-char)
+             (avy-style 'at-full)
+             (avy-all-windows t)
+             (posns (let* ((objed--object (or obj objed--object))
+                           (beg (or beg (window-start)))
+                           (end (or end (window-end))))
+                      (objed--collect-object-positions
+                       beg end
+                       (when obj
+                         (point))))))
         (cond (posns
                (if (> (length posns) 1)
                    (avy--process
@@ -2445,7 +2435,7 @@ which should be searched for candidates and default to
                    (objed--switch-to obj)
                  (objed--update-current-object)))
               (t
-               (message "No objects found."))))))
+               (message "No objects found.")))))))
 
 (defvar ivy-sort-function-alist)
 (defun objed-occur ()
@@ -4082,22 +4072,13 @@ operations and objects can be found in `objed-map',
 `objed-op-map' and `objed-object-map'.
 
 To define your own text objects and editing operations see
-`objed-define-object' and `objed-define-op'.
-
-Activating this mode loads the optional dependencies `which-key'
-and `avy' if they are available. This can be deactivated by
-setting the user options `objed-use-which-key-if-available' and
-`objed-use-avy-if-available' before loading."
+`objed-define-object' and `objed-define-op'."
   :global t
   :keymap objed-mode-map
   :require 'objed
   (if objed-mode
       (progn
         (add-hook 'minibuffer-setup-hook 'objed--reset)
-        (setq objed--which-key-avail-p (when objed-use-which-key-if-available
-                                         (require 'which-key nil t))
-              objed--avy-avail-p (when objed-use-avy-if-available
-                                   (require 'avy nil t)))
         (when objed-auto-init
           ;; interactive cmds
           (objed--install-advices objed-cmd-alist t)
