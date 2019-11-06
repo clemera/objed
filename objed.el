@@ -326,7 +326,7 @@ state. Commands added to this list wont do that."
            'face 'objed-mode-line))
   "Format used to display hint in mode-line.
 
-Only relevant when `objed-modeline-hint-p' is non-nil."
+Only relevant when `objed-modeline-hint' is non-nil."
   :type 'sexp)
 
 (defcustom objed-modeline-setup-func #'objed--setup-mode-line
@@ -683,7 +683,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; TODO: birdview mode/scroll mode
 
     (define-key map (kbd "C-h k") 'objed-describe-key)
-    (when objed-use-which-key-if-available-p
+    (when objed-use-which-key-if-available
       (define-key map (kbd "C-h n") 'which-key-show-next-page-cycle)
       (define-key map (kbd "C-h p") 'which-key-show-previous-page-cycle))
 
@@ -1449,14 +1449,14 @@ that any previous instance of this object is used."
 (defun objed-init-mode-line ()
   "Init mode line."
   ;; FIXME: obsolete and remove the variable users should use init hook
-  (when objed-modeline-hint-p
+  (when objed-modeline-hint
     (funcall objed-modeline-setup-func objed-mode-line-format)))
 
 (defun objed-init-which-key ()
   "Show top level help."
   ;; FIXME: obsolete and remove the variable users should use init hook
   ;; show which key after redisplay if active
-  (when objed-auto-wk-top-level-p
+  (when objed-auto-wk-top-level
     (run-at-time 0 nil #'objed-show-top-level)))
 
 (defun objed--setup-mode-line (format &optional reset)
@@ -1558,7 +1558,7 @@ non-nil which is the case when called interactively."
 (defvar objed--avy-err-msg
   "Package `avy' is not available.
 Add `avy' to your load path and restart `objed-mode' with a
-non-nil value of `objed-use-avy-if-available-p'."
+non-nil value of `objed-use-avy-if-available'."
   "Error message to use if avy commands are not ready to run.")
 
 
@@ -1574,7 +1574,7 @@ ignore in `which-key' popup. Any binding whose description
 matches IREGEX is not displayed."
   (when (and objed--which-key-avail-p
              ;; let the user deactivate later as well...
-             objed-use-which-key-if-available-p
+             objed-use-which-key-if-available
              (bound-and-true-p which-key-mode)
              (or nowait (sit-for which-key-idle-delay)))
     (prog1 t
@@ -2424,7 +2424,7 @@ which should be searched for candidates and default to
       (progn (call-interactively #'avy-goto-char)
              (objed--update-current-object))
     (unless (and objed--avy-avail-p
-                 objed-use-avy-if-available-p)
+                 objed-use-avy-if-available)
       (user-error objed--avy-err-msg))
     (let* ((avy-action #'goto-char)
            (avy-style 'at-full)
@@ -3927,7 +3927,7 @@ Reset and reinitilize objed if appropriate."
         (face-remap-remove-relative objed--hl-cookie)
         (setq objed--hl-cookie nil))
 
-      (when objed-modeline-hint-p
+      (when objed-modeline-hint
         (funcall objed-modeline-setup-func objed-mode-line-format 'reset))
 
       (when (> (length objed--last-states) objed-states-max)
@@ -4086,17 +4086,17 @@ To define your own text objects and editing operations see
 
 Activating this mode loads the optional dependencies `which-key'
 and `avy' if they are available. This can be deactivated by
-setting the user options `objed-use-which-key-if-available-p' and
-`objed-use-avy-if-available-p' before loading."
+setting the user options `objed-use-which-key-if-available' and
+`objed-use-avy-if-available' before loading."
   :global t
   :keymap objed-mode-map
   :require 'objed
   (if objed-mode
       (progn
         (add-hook 'minibuffer-setup-hook 'objed--reset)
-        (setq objed--which-key-avail-p (when objed-use-which-key-if-available-p
+        (setq objed--which-key-avail-p (when objed-use-which-key-if-available
                                          (require 'which-key nil t))
-              objed--avy-avail-p (when objed-use-avy-if-available-p
+              objed--avy-avail-p (when objed-use-avy-if-available
                                    (require 'avy nil t)))
         (when objed-auto-init
           ;; interactive cmds
