@@ -559,7 +559,8 @@ Don't modify this list manually, use `objed-define-dispatch'.")
 (defun objed-switch-goto-beg (_obj beg _end)
   "Move to BEG.
 
-Used as default for `objed-switch-alist'."
+This function move to the beginning of any selected
+object via `objed-switch-functions'."
   (goto-char beg))
 
 (defun objed--object-dispatch (name)
