@@ -258,7 +258,7 @@ The function should return nil if objed should not initialize."
                 :value-type (choice sexp
                                     (repeat sexp))))
 
-(defcustom objed-switch-alist  '((t . objed-switch-goto-beg))
+(defcustom objed-switch-alist  '()
   "Alist mapping objects to region functions.
 
 When switching to an object interactively using its object
@@ -272,6 +272,14 @@ for t acts as the default to use when no other mapping for
 object exists."
   :type '(alist :key-type sexp
                 :value-type function))
+
+(defcustom objed-switch-functions '(objed-switch-goto-beg)
+  "Hook that runs after switching to an object.
+
+Functions in this hook get the object name, start and end
+position as arguments. This hook runs after any mappings in
+`objed-switch-alist'."
+  :type 'hook)
 
 
 (defcustom objed-states-max 20
@@ -548,7 +556,7 @@ object as an argument."
 
 Don't modify this list manually, use `objed-define-dispatch'.")
 
-(defun objed-switch-goto-beg (beg _end)
+(defun objed-switch-goto-beg (_obj beg _end)
   "Move to BEG.
 
 Used as default for `objed-switch-alist'."
@@ -576,7 +584,9 @@ update to given object."
              (let ((switcher (or (assq name objed-switch-alist)
                                  (assq t objed-switch-alist))))
                (when switcher
-                 (funcall (cdr switcher) (objed--beg) (objed--end)))))))))
+                 (funcall (cdr switcher) (objed--beg) (objed--end))))
+             (run-hook-with-args 'objed-switch-functions name
+                                 (objed--beg) (objed--end)))))))
 
 
 (defun objed--switch-to-object-for-cmd (cmd)
