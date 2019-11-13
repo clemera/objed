@@ -70,7 +70,7 @@
 (eval-and-compile
   (require 'rx)
   (defun objed--get-regex-object (bregex eregex)
-  "Return regex object between BREGEX and EREGEX.
+    "Return regex object between BREGEX and EREGEX.
 
 The inner object part will be the text between the matches for
 those two expressions.
@@ -81,45 +81,68 @@ of this group will belong to the inner object part.
 
 EREGEX is the regular expression for the end of the object. If
 the regular expressions contains a group, any text which is part
-of this group will belong to the inner object part."
-  (let* ((obounds ())
-         (ibounds ())
-         (opos (point)))
-    (save-mark-and-excursion
-      ;; try to move into object when at boundary
-      (if (looking-at bregex)
-          (goto-char (or (match-end 1)
-                         (match-end 0)))
-        (if (looking-back eregex (line-beginning-position))
+of this group will belong to the inner object part.
+
+EREGEX can also be an empty string. In this case objects are
+separated by the BREGEX expression and reach until the next one
+or until the buffer end if no next instance can be found."
+    (let* ((obounds ())
+           (ibounds ())
+           (opos (point)))
+      (save-mark-and-excursion
+        ;; try to move into object when at boundary
+        (if (looking-at bregex)
+            (goto-char (or (match-end 1)
+                           (match-end 0)))
+          (if (looking-back eregex (line-beginning-position))
+              (goto-char (or (match-beginning 1)
+                             (match-beginning 0)))
+            (re-search-forward eregex nil t)
             (goto-char (or (match-beginning 1)
-                           (match-beginning 0)))
-          (re-search-forward eregex nil t)
-          (goto-char (or (match-beginning 1)
-                         (match-beginning 0)))))
-      (when (and  ;; goto possible start
-                 (re-search-backward bregex nil t)
-                 (push (or (match-beginning 1)
-                           (match-end 0))
-                       ibounds)
-                 (push (match-beginning 0)
-                       obounds)
-                 ;; goto possible end
-                 (goto-char (or (match-end 1)
-                                (match-end 0)))
-                 (re-search-forward eregex nil t)
-                 (push (or (match-end 1)
-                           (match-beginning 0))
-                       ibounds)
-                 (push (match-end 0)
-                       obounds)
-                 ;; when point was within start and end
-                 (<= (cadr obounds) opos (car obounds)))
-        (list (nreverse obounds)
-              (nreverse ibounds))))))
+                           (match-beginning 0)))))
+        (when (and ;; goto possible start
+               (re-search-backward bregex nil t)
+               (push (or (match-beginning 1)
+                         (match-end 0))
+                     ibounds)
+               (push (match-beginning 0)
+                     obounds)
+               ;; goto possible end
+               (goto-char (or (match-end 1)
+                              (match-end 0)))
+               (cond ((string= "" eregex)
+                      ;; no end provided, objects are separated by beginning
+                      ;; regex
+                      (cond ((re-search-forward bregex nil t)
+                             (push (match-beginning 0) obounds)
+                             ;; no way to tell so just skip ws
+                             ;; to have a sensible default
+                             (goto-char (car obounds))
+                             (objed--skip-ws t)
+                             (push (point) ibounds))
+                            (t
+                             ;; if there is no match that means the buffer is
+                             ;; the object end
+                             (goto-char (point-max))
+                             (push (point) obounds)
+                             (objed--skip-ws t)
+                             (push (point) ibounds))))
+                     (t
+                      (re-search-forward eregex nil t)
+                      (push (or (match-end 1)
+                                (match-beginning 0))
+                            ibounds)
+                      (push (match-end 0)
+                            obounds)))
+               ;; when point was within start and end
+               (<= (cadr obounds) opos (car obounds)))
+          (list (nreverse obounds)
+                (nreverse ibounds))))))
 
   (defun objed--transform-pos-data (plist)
     (cond  ((and (plist-get plist :beg)
-                 (plist-get plist :end))
+                 (or (plist-get plist :end)
+                     (stringp (plist-get plist :beg))))
             (let ((np nil)
                   (alt nil)
                   (skip nil))
@@ -139,16 +162,21 @@ of this group will belong to the inner object part."
 
               ;; merge ... :get-obj "regex search"
               (if (and (stringp (plist-get plist :beg))
-                       (stringp (plist-get plist :end)))
+                       (or (stringp (plist-get plist :end))
+                           (not (plist-get plist :end))))
                   (let ((bregex (plist-get plist :beg))
-                        (eregex (plist-get plist :end)))
+                        (eregex (or (plist-get plist :end)
+                                    "")))
                     (append np
                             (list :try-prev)
-                            (list `(when (re-search-backward ,eregex)
-                                     (goto-char (match-beginning 0))))
+                            (if (string= "" eregex)
+                                (list `(when (re-search-backward ,bregex)
+                                         (goto-char (match-end 0))))
+                                (list `(when (re-search-backward ,eregex)
+                                     (goto-char (match-beginning 0)))))
                             (list :try-next)
                             (list `(when (re-search-forward ,bregex)
-                                     (goto-char (match-end 0))))
+                                         (goto-char (match-end 0))))
                             (list :get-obj)
                             (list
                              `(objed--get-regex-object ,bregex
