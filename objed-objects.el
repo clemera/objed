@@ -445,6 +445,38 @@ defined."
              (nreverse res))))))
 
 
+(defun objed--define-kpair (map key name)
+  (let ((cmd (objed--name2func name 'nomode)))
+    (define-key map key cmd)))
+
+(defun objed-define-global-object-keys (&rest kpairs)
+  "Define global object keys.
+
+KPAIRS are pairs of the key and the object name."
+  (let ((map (default-value 'objed-object-map)))
+    (while kpairs
+      (objed--define-kpair map (pop kpairs) (pop kpairs)))))
+
+(defun objed-define-local-object-keys (&rest kpairs)
+  "Define object keys locally for current buffer.
+
+This function is intended to be used inside mode hooks to create
+mode specific object bindings.
+
+KPAIRS are pairs of the key and the object name."
+  (unless (local-variable-p 'objed-map)
+    (setq-local objed-map
+                (make-composed-keymap nil (default-value 'objed-map))))
+  (unless (local-variable-p 'objed-object-map)
+    (setq-local objed-object-map
+                (make-composed-keymap nil (default-value 'objed-object-map))))
+  (while kpairs
+    (objed--define-kpair objed-object-map (pop kpairs) (pop kpairs)))
+  (let ((switchk (where-is-internal 'objed-object-map
+                                    (default-value 'objed-map) t)))
+    (define-key objed-map switchk objed-object-map)))
+
+
 (defmacro objed--with-narrow-for-text (&rest body)
   "Execute BODY narrowed to string or comment."
   `(save-restriction
