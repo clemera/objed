@@ -254,9 +254,15 @@ Usage:
   (objed-define-object package name
      [:keyword [code-form]...]...)
 
+
+This macro creates a command named objed-<name>-object. This
+command can be used to activate objed for the defined object and
+is used internally to query for information needed for objed
+commands.
+
 PACKAGE is the name of the package the object should be loaded
-for. If nil you are defining a default object and need to add a
-binding in variable `objed-object-map' for the object command.
+for. If non-nil this will defer loading until PACKAGE is
+available.
 
 NAME is a symbol which defines the name which will be used to
 refer to this object. ARGS is a list of keyword arguments and
@@ -282,9 +288,13 @@ These keywords can be used instead of :get-obj above. The value
 for each is the code to run which should return the point
 position corresponding to the keyword. Point is allword to move
 between the keyword expression. The code runs in the same order
-the keywords are provided. It is also possible to use only :beg
-and :end with regular expressions to define an object. See
-`objed--get-regex-object' for details of their format.
+the keywords are provided.
+
+It is also possible to use only :beg and :end with regular
+expressions to define an object. See `objed--get-regex-object'
+for details of their format. If :end is omitted the regexp
+provided by :beg separates the objects on its own. This can be
+used for text objects which don't have an end marker.
 
 :try-next (optional)
 
@@ -305,11 +315,11 @@ throw an error.
 
 :mode (optional)
 
-Object defintions which don't use this keyword apply to all
-modes. If given it should be a symbol of a `major-mode'. Any
-keyword definitions used for this object will then override the
-default ones when in this mode. Keywords not used fallback to use
-the general definition.
+Object defintions which use this keyword derive from an already
+existing object with the same NAME. If given it should be a
+symbol of a `major-mode'. Any keyword definitions of the mode
+specific version will override the ones from the non mode
+specific version.
 
 :atp (optional)
 
