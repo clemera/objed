@@ -460,8 +460,10 @@ KPAIRS are pairs of the key and the object name."
 (defun objed-define-local-object-keys (&rest kpairs)
   "Define object keys locally for current buffer.
 
-This function is intended to be used inside mode hooks to create
-mode specific object bindings.
+This function is intended to be used inside mode hooks to add
+mode specific object bindings to the currently existing ones. If
+you want to replace the object key bindings entirely with local
+ones see `objed-define-local-object-keys*'.
 
 KPAIRS are pairs of the key and the object name."
   (unless (local-variable-p 'objed-map)
@@ -472,7 +474,39 @@ KPAIRS are pairs of the key and the object name."
                 (make-composed-keymap nil (default-value 'objed-object-map))))
   (while kpairs
     (objed--define-kpair objed-object-map (pop kpairs) (pop kpairs)))
-  (let ((switchk (where-is-internal 'objed-object-map
+  (let ((switchk (where-is-internal (default-value 'objed-object-map)
+                                    (default-value 'objed-map) t)))
+    (define-key objed-map switchk objed-object-map)))
+
+
+(defun objed--init-local-map (lmap map)
+  "Initilize local LMAP to shadow bindings in MAP."
+  (map-keymap (lambda (ev def)
+                (if (keymapp def)
+                    (objed--init-local-map lmap def)
+                  (define-key lmap (vector ev) nil)))
+              map))
+
+(defun objed-define-local-object-keys* (&rest kpairs)
+  "Define object keys locally for current buffer.
+
+This function is intended to be used inside mode hooks and
+creates new object key bindings for the current buffer. This
+means any previous object key bindings bindings are replaced by
+the bindings defined in KPAIRS.
+
+If you only want to add or change a few mode specific bindings
+see `objed-define-local-object-keys'.
+
+KPAIRS are pairs of the key and the object name."
+  (unless (local-variable-p 'objed-map)
+    (setq-local objed-map
+                (make-composed-keymap nil (default-value 'objed-map))))
+  (setq-local objed-object-map (make-sparse-keymap))
+  (objed--init-local-map objed-object-map (default-value 'objed-map))
+  (while kpairs
+    (objed--define-kpair objed-object-map (pop kpairs) (pop kpairs)))
+  (let ((switchk (where-is-internal (default-value 'objed-object-map)
                                     (default-value 'objed-map) t)))
     (define-key objed-map switchk objed-object-map)))
 
