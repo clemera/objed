@@ -1043,6 +1043,7 @@ To define new operations see `objed-define-op'.")
     (define-key map "n" 'objed-output-object)
     (define-key map "h" 'objed-buffer-object)
     (define-key map "z" 'objed-ace-object)
+    (define-key map "," 'objed-identifier-object)
     map)
   "Keymap used for additional text-objects by `objed'.
 
