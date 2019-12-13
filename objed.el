@@ -1425,6 +1425,11 @@ that any previous instance of this object is used."
                 ;; TODO: fallback here, too
                 (objed--switch-to-object-for-cmd sym))
                ((symbolp sym)
+                ;; for region object fallback to char
+                ;; if there is no mark in the buffer
+                (when (and (eq sym 'region)
+                           (not (mark)))
+                  (setq sym 'char))
                 (if fallback
                     (let ((obatp (objed--inside-object-p sym)))
                       (if obatp
