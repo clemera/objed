@@ -169,6 +169,15 @@
   "Whether to enable automatic initialization in `objed-mode'."
   :type 'boolean)
 
+(defcustom objed-integrate-region-commands t
+  "Whether to integrate regular region commands with objed.
+
+If this is non-nil objed tries to auto detect region commands and
+executes them on the active object region. In this case region
+commands also won't exit objed and they don't need to be added
+`objed-keeper-commands'."
+  :type 'boolean)
+
 
 (defcustom objed-disabled-modes '()
     "List of modes for which objed should stay disabled.
@@ -1483,15 +1492,27 @@ mode line hint is removed again."
   "Return non-nil if `objed-map' should stay active.
 
 Reinitializes the current object in case the current command is
-one of `objed-keeper-commands'."
-  (let ((ocmd (lookup-key objed-map (this-command-keys-vector))))
-    (or (commandp ocmd)
-        objed--with-allow-input
-        (and this-command
-             (or (memq this-command objed-keeper-commands)
-                 (assq this-command objed-cmd-alist))
-             (prog1 #'ignore
-               (add-hook 'post-command-hook 'objed--reinit-object-one-time nil t))))))
+one of `objed-keeper-commands'.
+
+If the map gets deactivated by a region command and
+`objed-integrate-region-commands' is non-nil setup current object
+as active region."
+  (let* ((ocmd (lookup-key objed-map (this-command-keys-vector)))
+         (keep (or (commandp ocmd)
+                   objed--with-allow-input
+                   (and this-command
+                        (or (memq this-command objed-keeper-commands)
+                            (assq this-command objed-cmd-alist))
+                        (prog1 #'ignore
+                          (add-hook 'post-command-hook 'objed--reinit-object-one-time nil t))))))
+    (when (and objed-integrate-region-commands
+               (objed--region-cmd-p this-command))
+        (setq keep t)
+        (goto-char (objed--beg))
+        (push-mark (objed--end) t)
+        (setq mark-active t)
+        (setq deactivate-mark t))
+    keep))
 
 
 (defun objed--reinit-object-one-time ()
@@ -2582,19 +2603,23 @@ modified."
 (defvar objed--cmd-cache nil
   "Caching results for `objed--read-cmd'.")
 
-(defun objed--init-cmd-cache (sym)
-  "Add SYM to `objed--cmd-cache' if it is a region command."
+(defun objed--region-cmd-p (sym)
+  "Return non-nil if SYM is the symbol of a region command."
   (require 'help)
   ;; don't trigger autoloads
   (let ((spec (when (not (and (symbolp sym)
                               (autoloadp (indirect-function sym))))
                 (cadr (interactive-form sym)))))
-    (when (or (and spec (stringp spec)
-                   (string-match "\\`\\*?r" spec))
-              (and (commandp sym)
-                   (string-match "\\`(\\(start\\|begi?n?\\) end"
-                                 (format "%s" (help-function-arglist sym t)))))
-      (push sym objed--cmd-cache))))
+    (or (and spec (stringp spec)
+             (string-match "\\`\\*?r" spec))
+        (and (commandp sym)
+             (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
+                               (format "%s" (help-function-arglist sym t)))))))
+
+(defun objed--init-cmd-cache (sym)
+  "Add SYM to `objed--cmd-cache' if it is a region command."
+  (when (objed--region-cmd-p sym)
+    (push sym objed--cmd-cache)))
 
 (defun objed--read-cmd (&optional force)
   "Completing read an operation from available region commands.
@@ -3917,6 +3942,7 @@ Reset and reinitilize objed if appropriate."
       (unless (and (markerp (objed--beg))
                    (eq (marker-buffer (objed--beg))
                        (current-buffer)))
+
         (setq objed--current-obj nil))
       ;; reset object as well?
       ;;(setq objed--object nil)
