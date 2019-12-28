@@ -1508,19 +1508,18 @@ as active region."
     (when (and (not keep)
                objed-integrate-region-commands
                (objed--region-cmd-p this-command 'force))
-        (setq keep t)
-        (goto-char (objed--beg))
-        (push-mark (objed--end) t)
-        (setq mark-active t)
-        (setq deactivate-mark t)
-
-        (when objed--marked-ovs
+      (setq keep t)
+      (if objed--marked-ovs
           (objed--do (lambda (beg end)
                        (goto-char beg)
                        (push-mark end t t)
                        (call-interactively this-command)
                        (deactivate-mark))
-                     'keep)))
+                     'keep)
+        (goto-char (objed--beg))
+        (push-mark (objed--end) t)
+        (setq mark-active t)
+        (setq deactivate-mark t)))
     keep))
 
 
