@@ -1505,7 +1505,8 @@ as active region."
                             (assq this-command objed-cmd-alist))
                         (prog1 #'ignore
                           (add-hook 'post-command-hook 'objed--reinit-object-one-time nil t))))))
-    (when (and objed-integrate-region-commands
+    (when (and (not keep)
+               objed-integrate-region-commands
                (objed--region-cmd-p this-command 'force))
         (setq keep t)
         (goto-char (objed--beg))
@@ -2616,8 +2617,27 @@ If FORCE in non-nil trigger autoloads if necessary."
     (or (and spec (stringp spec)
              (string-match "\\`\\*?r" spec))
         (and (commandp sym)
-             (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
-                               (format "%s" (help-function-arglist sym t)))))))
+             (or (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
+                               (format "%s" (help-function-arglist sym t)))
+                 (and force
+                      (objed--region-checked-p sym)))))))
+
+(defun objed--region-checked-p (cmd)
+  (let ((mode major-mode))
+    (save-window-excursion
+      (with-temp-buffer
+        (delay-mode-hooks
+          (funcall mode))
+        (insert "dummy")
+        (push-mark (point-min) t nil)
+        (let ((checked nil))
+          (cl-letf (((symbol-function #'region-active-p)
+                     (lambda () (setq checked t) nil)))
+            (catch 'exit
+              (minibuffer-with-setup-hook
+                  (lambda () (throw 'exit t))
+                (call-interactively cmd)))
+             checked))))))
 
 (defun objed--init-cmd-cache (sym)
   "Add SYM to `objed--cmd-cache' if it is a region command."
