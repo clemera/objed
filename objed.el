@@ -2632,14 +2632,13 @@ If FORCE in non-nil trigger autoloads if necessary."
             (funcall mode))
           (insert "dummy")
           (push-mark (point-min) t nil)
-          (let ((checked nil))
+          (catch 'checked
             (cl-letf (((symbol-function #'region-active-p)
-                       (lambda () (setq checked t) nil)))
+                       (lambda () (throw 'checked t))))
               (catch 'exit
                 (minibuffer-with-setup-hook
                     (lambda () (throw 'exit t))
-                  (call-interactively cmd)))
-              checked)))))))
+                  (call-interactively cmd))))))))))
 
 (defun objed--init-cmd-cache (sym)
   "Add SYM to `objed--cmd-cache' if it is a region command."
