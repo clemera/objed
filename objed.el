@@ -1506,7 +1506,7 @@ as active region."
                         (prog1 #'ignore
                           (add-hook 'post-command-hook 'objed--reinit-object-one-time nil t))))))
     (when (and objed-integrate-region-commands
-               (objed--region-cmd-p this-command))
+               (objed--region-cmd-p this-command 'force))
         (setq keep t)
         (goto-char (objed--beg))
         (push-mark (objed--end) t)
@@ -2603,12 +2603,15 @@ modified."
 (defvar objed--cmd-cache nil
   "Caching results for `objed--read-cmd'.")
 
-(defun objed--region-cmd-p (sym)
-  "Return non-nil if SYM is the symbol of a region command."
+(defun objed--region-cmd-p (sym &optional force)
+  "Return non-nil if SYM is the symbol of a region command.
+
+If FORCE in non-nil trigger autoloads if necessary."
   (require 'help)
   ;; don't trigger autoloads
-  (let ((spec (when (not (and (symbolp sym)
-                              (autoloadp (indirect-function sym))))
+  (let ((spec (when (or force
+                        (not (and (symbolp sym)
+                                  (autoloadp (indirect-function sym)))))
                 (cadr (interactive-form sym)))))
     (or (and spec (stringp spec)
              (string-match "\\`\\*?r" spec))
