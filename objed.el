@@ -1512,7 +1512,15 @@ as active region."
         (goto-char (objed--beg))
         (push-mark (objed--end) t)
         (setq mark-active t)
-        (setq deactivate-mark t))
+        (setq deactivate-mark t)
+
+        (when objed--marked-ovs
+          (objed--do (lambda (beg end)
+                       (goto-char beg)
+                       (push-mark end t t)
+                       (call-interactively this-command)
+                       (deactivate-mark))
+                     'keep)))
     keep))
 
 
