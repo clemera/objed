@@ -2624,23 +2624,32 @@ If FORCE in non-nil trigger autoloads if necessary."
 
 
 (defun objed--region-checked-p (cmd)
-  (unless (string-match "isearch" (symbol-name cmd))
-    (let ((mode major-mode))
-      ;; this might still have unintended side effects..?
-      (save-window-excursion
-        (save-excursion
-          (with-temp-buffer
-            (delay-mode-hooks
-              (funcall mode))
-            (insert "dummy")
-            (push-mark (point-min) t nil)
-            (catch 'checked
-              (cl-letf (((symbol-function #'region-active-p)
-                         (lambda () (throw 'checked t))))
-                (catch 'exit
-                  (minibuffer-with-setup-hook
-                      (lambda () (throw 'exit t))
-                    (call-interactively cmd)))))))))))
+  (let ((mode major-mode))
+    ;; this might still have unintended side effects..?
+    (save-window-excursion
+      (save-excursion
+        (with-temp-buffer
+          (delay-mode-hooks
+            (funcall mode))
+          (insert "dummy")
+          (push-mark (point-min) t nil)
+          (catch 'checked
+            (cl-letf (((symbol-function #'region-active-p)
+                       (lambda () (throw 'checked t)))
+                      ((symbol-function #'set-transient-map)
+                       (lambda (&rest _) (throw 'checked nil)))
+                      (watcher (lambda (_ _ op _)
+                                 (when (eq op 'set)
+                                   (throw 'checked nil)))))
+              (add-variable-watcher 'overriding-terminal-local-map
+                                    watcher)
+              (minibuffer-with-setup-hook
+                  (lambda () (throw 'checked nil))
+                (unwind-protect
+                    (call-interactively cmd)
+                  (remove-variable-watcher
+                   'overriding-terminal-local-map
+                   watcher))))))))))
 
 (defun objed--init-cmd-cache (sym)
   "Add SYM to `objed--cmd-cache' if it is a region command."
