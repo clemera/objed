@@ -2626,30 +2626,35 @@ If FORCE in non-nil trigger autoloads if necessary."
 (defun objed--region-checked-p (cmd)
   (let ((mode major-mode))
     ;; this might still have unintended side effects..?
-    (save-window-excursion
-      (save-excursion
-        (with-temp-buffer
-          (delay-mode-hooks
-            (funcall mode))
-          (insert "dummy")
-          (push-mark (point-min) t nil)
-          (catch 'checked
-            (cl-letf (((symbol-function #'region-active-p)
-                       (lambda () (throw 'checked t)))
-                      ((symbol-function #'set-transient-map)
-                       (lambda (&rest _) (throw 'checked nil)))
-                      (watcher (lambda (_ _ op _)
-                                 (when (eq op 'set)
-                                   (throw 'checked nil)))))
-              (add-variable-watcher 'overriding-terminal-local-map
-                                    watcher)
-              (minibuffer-with-setup-hook
-                  (lambda () (throw 'checked nil))
-                (unwind-protect
-                    (call-interactively cmd)
-                  (remove-variable-watcher
-                   'overriding-terminal-local-map
-                   watcher))))))))))
+    (ignore-errors
+      (save-window-excursion
+        (save-excursion
+          (with-temp-buffer
+            (delay-mode-hooks
+              (funcall mode))
+            (insert "dummy")
+            (push-mark (point-min) t nil)
+            (catch 'checked
+              (cl-letf (((symbol-function #'region-active-p)
+                         (lambda () (throw 'checked t)))
+                        ;; don't proceed if the command messes with
+                        ;; overriding-terminal-local-map which will cause problems
+                        ((symbol-function #'set-transient-map)
+                         (lambda (&rest _) (throw 'checked nil)))
+                        (watcher (lambda (_ _ op _)
+                                   (when (eq op 'set)
+                                     (throw 'checked nil)))))
+                (add-variable-watcher 'overriding-terminal-local-map
+                                      watcher)
+                (minibuffer-with-setup-hook
+                    ;; commands which use the minibuffer
+                    ;; can not be checked this way
+                    (lambda () (throw 'checked nil))
+                  (unwind-protect
+                      (call-interactively cmd)
+                    (remove-variable-watcher
+                     'overriding-terminal-local-map
+                     watcher)))))))))))
 
 (defun objed--init-cmd-cache (sym)
   "Add SYM to `objed--cmd-cache' if it is a region command."
