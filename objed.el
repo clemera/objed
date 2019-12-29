@@ -4146,15 +4146,21 @@ whitespace they build a sequence."
 
 (defun objed--do-region-command (cmd)
   "Execute CMD with current object(s) as active region."
-  (if objed--marked-ovs
-      (objed--do (lambda (beg end)
-                   (goto-char beg)
-                   (push-mark end t t)
-                   (call-interactively cmd)
-                   (deactivate-mark))
-                 'exit)
-    (goto-char (objed--beg))
-    (push-mark (objed--end) t t)))
+  (cond (objed--marked-ovs
+         (let ((ov (pop objed--marked-ovs)))
+           (objed--do
+            (lambda (beg end)
+              (goto-char beg)
+              (push-mark end t t)
+              (objed--with-allow-input
+               (call-interactively cmd))
+              (deactivate-mark)) 'keep)
+           (goto-char (overlay-start ov))
+           (push-mark (overlay-end ov) t t)
+           (delete-overlay ov)))
+        (t
+         (goto-char (objed--beg))
+         (push-mark (objed--end) t t))))
 
 
 ;; * Objed Mode
