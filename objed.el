@@ -2619,7 +2619,12 @@ modified."
     anzu-query-replace
     query-replace-regexp
     query-replace)
-  "List of commands which are known to be region commands.")
+  "List of commands which can be used as region commands.
+
+If `objed-integrate-region-commands' is non-nil regular Emacs
+commands which are region commands will be called with the object
+as active region. Some commands which are not auto detected by
+current heuristics need to be added to this list.")
 
 (defun objed--region-cmd-p (sym &optional force)
   "Return non-nil if SYM is the symbol of a region command.
