@@ -2623,13 +2623,15 @@ modified."
 
 If `objed-integrate-region-commands' is non-nil regular Emacs
 commands which are region commands will be called with the object
-as active region. Some commands which are not auto detected by
-current heuristics need to be added to this list.")
+as active region. Commands which are not auto detected by current
+heuristics need to be added to this list.")
 
 (defun objed--region-cmd-p (sym &optional force)
   "Return non-nil if SYM is the symbol of a region command.
 
-If FORCE in non-nil trigger autoloads if necessary."
+If FORCE in non-nil trigger autoloads if necessary and perform
+more extensive check which could have unintended side effects
+currently."
   (require 'help)
   ;; don't trigger autoloads
   (let ((spec (when (or force
