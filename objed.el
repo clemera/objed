@@ -1388,6 +1388,9 @@ that any previous instance of this object is used."
   (setq objed--buffer (current-buffer))
   (add-hook 'pre-command-hook 'objed--push-state nil t)
   (add-hook 'post-command-hook 'objed--check-buffer)
+  ;; the user might not use `objed-mode' at all
+  ;; so this hook might not be present already...
+  (add-hook 'minibuffer-setup-hook 'objed--reset)
 
   (pcase-dolist
       (`(,var . ,val)
