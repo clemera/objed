@@ -1506,19 +1506,8 @@ as active region."
            t)
           ((and objed-integrate-region-commands
                 (objed--region-cmd-p this-command 'force))
-           (prog1 t
-             (if objed--marked-ovs
-                 (progn (objed--do (lambda (beg end)
-                                     (goto-char beg)
-                                     (push-mark end t t)
-                                     (call-interactively this-command)
-                                     (deactivate-mark))
-                                   'keep)
-                        (objed--switch-to 'char))
-               (goto-char (objed--beg))
-               (push-mark (objed--end) t)
-               (setq mark-active t)
-               (setq deactivate-mark t))))
+           (prog1 (memq this-command objed-keeper-commands)
+             (objed--do-region-command this-command)))
           ((and this-command
                 (or (memq this-command objed-keeper-commands)
                     (assq this-command objed-cmd-alist)))
@@ -4153,6 +4142,19 @@ whitespace they build a sequence."
         (= (overlay-start ov)
            (pop posns)))
       ovs))))
+
+
+(defun objed--do-region-command (cmd)
+  "Execute CMD with current object(s) as active region."
+  (if objed--marked-ovs
+      (objed--do (lambda (beg end)
+                   (goto-char beg)
+                   (push-mark end t t)
+                   (call-interactively cmd)
+                   (deactivate-mark))
+                 'keep)
+    (goto-char (objed--beg))
+    (push-mark (objed--end) t t)))
 
 
 ;; * Objed Mode
