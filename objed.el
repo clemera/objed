@@ -4152,7 +4152,7 @@ whitespace they build a sequence."
                    (push-mark end t t)
                    (call-interactively cmd)
                    (deactivate-mark))
-                 'keep)
+                 'exit)
     (goto-char (objed--beg))
     (push-mark (objed--end) t t)))
 
