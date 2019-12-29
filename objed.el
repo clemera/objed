@@ -2628,6 +2628,8 @@ If FORCE in non-nil trigger autoloads if necessary."
              (or (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
                                (format "%s" (help-function-arglist sym t)))
                  (and force
+                      (string-match "region"
+                                    (documentation sym))
                       (objed--region-checked-p sym)))))))
 
 
@@ -2644,6 +2646,10 @@ If FORCE in non-nil trigger autoloads if necessary."
             (push-mark (point-min) t nil)
             (catch 'checked
               (cl-letf (((symbol-function #'region-active-p)
+                         (lambda () (throw 'checked t)))
+                        ((symbol-function #'region-beginning)
+                         (lambda () (throw 'checked t)))
+                        ((symbol-function #'region-end)
                          (lambda () (throw 'checked t)))
                         ;; don't proceed if the command messes with
                         ;; overriding-terminal-local-map which will cause problems
