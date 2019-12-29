@@ -2628,8 +2628,9 @@ If FORCE in non-nil trigger autoloads if necessary."
              (or (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
                                (format "%s" (help-function-arglist sym t)))
                  (and force
-                      (string-match "region"
-                                    (documentation sym))
+                      (let ((doc (documentation sym)))
+                        (or (and doc (string-match "\\(region\\)\\|\\(mark\\)" doc))
+                            (and (symbolp sym) (string-match "dwim" (symbol-name sym)))))
                       (objed--region-checked-p sym)))))))
 
 
