@@ -2614,6 +2614,13 @@ modified."
 (defvar objed--cmd-cache nil
   "Caching results for `objed--read-cmd'.")
 
+(defvar objed--known-region-commands
+  '(anzu-query-replace-regexp
+    anzu-query-replace
+    query-replace-regexp
+    query-replace)
+  "List of commands which are known to be region commands.")
+
 (defun objed--region-cmd-p (sym &optional force)
   "Return non-nil if SYM is the symbol of a region command.
 
@@ -2629,6 +2636,7 @@ If FORCE in non-nil trigger autoloads if necessary."
         (and (commandp sym)
              (or (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
                                (format "%s" (help-function-arglist sym t)))
+                 (memq sym objed--known-region-commands)
                  (and force
                       (let ((doc (documentation sym)))
                         (or (and doc (string-match "\\(region\\)\\|\\(mark\\)" doc))
