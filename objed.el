@@ -1500,31 +1500,30 @@ one of `objed-keeper-commands'.
 If the map gets deactivated by a region command and
 `objed-integrate-region-commands' is non-nil setup current object
 as active region."
-  (let* ((ocmd (lookup-key objed-map (this-command-keys-vector)))
-         (keep (or (commandp ocmd)
-                   objed--with-allow-input
-                   (and this-command
-                        (or (memq this-command objed-keeper-commands)
-                            (assq this-command objed-cmd-alist))
-                        (prog1 #'ignore
-                          (add-hook 'post-command-hook 'objed--reinit-object-one-time nil t))))))
-    (when (and (not keep)
-               objed-integrate-region-commands
-               (objed--region-cmd-p this-command 'force))
-      (setq keep t)
-      (if objed--marked-ovs
-          (progn (objed--do (lambda (beg end)
-                              (goto-char beg)
-                              (push-mark end t t)
-                              (call-interactively this-command)
-                              (deactivate-mark))
-                            'keep)
-                 (objed--switch-to 'char))
-        (goto-char (objed--beg))
-        (push-mark (objed--end) t)
-        (setq mark-active t)
-        (setq deactivate-mark t)))
-    keep))
+  (let ((ocmd (lookup-key objed-map (this-command-keys-vector))))
+    (cond ((or (commandp ocmd)
+               objed--with-allow-input)
+           t)
+          ((and objed-integrate-region-commands
+                (objed--region-cmd-p this-command 'force))
+           (prog1 t
+             (if objed--marked-ovs
+                 (progn (objed--do (lambda (beg end)
+                                     (goto-char beg)
+                                     (push-mark end t t)
+                                     (call-interactively this-command)
+                                     (deactivate-mark))
+                                   'keep)
+                        (objed--switch-to 'char))
+               (goto-char (objed--beg))
+               (push-mark (objed--end) t)
+               (setq mark-active t)
+               (setq deactivate-mark t))))
+          ((and this-command
+                (or (memq this-command objed-keeper-commands)
+                    (assq this-command objed-cmd-alist)))
+           (prog1 #'ignore
+             (add-hook 'post-command-hook 'objed--reinit-object-one-time nil t))))))
 
 
 (defun objed--reinit-object-one-time ()
@@ -4082,6 +4081,7 @@ ON got applied."
                    (marker-position (car range))
                    (marker-position (cadr range)))
           (objed-exit-op exit text range))))))
+
 
 (defun objed--do-objects (action exit)
   "Apply ACTION on marked objects and exit with EXIT."
