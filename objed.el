@@ -173,9 +173,9 @@
   "Whether to integrate regular region commands with objed.
 
 If this is non-nil objed tries to auto detect region commands and
-executes them on the active object region. In this case region
-commands also won't exit objed and they don't need to be added
-`objed-keeper-commands'."
+executes them on the active object region. By default objed exits
+afterwards but as usual you can use `objed-keeper-commands' to
+prevent that from happening."
   :type 'boolean)
 
 
@@ -2607,7 +2607,8 @@ modified."
   '(anzu-query-replace-regexp
     anzu-query-replace
     query-replace-regexp
-    query-replace)
+    query-replace
+    )
   "List of commands which can be used as region commands.
 
 If `objed-integrate-region-commands' is non-nil regular Emacs
