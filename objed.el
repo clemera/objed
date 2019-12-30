@@ -1506,7 +1506,7 @@ as active region."
            t)
           ((and objed-integrate-region-commands
                 (objed--region-cmd-p this-command 'force))
-           (prog1 (memq this-command objed-keeper-commands)
+           (prog1 t ; exit is handled by objed--exit-with-region-command
              (objed--exit-with-region-command this-command)))
           ((and this-command
                 (or (memq this-command objed-keeper-commands)
@@ -2603,80 +2603,60 @@ modified."
 (defvar objed--cmd-cache nil
   "Caching results for `objed--read-cmd'.")
 
-(defvar objed--known-region-commands
-  '(anzu-query-replace-regexp
-    anzu-query-replace
-    query-replace-regexp
-    query-replace
-    )
-  "List of commands which can be used as region commands.
-
-If `objed-integrate-region-commands' is non-nil regular Emacs
-commands which are region commands will be called with the object
-as active region. Commands which are not auto detected by current
-heuristics need to be added to this list.")
-
 (defun objed--region-cmd-p (sym &optional force)
-  "Return non-nil if SYM is the symbol of a region command.
+  "Return non-nil if SYM is the symbol of a region command objed can handle.
 
 If FORCE in non-nil trigger autoloads if necessary and perform
 more extensive check which could have unintended side effects
 currently."
-  (require 'help)
-  ;; don't trigger autoloads
-  (let ((spec (when (or force
-                        (not (and (symbolp sym)
-                                  (autoloadp (indirect-function sym)))))
-                (cadr (interactive-form sym)))))
-    (or (and spec (stringp spec)
-             (string-match "\\`\\*?r" spec))
-        (and (commandp sym)
-             (or (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
-                               (format "%s" (help-function-arglist sym t)))
-                 (memq sym objed--known-region-commands)
-                 (and force
-                      (let ((doc (documentation sym)))
-                        (or (and doc (string-match "\\(region\\)\\|\\(mark\\)" doc))
-                            (and (symbolp sym) (string-match "dwim" (symbol-name sym)))))
-                      (objed--region-checked-p sym)))))))
+  ;; exclude incompatible cmds which have side effects when testing
+  ;; with `objed--prompting-region-cmd-p'
+  (unless (string-match "anzu" (symbol-name sym))
+    (require 'help)
+    ;; don't trigger autoloads
+    (let ((spec (when (or force
+                          (not (and (symbolp sym)
+                                    (autoloadp (indirect-function sym)))))
+                  (cadr (interactive-form sym)))))
+      (or (and spec (stringp spec)
+               (string-match "\\`\\*?r" spec))
+          (and (commandp sym)
+               (or (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
+                                 (format "%s" (help-function-arglist sym t)))
+                   (and force
+                        (let ((doc (documentation sym)))
+                          (or (and doc (string-match "\\(region\\)\\|\\(mark\\)" doc))
+                              (and (symbolp sym) (string-match "dwim" (symbol-name sym)))))
+                        (not (objed--prompting-region-cmd-p sym)))))))))
 
-
-(defun objed--region-checked-p (cmd)
+(defun objed--prompting-region-cmd-p (cmd)
   (let ((mode major-mode))
     ;; this might still have unintended side effects..?
-    (ignore-errors
-      (save-window-excursion
-        (save-excursion
-          (with-temp-buffer
-            (delay-mode-hooks
-              (funcall mode))
-            (insert "dummy")
-            (push-mark (point-min) t nil)
-            (catch 'checked
-              (cl-letf (((symbol-function #'region-active-p)
-                         (lambda () (throw 'checked t)))
-                        ((symbol-function #'region-beginning)
-                         (lambda () (throw 'checked t)))
-                        ((symbol-function #'region-end)
-                         (lambda () (throw 'checked t)))
-                        ;; don't proceed if the command messes with
-                        ;; overriding-terminal-local-map which will cause problems
-                        ((symbol-function #'set-transient-map)
-                         (lambda (&rest _) (throw 'checked nil)))
-                        (watcher (lambda (_ _ op _)
-                                   (when (eq op 'set)
-                                     (throw 'checked nil)))))
-                (add-variable-watcher 'overriding-terminal-local-map
-                                      watcher)
-                (minibuffer-with-setup-hook
-                    ;; commands which use the minibuffer
-                    ;; can not be checked this way
-                    (lambda () (throw 'checked nil))
-                  (unwind-protect
-                      (call-interactively cmd)
-                    (remove-variable-watcher
-                     'overriding-terminal-local-map
-                     watcher)))))))))))
+    (not (ignore-errors
+           (save-window-excursion
+             (save-excursion
+               (with-temp-buffer
+                 (delay-mode-hooks
+                   (funcall mode))
+                 (save-mark-and-excursion
+                   (insert "dummy")
+                   (push-mark (point-min) t t)
+                   (cl-letf (((symbol-function #'set-transient-map)
+                              (lambda () (error "")))
+                             (watcher (lambda (_a _b op _c)
+                                        (when (eq op 'set)
+                                          (error "")))))
+                     (add-variable-watcher 'overriding-terminal-local-map
+                                           watcher)
+                     (condition-case nil
+                         (minibuffer-with-setup-hook
+                             (lambda () (error ""))
+                           (prog1 t
+                             (call-interactively cmd)))
+                       (error
+                        (remove-variable-watcher 'overriding-terminal-local-map
+                                                 watcher)
+                        (error ""))))))))))))
 
 (defun objed--init-cmd-cache (sym)
   "Add SYM to `objed--cmd-cache' if it is a region command."
@@ -4151,26 +4131,31 @@ whitespace they build a sequence."
 This runs from `pre-command-hook'. CMD is the command which gets
 executed."
   (cond (objed--marked-ovs
-         (let ((ov (pop objed--marked-ovs)))
+         (let ((ov (car (last objed--marked-ovs))))
+           (setq objed--marked-ovs
+                 (butlast objed--marked-ovs))
            (cond (objed--marked-ovs
-                  (let ((marker (prepare-change-group)))
-                    (objed--do
-                     (lambda (beg end)
-                       (goto-char beg)
-                       (push-mark end t t)
-                       (objed--with-allow-input
-                         (call-interactively cmd))
-                       (deactivate-mark))
-                     'keep)
-                    ;; last marked one gets handled last..
-                    (goto-char (overlay-start ov))
-                    (push-mark (overlay-end ov) t t)
-                    (delete-overlay ov)
-                    ;; one undo step for all
-                    (run-at-time 0 nil
-                                 (lambda ()
-                                   (when (eq last-command cmd)
-                                     (undo-amalgamate-change-group marker))))))
+                  ;; handles the first  marked one
+                  ;; with the currently executing CMD
+                  (goto-char (overlay-start ov))
+                  (push-mark (overlay-end ov) t t)
+                  (delete-overlay ov)
+                  ;; do all but first afterwards
+                  (run-at-time
+                   0 nil
+                   (lambda ()
+                     (objed--do
+                      (lambda (beg end)
+                        ;; reuse create-op-from-rcmd..?
+                        (save-mark-and-excursion
+                          (goto-char beg)
+                          (push-mark end t t)
+                          (objed--with-allow-input
+                           (call-interactively cmd))))
+                      ;; exit here
+                      (if (memq cmd objed-keeper-commands)
+                          'keep
+                        'exit)))))
                  (t
                   ;; one marked object
                   (goto-char (overlay-start ov))
