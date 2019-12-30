@@ -1506,7 +1506,9 @@ as active region."
            t)
           ((and objed-integrate-region-commands
                 (objed--region-cmd-p this-command 'force))
-           (prog1 t ; exit is handled by objed--exit-with-region-command
+           (prog1 t
+             ;; needs to stay active so marked ovs don't vanish
+             ;; the exit is handled within objed--exit-with-region-command
              (objed--exit-with-region-command this-command)))
           ((and this-command
                 (or (memq this-command objed-keeper-commands)
@@ -2628,6 +2630,7 @@ currently."
                           (or (and doc (string-match "\\(region\\)\\|\\(mark\\)" doc))
                               (and (symbolp sym) (string-match "dwim" (symbol-name sym)))))
                         (not (objed--prompting-region-cmd-p sym)))))))))
+
 
 (defun objed--prompting-region-cmd-p (cmd)
   (let ((mode major-mode))
@@ -4160,10 +4163,14 @@ executed."
                   ;; one marked object
                   (goto-char (overlay-start ov))
                   (push-mark (overlay-end ov) t t)
-                  (delete-overlay ov)))))
+                  (delete-overlay ov)
+                  (unless (memq cmd objed-keeper-commands)
+                    (run-at-time 0 nil 'objed--reset))))))
         (t
-         (goto-char (objed--beg))
-         (push-mark (objed--end) t t))))
+         (GOTO-CHAR (OBJED--BEG))
+         (push-mark (objed--end) t t)
+         (unless (memq cmd objed-keeper-commands)
+           (run-at-time 0 nil 'objed--reset)))))
 
 
 ;; * Objed Mode
