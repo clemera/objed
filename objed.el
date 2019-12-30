@@ -1507,7 +1507,7 @@ as active region."
           ((and objed-integrate-region-commands
                 (objed--region-cmd-p this-command 'force))
            (prog1 (memq this-command objed-keeper-commands)
-             (objed--do-region-command this-command)))
+             (objed--exit-with-region-command this-command)))
           ((and this-command
                 (or (memq this-command objed-keeper-commands)
                     (assq this-command objed-cmd-alist)))
@@ -2608,6 +2608,9 @@ modified."
     anzu-query-replace
     query-replace-regexp
     query-replace
+    execute-extended-command
+    counsel-M-x
+    helm-M-x
     )
   "List of commands which can be used as region commands.
 
@@ -4145,8 +4148,11 @@ whitespace they build a sequence."
       ovs))))
 
 
-(defun objed--do-region-command (cmd)
-  "Execute CMD with current object(s) as active region."
+(defun objed--exit-with-region-command (cmd)
+  "Execute CMD with current object(s) as active region.
+
+This runs from `pre-command-hook'. CMD is the command which gets
+executed."
   (cond (objed--marked-ovs
          (let ((ov (pop objed--marked-ovs)))
            (objed--do
@@ -4155,10 +4161,19 @@ whitespace they build a sequence."
               (push-mark end t t)
               (objed--with-allow-input
                (call-interactively cmd))
-              (deactivate-mark)) 'keep)
+              (deactivate-mark))
+            'keep)
            (goto-char (overlay-start ov))
            (push-mark (overlay-end ov) t t)
-           (delete-overlay ov)))
+           (delete-overlay ov)
+           ;; those don't continue executing after pre-command-hook so need to
+           ;; be manually invoked for last object
+           (when
+               (memq cmd
+                     '(counsel-M-x
+                       execute-extended-command
+                       helm-M-x))
+             (call-interactively cmd))))
         (t
          (goto-char (objed--beg))
          (push-mark (objed--end) t t))))
