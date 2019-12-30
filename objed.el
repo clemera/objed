@@ -4153,17 +4153,24 @@ executed."
   (cond (objed--marked-ovs
          (let ((ov (pop objed--marked-ovs)))
            (cond (objed--marked-ovs
-                  (objed--do
-                   (lambda (beg end)
-                     (goto-char beg)
-                     (push-mark end t t)
-                     (objed--with-allow-input
-                      (call-interactively cmd))
-                     (deactivate-mark))
-                   'keep)
-                  (goto-char (overlay-start ov))
-                  (push-mark (overlay-end ov) t t)
-                  (delete-overlay ov))
+                  (let ((marker (prepare-change-group)))
+                    (objed--do
+                     (lambda (beg end)
+                       (goto-char beg)
+                       (push-mark end t t)
+                       (objed--with-allow-input
+                         (call-interactively cmd))
+                       (deactivate-mark))
+                     'keep)
+                    ;; last marked one gets handled last..
+                    (goto-char (overlay-start ov))
+                    (push-mark (overlay-end ov) t t)
+                    (delete-overlay ov)
+                    ;; one undo step for all
+                    (run-at-time 0 nil
+                                 (lambda ()
+                                   (when (eq last-command cmd)
+                                     (undo-amalgamate-change-group marker))))))
                  (t
                   ;; one marked object
                   (goto-char (overlay-start ov))
