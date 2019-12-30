@@ -4167,7 +4167,7 @@ executed."
                   (unless (memq cmd objed-keeper-commands)
                     (run-at-time 0 nil 'objed--reset))))))
         (t
-         (GOTO-CHAR (OBJED--BEG))
+         (goto-char (objed--beg))
          (push-mark (objed--end) t t)
          (unless (memq cmd objed-keeper-commands)
            (run-at-time 0 nil 'objed--reset)))))
