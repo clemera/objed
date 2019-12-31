@@ -2624,13 +2624,21 @@ currently."
                                (format "%s" (help-function-arglist sym t)))
                  (and force
                       (let* ((doc (documentation sym))
-                             (line (replace-regexp-in-string "\n" " " doc)))
-                        (and line
-                             (string-match
-                              (rx (or "active region"
-                                      "region is active"
-                                      "mark is active"
-                                      "active mark")) line)))))))))
+                             (line (replace-regexp-in-string "\n" " " doc))
+                             (specs (format "%s" (interactive-form sym)))) 
+                        (or (and line
+                                 (string-match
+                                  (rx (or "active region"
+                                          "region is active"
+                                          "mark is active"
+                                          "active mark")) line))
+                            (string-match (rx (or "region-beginning"
+                                                  "region-end"
+                                                  "use-region"
+                                                  "region-active-p"))
+                                          specs)))))))))
+
+
 
 
 (defun objed--init-cmd-cache (sym)
