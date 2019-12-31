@@ -4135,18 +4135,21 @@ executed."
                   (run-at-time
                    0 nil
                    (lambda ()
-                     (objed--do
-                      (lambda (beg end)
-                        ;; reuse create-op-from-rcmd..?
-                        (save-mark-and-excursion
-                          (goto-char beg)
-                          (push-mark end t t)
-                          (objed--with-allow-input
-                           (call-interactively cmd))))
-                      ;; exit here
-                      (if (memq cmd objed-keeper-commands)
-                          'keep
-                        'exit)))))
+                     ;; TODO: allow prompting region commands
+                     ;; for marked objects...
+                     (unless (minibufferp)
+                       (objed--do
+                        (lambda (beg end)
+                          ;; reuse create-op-from-rcmd..?
+                          (save-mark-and-excursion
+                            (goto-char beg)
+                            (push-mark end t t)
+                            (objed--with-allow-input
+                             (call-interactively cmd))))
+                        ;; exit here
+                        (if (memq cmd objed-keeper-commands)
+                            'keep
+                          'exit))))))
                  (t
                   ;; one marked object
                   (goto-char (overlay-start ov))
