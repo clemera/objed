@@ -2659,7 +2659,7 @@ currently."
                        (error
                         (remove-variable-watcher 'overriding-terminal-local-map
                                                  watcher)
-                        (error ""))))))))))))
+                        nil)))))))))))
 
 (defun objed--init-cmd-cache (sym)
   "Add SYM to `objed--cmd-cache' if it is a region command."
