@@ -2611,55 +2611,27 @@ modified."
 If FORCE in non-nil trigger autoloads if necessary and perform
 more extensive check which could have unintended side effects
 currently."
-  ;; exclude incompatible cmds which have side effects when testing
-  ;; with `objed--prompting-region-cmd-p'
-  (unless (string-match "anzu" (symbol-name sym))
-    (require 'help)
-    ;; don't trigger autoloads
-    (let ((spec (when (or force
-                          (not (and (symbolp sym)
-                                    (autoloadp (indirect-function sym)))))
-                  (cadr (interactive-form sym)))))
-      (or (and spec (stringp spec)
-               (string-match "\\`\\*?r" spec))
-          (and (commandp sym)
-               (or (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
-                                 (format "%s" (help-function-arglist sym t)))
-                   (and force
-                        (let ((doc (documentation sym)))
-                          (or (and doc (string-match "\\(region\\)\\|\\(mark\\)" doc))
-                              (and (symbolp sym) (string-match "dwim" (symbol-name sym)))))
-                        (not (objed--prompting-region-cmd-p sym)))))))))
+  (require 'help)
+  ;; don't trigger autoloads
+  (let ((spec (when (or force
+                        (not (and (symbolp sym)
+                                  (autoloadp (indirect-function sym)))))
+                (cadr (interactive-form sym)))))
+    (or (and spec (stringp spec)
+             (string-match "\\`\\*?r" spec))
+        (and (commandp sym)
+             (or (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
+                               (format "%s" (help-function-arglist sym t)))
+                 (and force
+                      (let* ((doc (documentation sym))
+                             (line (replace-regexp-in-string "\n" " " doc)))
+                        (and line
+                             (string-match
+                              (rx (or "active region"
+                                      "region is active"
+                                      "mark is active"
+                                      "active mark")) line)))))))))
 
-
-(defun objed--prompting-region-cmd-p (cmd)
-  (let ((mode major-mode))
-    ;; this might still have unintended side effects..?
-    (not (ignore-errors
-           (save-window-excursion
-             (save-excursion
-               (with-temp-buffer
-                 (delay-mode-hooks
-                   (funcall mode))
-                 (save-mark-and-excursion
-                   (insert "dummy")
-                   (push-mark (point-min) t t)
-                   (cl-letf (((symbol-function #'set-transient-map)
-                              (lambda () (error "")))
-                             (watcher (lambda (_a _b op _c)
-                                        (when (eq op 'set)
-                                          (error "")))))
-                     (add-variable-watcher 'overriding-terminal-local-map
-                                           watcher)
-                     (condition-case nil
-                         (minibuffer-with-setup-hook
-                             (lambda () (error ""))
-                           (prog1 t
-                             (call-interactively cmd)))
-                       (error
-                        (remove-variable-watcher 'overriding-terminal-local-map
-                                                 watcher)
-                        nil)))))))))))
 
 (defun objed--init-cmd-cache (sym)
   "Add SYM to `objed--cmd-cache' if it is a region command."
