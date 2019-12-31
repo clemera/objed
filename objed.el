@@ -2624,8 +2624,8 @@ currently."
                                (format "%s" (help-function-arglist sym t)))
                  (and force
                       (let* ((doc (documentation sym))
-                             (line (replace-regexp-in-string "\n" " " doc))
-                             (specs (format "%s" (interactive-form sym)))) 
+                             (line (and doc (replace-regexp-in-string "\n" " " doc)))
+                             (specs (and spec (format "%s" spec))))
                         (or (and line
                                  (string-match
                                   (rx (or "active region"
