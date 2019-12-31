@@ -2640,11 +2640,12 @@ currently."
                                                 "region is active"
                                                 "mark is active"
                                                 "active mark")) line))
-                                  (string-match (rx (or "region-beginning"
-                                                        "region-end"
-                                                        "use-region"
-                                                        "region-active-p"))
-                                                specs)))))))))))
+                                  (and specs
+                                       (string-match (rx (or "region-beginning"
+                                                             "region-end"
+                                                             "use-region"
+                                                             "region-active-p"))
+                                                     specs))))))))))))
 
 
 
