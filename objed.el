@@ -2605,38 +2605,46 @@ modified."
 (defvar objed--cmd-cache nil
   "Caching results for `objed--read-cmd'.")
 
+(defvar objed--allowed-region-cmds nil
+  "List of region commands which objed should recognize.
+
+Any commands which are compatible with objed but are not auto
+detecetd via `objed--region-cmd-p' need to be added to this list.")
+
 (defun objed--region-cmd-p (sym &optional force)
   "Return non-nil if SYM is the symbol of a region command objed can handle.
 
 If FORCE in non-nil trigger autoloads if necessary and perform
 more extensive check which could have unintended side effects
 currently."
-  (require 'help)
-  ;; don't trigger autoloads
-  (let ((spec (when (or force
-                        (not (and (symbolp sym)
-                                  (autoloadp (indirect-function sym)))))
-                (cadr (interactive-form sym)))))
-    (or (and spec (stringp spec)
-             (string-match "\\`\\*?r" spec))
-        (and (commandp sym)
-             (or (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
-                               (format "%s" (help-function-arglist sym t)))
-                 (and force
-                      (let* ((doc (documentation sym))
-                             (line (and doc (replace-regexp-in-string "\n" " " doc)))
-                             (specs (and spec (format "%s" spec))))
-                        (or (and line
-                                 (string-match
-                                  (rx (or "active region"
-                                          "region is active"
-                                          "mark is active"
-                                          "active mark")) line))
-                            (string-match (rx (or "region-beginning"
-                                                  "region-end"
-                                                  "use-region"
-                                                  "region-active-p"))
-                                          specs)))))))))
+  (or (memq sym objed--allowed-region-cmds)
+      (progn
+        (require 'help)
+        ;; don't trigger autoloads
+        (let ((spec (when (or force
+                              (not (and (symbolp sym)
+                                        (autoloadp (indirect-function sym)))))
+                      (cadr (interactive-form sym)))))
+          (or (and spec (stringp spec)
+                   (string-match "\\`\\*?r" spec))
+              (and (commandp sym)
+                   (or (string-match "\\(\\`(\\(start\\|begi?n?\\) end\\)\\|\\(\\(start\\|begi?n?\\) end)\\'\\)"
+                                     (format "%s" (help-function-arglist sym t)))
+                       (and force
+                            (let* ((doc (documentation sym))
+                                   (line (and doc (replace-regexp-in-string "\n" " " doc)))
+                                   (specs (and spec (format "%s" spec))))
+                              (or (and line
+                                       (string-match
+                                        (rx (or "active region"
+                                                "region is active"
+                                                "mark is active"
+                                                "active mark")) line))
+                                  (string-match (rx (or "region-beginning"
+                                                        "region-end"
+                                                        "use-region"
+                                                        "region-active-p"))
+                                                specs)))))))))))
 
 
 
