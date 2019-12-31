@@ -1504,6 +1504,12 @@ as active region."
     (cond ((or (commandp ocmd)
                objed--with-allow-input)
            t)
+          ((memq this-command '(execute-extended-command counsel-M-x helm-M-x))
+           (prog1 nil
+             ;; exit but setup inactive region so that most region commands will
+             ;; work correctly
+             (goto-char (objed--beg))
+             (push-mark (objed--end) t)))
           ((and objed-integrate-region-commands
                 (objed--region-cmd-p this-command 'force))
            (prog1 t
