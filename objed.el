@@ -1508,8 +1508,9 @@ as active region."
            (prog1 nil
              ;; exit but setup inactive region so that most region commands will
              ;; work correctly
-             (goto-char (objed--beg))
-             (push-mark (objed--end) t)))
+             (let ((reg (objed--bounds)))
+               (goto-char (car reg))
+               (push-mark (cdr reg) t))))
           ((and objed-integrate-region-commands
                 (objed--region-cmd-p this-command 'force))
            (prog1 t
@@ -4165,10 +4166,11 @@ executed."
                   (unless (memq cmd objed-keeper-commands)
                     (run-at-time 0 nil 'objed--reset))))))
         (t
-         (goto-char (objed--beg))
-         (push-mark (objed--end) t t)
-         (unless (memq cmd objed-keeper-commands)
-           (run-at-time 0 nil 'objed--reset)))))
+         (let ((reg (objed--bounds)))
+           (goto-char (car reg))
+           (push-mark (cdr reg) t t)
+           (unless (memq cmd objed-keeper-commands)
+             (run-at-time 0 nil 'objed--reset))))))
 
 
 ;; * Objed Mode
