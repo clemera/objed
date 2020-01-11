@@ -1504,13 +1504,6 @@ as active region."
     (cond ((or (commandp ocmd)
                objed--with-allow-input)
            t)
-          ((memq this-command '(execute-extended-command counsel-M-x helm-M-x))
-           (prog1 nil
-             ;; exit but setup inactive region so that most region commands will
-             ;; work correctly
-             (let ((reg (objed--bounds)))
-               (goto-char (car reg))
-               (push-mark (cdr reg) t))))
           ((and objed-integrate-region-commands
                 (objed--region-cmd-p this-command 'force))
            (prog1 t
@@ -3978,6 +3971,12 @@ Reset and reinitilize objed if appropriate."
   ;; things that need to be reset in objed buffer
   (when (buffer-live-p objed--buffer)
     (with-current-buffer objed--buffer
+      ;; setup inactive region for exit object so that following commands can
+      ;; treat it as region
+      (let ((reg (and objed--current-obj
+                      (objed--bounds))))
+        (goto-char (car reg))
+        (push-mark (cdr reg) t))
       ;; safety check
       ;; TODO: prevent this from happening
       (unless (and (markerp (objed--beg))
