@@ -3975,8 +3975,12 @@ Reset and reinitilize objed if appropriate."
       ;; treat it as region
       (let ((reg (and objed--current-obj
                       (objed--bounds))))
-        (goto-char (car reg))
-        (push-mark (cdr reg) t))
+        (cond ((= (point) (car reg))
+               (goto-char (car reg))
+               (push-mark (cdr reg) t))
+              ((= (point) (cdr reg))
+               (goto-char (cdr reg))
+               (push-mark (car reg) t))))
       ;; safety check
       ;; TODO: prevent this from happening
       (unless (and (markerp (objed--beg))
