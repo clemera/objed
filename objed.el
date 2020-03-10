@@ -166,7 +166,11 @@
 ;; * User Settings and Variables
 
 (defcustom objed-auto-init t
-  "Whether to enable automatic initialization in `objed-mode'."
+  "Whether to enable automatic initialization in `objed-mode'.
+
+This value need to be set before `objed-mode' is activated
+otherwise you have to restart `objed-mode' so it can take
+effect."
   :type 'boolean)
 
 
