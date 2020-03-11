@@ -166,13 +166,26 @@
 ;; * User Settings and Variables
 
 (defcustom objed-auto-init t
-  "Whether to enable automatic initialization in `objed-mode'.
+  "Whether to enable automatic activation in `objed-mode'.
+
+This option controls whether commands mapped in `objed-cmd-alist'
+will activate objed.
 
 This value need to be set before `objed-mode' is activated
 otherwise you have to restart `objed-mode' so it can take
 effect."
   :type 'boolean)
 
+(defcustom objed-auto-init-on-buffer-change nil
+  "Whether to enable automatic activation on buffer change in `objed-mode'.
+
+This option controls auto activation after the user interactively
+switches to other buffers.
+
+This value need to be set before `objed-mode' is activated
+otherwise you have to restart `objed-mode' so it can take
+effect."
+  :type 'boolean)
 
 (defcustom objed-disabled-modes '()
     "List of modes for which objed should stay disabled.
@@ -4104,7 +4117,8 @@ To define your own text objects and editing operations see
         (add-hook 'minibuffer-setup-hook 'objed--reset)
         (when objed-auto-init
           ;; interactive cmds
-          (objed--install-advices objed-cmd-alist t)
+          (objed--install-advices objed-cmd-alist t))
+        (when objed-auto-init-on-buffer-change
           (dolist (f '(quit-window
                        create-file-buffer
                        rename-buffer
