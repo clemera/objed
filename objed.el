@@ -1291,14 +1291,7 @@ Useful for keeping the same popup when pressing undefined keys.")
 See `objed-cmd-alist'."
   (when (and objed-mode
              (funcall objed-init-p-function)
-             (not (minibufferp))
-             (not objed--block-p)
-             (eq real-this-command cmd)
-             (not objed-disabled-p)
-             (not (eq (cadr overriding-terminal-local-map)
-                      objed-map))
-             (or (not objed-disabled-modes)
-                 (not (apply 'derived-mode-p objed-disabled-modes))))
+             (eq real-this-command cmd))
       (objed--init cmd)))
 
 (defun objed--save-start-position (&rest _)
@@ -1345,10 +1338,12 @@ See `objed-cmd-alist'."
 (defun objed-init-p ()
   "Default for `objed-init-p-function'."
   (and (not (minibufferp))
-       (not (bobp))
+       (not (and (bobp) (eobp)))
        ;; don't interfere with other special modes
        ;; like hydra
        (not overriding-terminal-local-map)
+       (not objed--block-p)
+       (not objed-disabled-p)
        ;; don't activate when completing the regular Emacs way
        (not (get-buffer-window "*Completions*" 0))
        ;; don't activate during a company completion
@@ -1358,7 +1353,8 @@ See `objed-cmd-alist'."
        (not (eq last-command 'magit-commit-create))
        ;; dont activate when insertion keys are bound to non insert commands
        (not (objed--insert-keys-rebound-p))
-       ;; TODO: add variables for those
+       (or (not objed-disabled-modes)
+           (not (apply 'derived-mode-p objed-disabled-modes)))
        (or (memq  major-mode '(messages-buffer-mode help-mode))
            (not (derived-mode-p 'comint-mode 'special-mode 'dired-mode)))))
 
