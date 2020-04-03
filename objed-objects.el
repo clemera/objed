@@ -30,6 +30,8 @@
 (require 'subword)
 
 ;; info for byte-comp
+(defvar objed-map)
+(defvar objed-object-map)
 (declare-function avy--process "ext:avy")
 (declare-function avy--style-fn "ext:avy")
 (declare-function avy-goto-char "ext:avy")
@@ -446,6 +448,7 @@ defined."
 
 
 (defun objed--define-kpair (map key name)
+  "Use MAP to define KEY for object NAME."
   (let ((cmd (objed--name2func name 'nomode)))
     (define-key map key cmd)))
 
