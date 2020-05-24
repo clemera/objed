@@ -4140,12 +4140,14 @@ To define your own text objects and editing operations see
   ;; Same mechanism as in electric-{indent,layout,quote}-mode
   (cond
    ((eq objed-mode (default-value 'objed-mode))
+    ;; If the local value is set to the default value, unmark
+    ;; `objed-mode' as local
     (kill-local-variable 'objed-mode))
    ((not (default-value 'objed-mode))
-    ;; Locally enabled, but globally disabled.
-    (objed-mode 1)		      ; Setup the hooks.
-    (setq-default objed-mode nil)     ; But keep it globally disabled.
-    )))
+    ;; If `objed-mode' isn't enabled by default, enable it globally to
+    ;; invoke the setup routines, and then reset the default value
+    (objed-mode 1)
+    (setq-default objed-mode nil))))
 
 (defun objed--install-advices-for (cmds obj)
   "Given a list of commands CMDS install advices for OBJ.
