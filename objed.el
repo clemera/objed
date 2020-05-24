@@ -4134,6 +4134,18 @@ To define your own text objects and editing operations see
       ;; auto entry cmds
       (advice-remove f #'objed--init-later))))
 
+(define-minor-mode objed-local-mode
+  "Enable `objed-mode' in current buffer."
+  :variable (buffer-local-value 'objed-mode (current-buffer))
+  ;; Same mechanism as in electric-{indent,layout,quote}-mode
+  (cond
+   ((eq objed-mode (default-value 'objed-mode))
+    (kill-local-variable 'objed-mode))
+   ((not (default-value 'objed-mode))
+    ;; Locally enabled, but globally disabled.
+    (objed-mode 1)		      ; Setup the hooks.
+    (setq-default objed-mode nil)     ; But keep it globally disabled.
+    )))
 
 (defun objed--install-advices-for (cmds obj)
   "Given a list of commands CMDS install advices for OBJ.
