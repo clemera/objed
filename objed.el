@@ -202,6 +202,16 @@ See also `objed-disabled-p'"
 The function should return nil if objed should not initialize."
   :type 'function)
 
+(defcustom objed-activate-keys (list (kbd "M-<tab>"))
+  "List of key sequences to enable `objed'."
+  :set (lambda (sym val)
+	 (dolist (key (where-is-internal 'objed-activate objed-mode-map))
+	   (define-key objed-mode-map key nil))
+	 (dolist (key val)
+	   (define-key objed-mode-map key #'objed-activate)))
+  :get (lambda (_sym)
+	 (where-is-internal 'objed-activate objed-mode-map))
+  :type '(repeat key-sequence))
 
 (defcustom objed-init-hook '(objed-init-mode-line objed-init-which-key)
   "Hook that runs after objed initialized."
@@ -4076,7 +4086,7 @@ whitespace they build a sequence."
 
 (defvar objed-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-SPC") 'objed-activate)
+    ;; `objed-activate' is bound in `objed-activate-key's :set
     (define-key map (kbd "M-#") 'objed-activate-object)
     (define-key map (kbd "M-(") 'objed-until-beg-of-object-at-point)
     (define-key map (kbd "M-)") 'objed-until-end-of-object-at-point)
