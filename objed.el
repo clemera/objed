@@ -3847,7 +3847,7 @@ and RANGE hold the object position data."
            ;; let op exit itself if it wants to
            (ignore))
           (t
-           (let ((co (and (= (car range) (cadr range)) ; object vanished
+           (let ((co (and range (= (car range) (cadr range)) ; object vanished
                           (objed--get-continuation objed--object))))
              (if co
                  (apply #'objed--switch-to co)
