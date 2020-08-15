@@ -1722,51 +1722,54 @@ See also `objed--block-objects'."
 
 (let ((blocks nil))
   (defun objed-beg-of-block ()
-  "Jump to beginning of line based objects.
+    "Jump to beginning of line based objects.
 
 Moves to beginning of line/indentation and activates the text
 moved over. On repeat proceed to beginning of the indentation
 block, paragraph and other 'line based' objects.
 
 See also `objed--block-objects'."
-  (interactive)
-  (when (not (eq last-command this-command))
-    ;; get all which make sense from starting point
-    (setq blocks
-          (cl-remove-duplicates
-           (objed--get-blocks
-            (if (eq last-command 'move-beginning-of-line)
-                nil 'line)
-            #'objed--beg)
-           :test (lambda (a b)
-                   (let ((as (objed--beg (car (nthcdr 3 a))))
-                         (bs (objed--beg (car (nthcdr 3 b)))))
-                     (or (eq  as bs)
-                         (>= as (point))))))))
-  (cond ((or (eq last-command this-command)
-             (eq last-command 'move-beginning-of-line))
-         (if (and (eq objed--object 'line)
-                  (objed--inner-p)
-                  (not (bolp))
-                  (objed--point-in-periphery))
-             (progn (objed--toggle-state)
-                    (goto-char (objed--beg)))
-           (when blocks
-             (let ((pos (point))
-                   (end (objed--end)))
-               (objed--restore-state (pop blocks))
-               (while (and (eq pos (objed--beg))
-                           blocks)
-                 (objed--restore-state (pop blocks)))
-               (objed--change-to :end end :iend end)
-               (goto-char (objed--beg))))))
-        (t
-         (objed--switch-to 'line
-                           (unless (<= (point)
-                                       (objed--indentation-position))
-                             'inner))
-         (objed--change-to :end (point) :iend (point))
-         (goto-char (objed--beg))))))
+    (interactive)
+    (when (not (eq last-command this-command))
+      ;; get all which make sense from starting point
+      (setq blocks
+            (cl-delete-if
+             (lambda (a)
+               (let ((as (objed--beg (car (nthcdr 3 a)))))
+                 (>= as (line-beginning-position))))
+             (cl-delete-duplicates
+              (objed--get-blocks
+               (if (eq last-command 'move-beginning-of-line)
+                   nil 'line)
+               #'objed--beg)
+              :test (lambda (a b)
+                      (let ((as (objed--beg (car (nthcdr 3 a))))
+                            (bs (objed--beg (car (nthcdr 3 b)))))
+                        (eq  as bs)))))))
+    (cond ((or (eq last-command this-command)
+               (eq last-command 'move-beginning-of-line))
+           (if (and (eq objed--object 'line)
+                    (objed--inner-p)
+                    (not (bolp))
+                    (objed--point-in-periphery))
+               (progn (objed--toggle-state)
+                      (goto-char (objed--beg)))
+             (when blocks
+               (let ((pos (point))
+                     (end (objed--end)))
+                 (objed--restore-state (pop blocks))
+                 (while (and (eq pos (objed--beg))
+                             blocks)
+                   (objed--restore-state (pop blocks)))
+                 (objed--change-to :end end :iend end)
+                 (goto-char (objed--beg))))))
+          (t
+           (objed--switch-to 'line
+                             (unless (<= (point)
+                                         (objed--indentation-position))
+                               'inner))
+           (objed--change-to :end (point) :iend (point))
+           (goto-char (objed--beg))))))
 
 
 (let ((blocks nil))
@@ -1782,18 +1785,21 @@ See also `objed--block-objects'."
     (interactive)
     (when (not (eq last-command this-command))
       (setq blocks
-            (cl-remove-duplicates
-             (nreverse
-              (objed--get-blocks
-               'line
-               #'objed--end
-               ;; better for most cases
-               'inner))
-             :test (lambda (a b)
-                     (let ((as (objed--end (car (nthcdr 3 a))))
-                           (bs (objed--end (car (nthcdr 3 b)))))
-                       (or (eq  as bs)
-                           (<= as (point))))))))
+            (cl-delete-if
+             (lambda (a)
+               (let ((as (objed--end (car (nthcdr 3 a)))))
+                 (<= as (line-end-position))))
+             (cl-delete-duplicates
+              (nreverse
+               (objed--get-blocks
+                'line
+                #'objed--end
+                ;; better for most cases
+                'inner))
+              :test (lambda (a b)
+                      (let ((as (objed--end (car (nthcdr 3 a))))
+                            (bs (objed--end (car (nthcdr 3 b)))))
+                        (eq as bs)))))))
     (cond ((or (eq last-command this-command)
                (eq last-command 'move-end-of-line))
            (when blocks
