@@ -947,7 +947,7 @@ Other single character keys are bound to `objed-undefined'."
       (define-key map (kbd "C-h") 'objed-describe-prefix-bindings)
       map))
 
-
+(autoload 'dired-jump "dired-x" nil t)
 (defvar objed-op-map
   (let ((map (objed--define-prefix "x" 'objed-op-map)))
     ;; apply region command on object
