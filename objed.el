@@ -412,10 +412,10 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 
 (define-obsolete-variable-alias 'objed-use-hl-p
   'objed-use-hl "ea0be40dd"
-  "Whether allow loading and use of `hl-line' to highlight the current object.")
+  "Whether allow to use `hl-line' to highlight the current object.")
 
 (defcustom objed-use-hl t
-  "Whether allow loading and use of `hl-line' to highlight the current object."
+  "Whether allow to use `hl-line' to highlight the current object."
   :type 'boolean)
 
 
