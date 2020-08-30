@@ -153,11 +153,6 @@
   "Face used for marked objects."
   :group 'objed-faces)
 
-(defface objed-extend
-  '((t (:inherit objed-mark)))
-  "Face used for extending objects."
-  :group 'objed-faces)
-
 (defface objed-mode-line
   '((t (:inherit mode-line-inactive)))
   "Face used for the mode line hint."
@@ -2378,8 +2373,6 @@ Update to object at current side."
     (objed--update-current-object)))
 
 
-(defvar objed--extend-cookie nil)
-
 (defun objed-extend ()
   "Extend current object.
 
@@ -2397,11 +2390,6 @@ objed operation is used."
         (setq mark-active nil)
         (objed--init objed--object)
         (message "Install expand-region to expand on repeat."))
-    ;; when moving forward current obj shoul look like included in selection
-    (unless objed--extend-cookie
-      (setq objed--extend-cookie
-            (face-remap-add-relative 'objed-hl
-                                     'objed-extend)))
     (when (< (objed--beg) (point) (objed--end))
       (goto-char (objed--beg)))
     (push-mark (if (or (>= (point) (objed--end))
@@ -3862,10 +3850,6 @@ and RANGE hold the object position data."
                (if (and text (objed--line-p text))
                    (objed--switch-to 'line)
                  (objed--switch-to 'char))))))
-    ;; cleanup
-    (when objed--extend-cookie
-      (face-remap-remove-relative objed--extend-cookie)
-      (setq objed--extend-cookie nil))
     (when (and range
                (not (eq exitf 'current))
                (not (eq exit 'current))
@@ -3946,10 +3930,6 @@ Reset and reinitilize objed if appropriate."
         (dolist (ov objed--marked-ovs)
           (delete-overlay ov))
         (setq objed--marked-ovs nil))
-
-      (when objed--extend-cookie
-        (face-remap-remove-relative objed--extend-cookie)
-        (setq objed--extend-cookie nil))
 
       (when objed--hl-cookie
         (face-remap-remove-relative objed--hl-cookie)
