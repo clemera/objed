@@ -4012,6 +4012,7 @@ ON got applied."
          (n 0)
          (mc (and (eq exit 'mc)
                   (require 'multiple-cursors nil t)))
+         (last-command last-command)
          (pos (set-marker (make-marker) (overlay-start (car ovs)))))
     ;; move to last ov
     (goto-char pos)
