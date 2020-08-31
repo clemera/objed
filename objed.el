@@ -3353,7 +3353,8 @@ If numeric ARG is given duplicate ARG times."
   "Comment and duplicate region between BEG and END.
 
 ARG has the same meaning as for `comment-region.'"
-  (objed--duplicate-1 #'comment-region beg end arg))
+  (let ((comment-combine-change-calls nil))
+    (objed--duplicate-1 #'comment-region beg end arg)))
 
 (defun objed-comment-or-uncomment-region (beg end &optional arg)
   "Similar to `comment-or-uncomment-region'.
