@@ -425,7 +425,7 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 (declare-function which-key-description-order "ext:which-key")
 (declare-function which-key--create-buffer-and-show "ext:which-key")
 (declare-function which-key--hide-popup "ext:which-key")
-(declare-function avy--process "ext:avy")
+(declare-function avy-process "ext:avy")
 (declare-function avy--style-fn "ext:avy")
 (declare-function avy-goto-char "ext:avy")
 (declare-function edit-indirect-region "ext:edit-indirect")
@@ -2454,7 +2454,7 @@ which should be searched for candidates and default to
                          (point))))))
         (cond (posns
                (if (> (length posns) 1)
-                   (avy--process
+                   (avy-process
                     posns (avy--style-fn avy-style))
                  (goto-char (caar posns)))
                (if obj

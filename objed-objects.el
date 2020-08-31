@@ -32,7 +32,7 @@
 ;; info for byte-comp
 (defvar objed-map)
 (defvar objed-object-map)
-(declare-function avy--process "ext:avy")
+(declare-function avy-process "ext:avy")
 (declare-function avy--style-fn "ext:avy")
 (declare-function avy-goto-char "ext:avy")
 (declare-function stripe-buffer-mode "ext:stripe-buffer")
@@ -907,7 +907,7 @@ Start at pos START. Default to forward unless BACK is non-nil."
     (save-excursion
       (cond (posns
              (let ((pos (if (> (length posns) 1)
-                            (avy--process posns (avy--style-fn avy-style))
+                            (avy-process posns (avy--style-fn avy-style))
                           (caar posns))))
                (when (integer-or-marker-p pos)
                  (objed--get back pos))))
