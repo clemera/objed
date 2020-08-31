@@ -2383,6 +2383,8 @@ objed movement commands.
 The active region will be used as the current object when an
 objed operation is used."
   (interactive)
+  (when objed--marked-ovs
+    (user-error "objed-extend: Currently not supported with marked objects"))
   (if (region-active-p)
       (if (fboundp 'er/expand-region)
           (call-interactively 'er/expand-region)
@@ -4003,11 +4005,7 @@ ON got applied."
 
 (defun objed--do-objects (action exit)
   "Apply ACTION on marked objects and exit with EXIT."
-  (let* ((ovs (if (use-region-p)
-                  (cons (make-overlay (region-beginning)
-                                      (region-end))
-                        (copy-sequence objed--marked-ovs))
-                (copy-sequence objed--marked-ovs)))
+  (let* ((ovs (copy-sequence objed--marked-ovs))
          (appendp (memq action '(kill-region copy-region-as-kill)))
          (n 0)
          (mc (and (eq exit 'mc)
