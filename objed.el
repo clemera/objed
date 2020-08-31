@@ -4003,7 +4003,11 @@ ON got applied."
 
 (defun objed--do-objects (action exit)
   "Apply ACTION on marked objects and exit with EXIT."
-  (let* ((ovs objed--marked-ovs)
+  (let* ((ovs (if (use-region-p)
+                  (cons (make-overlay (region-beginning)
+                                      (region-end))
+                        (copy-sequence objed--marked-ovs))
+                (copy-sequence objed--marked-ovs)))
          (appendp (memq action '(kill-region copy-region-as-kill)))
          (n 0)
          (mc (and (eq exit 'mc)
@@ -4012,8 +4016,8 @@ ON got applied."
     ;; move to last ov
     (goto-char pos)
     (save-excursion
-      ;; TODO: why not bottom up, was there a reason?
-      (dolist (ov (nreverse (copy-sequence ovs)))
+      ;; Use the order they were "marked".
+      (dolist (ov (nreverse ovs))
         (let ((beg (overlay-start ov))
               (end (overlay-end ov)))
           (when (and beg end)
