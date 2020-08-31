@@ -3703,7 +3703,7 @@ Commands can be shell commands or region commands."
 (defvar objed-use-ielm-for-eval-p nil
   "Whether to use ielm for `objed-run-or-eval' for Elisp.
 
-If nil ‘eval-region’ is used instead.")
+If nil `eval-region' is used instead.")
 
 (defun objed-run-or-eval (beg end)
   "Evalate region between BEG and END using `eval-in-repl'."
