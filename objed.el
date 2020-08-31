@@ -817,8 +817,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     (define-key map "@" 'objed-extend)
     ;; TODO: second + include more
-    (define-key map "+" 'objed-include-trailing-ws)
-    ;; (define-key map "" 'objed-include-leading-ws)
+    (define-key map "+" 'objed-include-forward)
+    ;; (define-key map "" 'objed-include-backward)
 
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
@@ -2400,18 +2400,27 @@ objed operation is used."
                  (objed--end))
                t t)))
 
-(defun objed-include-trailing-ws ()
-  "Include trailing ws for current object."
+(defun objed-include-forward ()
+  "Include trailing punctuation or whitespace of object."
   (interactive)
-  (objed--change-to
-   :end (objed--skip-forward (objed--end) 'ws)))
+  (let ((end
+         (save-excursion
+           (goto-char (objed--end))
+           (when (= 0 (skip-syntax-forward "_."))
+             (objed--skip-ws))
+           (point))))
+    (objed--change-to :end end)))
 
-(defun objed-include-leading-ws ()
-  "Include leading ws for current object."
+(defun objed-include-backward ()
+  "Include leading punctuation or whitespace of object."
   (interactive)
-  (objed--change-to
-   :beg
-   (objed--skip-backward (objed--beg) 'ws)))
+  (let ((beg
+         (save-excursion
+           (goto-char (objed--beg))
+           (when (= 0 (skip-syntax-backward "_."))
+             (objed--skip-ws 'back))
+           (point))))
+    (objed--change-to :beg beg)))
 
 (defun objed-contents-object ()
   "Switch to reference of an object.
