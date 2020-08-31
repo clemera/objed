@@ -2417,7 +2417,7 @@ objed operation is used."
   (let ((beg
          (save-excursion
            (goto-char (objed--beg))
-           (when (= 0 (skip-syntax-backward "_."))
+           (when (= 0 (skip-syntax-backward "_.'"))
              (objed--skip-ws 'back))
            (point))))
     (objed--change-to :beg beg)))
