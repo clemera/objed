@@ -1026,6 +1026,7 @@ To define new operations see `objed-define-op'.")
     ;; default objects
     (define-key map "c" 'objed-char-object)
     (define-key map "w" 'objed-word-object)
+    (define-key map "y" 'objed-symbol-object)
     (define-key map "l" 'objed-line-object)
     (define-key map " " 'objed-region-object)
 
