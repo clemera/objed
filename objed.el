@@ -756,23 +756,15 @@ BEFORE and AFTER are forms to execute before/after calling the command."
                                                 objed--obj-state
                                               'whole))))
 
-    (define-key map "S" (objed--call-and-switch
+    (define-key map "f" (objed--call-and-switch
                          forward-symbol symbol))
-    (define-key map "R" (objed--call-and-switch
+    (define-key map "b" (objed--call-and-switch
                          backward-symbol symbol))
 
-    (define-key map "f" (objed--call-and-switch
+    (define-key map "F" (objed--call-and-switch
                          objed--forward-sexp sexp))
-    (define-key map "b" (objed--call-and-switch
-                         objed--backward-sexp sexp))
-
-    (define-key map "F" (defun objed-forward-defun ()
-                          (interactive)
-                          (objed--switch-to 'defun)
-                          (goto-char (objed--end))))
-
     (define-key map "B" (objed--call-and-switch
-                         beginning-of-defun defun))
+                         objed--backward-sexp sexp))
 
     (define-key map "p" (objed--call-and-switch
                          previous-line line
@@ -808,6 +800,15 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "a" 'objed-beg-of-block)
     (define-key map "e" 'objed-end-of-block)
     (define-key map "v" 'objed-expand-block)
+
+    (define-key map "A" (defun objed-forward-defun ()
+                          (interactive)
+                          (objed--switch-to 'defun)
+                          (goto-char (objed--end))))
+    (define-key map "E" (objed--call-and-switch
+                         beginning-of-defun defun))
+
+
 
     ;; context expansions
     (define-key map "o" 'objed-expand-context)
