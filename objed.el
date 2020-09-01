@@ -1820,48 +1820,6 @@ See also `objed--block-objects'."
            (goto-char (objed--end))))))
 
 
-(defun objed-forward-symbol ()
-  "Move point forward one symbol.
-
-Skips strings and comments."
-  (interactive)
-  (let ((pos (point)))
-    (if (not (eq objed--object 'symbol))
-        (progn
-          (objed--switch-to 'symbol)
-          (goto-char (objed--end))
-          ;; at end of word...
-          (unless (or (> (point) pos)
-                      (eobp))
-            (objed--next-symbol)
-            (objed--switch-to 'symbol)
-            (goto-char (objed--end))))
-    (objed--next-symbol)
-    (objed--switch-to 'symbol)
-    (goto-char (objed--end)))))
-
-
-(defun objed-backward-symbol ()
-  "Move point backward one symbol.
-
-Skips strings and comments."
-  (interactive)
-  (let ((pos (point)))
-    (if (not (eq objed--object 'symbol))
-        (progn
-          (objed--switch-to 'symbol)
-          (goto-char (objed--beg))
-          (unless (< (point) pos)
-            ;; in case we got the fallback
-            (objed--prev-symbol)
-            (objed--prev-symbol)
-            (objed--switch-to 'symbol)
-            (goto-char (objed--beg))))
-      (objed--prev-symbol)
-      (objed--switch-to 'symbol)
-      (goto-char (objed--beg)))))
-
-
 ;; * Context Objects (programming constructs)
 
 (defvar objed--context-objects '(string bracket tag comment)
