@@ -720,8 +720,6 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; general movement
     (define-key map "l" (objed--call-and-switch right-char char))
     (define-key map "h" (objed--call-and-switch left-char char))
-    (define-key map "L" 'objed-move-char-forward)
-    (define-key map "H" 'objed-move-char-backward)
     (define-key map "s" (defun objed-forward-word ()
                           "Call `forward-word' and switch to object word"
                           (interactive)
@@ -755,16 +753,15 @@ BEFORE and AFTER are forms to execute before/after calling the command."
                                                 objed--obj-state
                                               'whole))))
 
-    (define-key map "S" 'objed-move-word-forward)
-    (define-key map "R" 'objed-move-word-backward)
+    (define-key map "S" (objed--call-and-switch
+                         forward-symbol symbol))
+    (define-key map "R" (objed--call-and-switch
+                         backward-symbol symbol))
 
     (define-key map "f" (objed--call-and-switch
                          objed--forward-sexp sexp))
     (define-key map "b" (objed--call-and-switch
                          objed--backward-sexp sexp))
-
-    (define-key map "F" 'objed-move-object-forward)
-    (define-key map "B" 'objed-move-object-backward)
 
     (define-key map "p" (objed--call-and-switch
                          previous-line line
@@ -777,20 +774,20 @@ BEFORE and AFTER are forms to execute before/after calling the command."
                          (when (objed--point-in-periphery)
                            (back-to-indentation))))
 
-    (define-key map "N" 'objed-move-line-forward)
-    (define-key map "P" 'objed-move-line-backward)
+    (define-key map "N" (defun objed-forward-paragraph ()
+                          (interactive)
+                          (call-interactively 'forward-paragraph)
+                          (objed--skip-ws t)
+                          (objed--switch-to 'paragraph)
+                          (goto-char (objed--end))))
+    (define-key map "P" (objed--call-and-switch backward-paragraph paragraph))
 
     (define-key map "(" 'objed-backward-until-context)
     (define-key map ")" 'objed-forward-until-context)
     (define-key map "[" 'objed-previous) ;; objed-current-or-previous-context
     (define-key map "]" 'objed-next) ;; objed-current-or-next-context
-    (define-key map "{" (objed--call-and-switch backward-paragraph paragraph))
-    (define-key map "}" (defun objed-forward-paragraph ()
-                          (interactive)
-                          (call-interactively 'forward-paragraph)
-                          (unless (eq last-command this-command)
-                            (objed--skip-ws t))
-                          (objed--switch-to 'paragraph)))
+    (define-key map "{" 'objed-move-object-backward)
+    (define-key map "}" 'objed-move-object-forward)
 
     (define-key map (kbd "<home>") 'objed-top-object)
     (define-key map (kbd "<end>") 'objed-bottom-object)
@@ -3081,37 +3078,6 @@ Swaps the current object with the previous one."
          (objed-move-object-forward))
         ((eq dir 'backward)
          (objed-move-object-backward))))
-
-(defun objed-move-char-forward ()
-  "Switch to char object and move it forward."
-  (interactive)
-  (objed--switch-and-move 'char 'forward))
-
-(defun objed-move-char-backward ()
-  "Switch to char object and move it backward."
-  (interactive)
-  (objed--switch-and-move 'char 'backward))
-
-(defun objed-move-word-forward ()
-  "Switch to word object and move it forward."
-  (interactive)
-  (objed--switch-and-move 'word 'forward))
-
-(defun objed-move-word-backward ()
-  "Switch to word object and move it backward."
-  (interactive)
-  (objed--switch-and-move 'word 'backward))
-
-(defun objed-move-line-backward ()
-  "Switch to line object and move it backward."
-  (interactive)
-  (objed--switch-and-move 'line 'backward))
-
-(defun objed-move-line-forward ()
-  "Switch to line object and move it forward."
-  (interactive)
-  (objed--switch-and-move 'line 'forward))
-
 
 (defvar edit-indirect--overlay)
 (defun objed-narrow (&optional arg)
