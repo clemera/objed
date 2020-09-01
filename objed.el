@@ -720,6 +720,9 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; general movement
     (define-key map "l" (objed--call-and-switch right-char char))
     (define-key map "h" (objed--call-and-switch left-char char))
+    (define-key map "L" (objed--call-and-switch objed-forward-line line))
+    (define-key map "H" (objed--call-and-switch objed-backward-line line))
+
     (define-key map "s" (defun objed-forward-word ()
                           "Call `forward-word' and switch to object word"
                           (interactive)
@@ -907,6 +910,21 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     map)
   "Keymap for commands when `objed' is active.")
+
+(defun objed-forward-line (arg)
+  "Like `forward-word' but for lines."
+  (interactive "p")
+  (when (eolp)
+    (forward-line 1))
+  (move-end-of-line arg))
+
+(defun objed-backward-line (arg)
+  "Like `backward-word' but for lines."
+  (interactive "p")
+  (when (bolp)
+    (forward-line -1))
+  (forward-line (1+ (- arg)))
+  (move-beginning-of-line 1))
 
 
 (defun objed--define-prefix (key cmd)
