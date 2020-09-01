@@ -1906,41 +1906,17 @@ comments."
     (re-search-backward  ".\\>" nil t)))
 
 
-(defun objed--next-symbol ()
-  "Move to next symbol."
-  (re-search-forward  "\\_<" nil t)
-  (let (syn start)
-    (while (setq start (nth 8 (setq syn (syntax-ppss))))
-      (goto-char start)
-      (when (cond ((nth 3 syn)
-                   (forward-sexp 1) t)
-                  ((nth 4 syn)
-                   (forward-comment 1) t))
-        (re-search-forward  "\\_<." nil t)))))
-
-
-(defun objed--prev-symbol ()
-  "Move to previous symbol."
-  (re-search-backward  "\\_>" nil t)
-  (let (start)
-    (while (setq start (nth 8 (syntax-ppss)))
-      (goto-char start)
-      (re-search-backward  "\\_>" nil t))))
-
-
 (objed-define-object nil symbol
   :atp
-  (and (not (objed--in-string-or-comment-p))
-       (or (looking-at "\\_<")
+  (and (or (looking-at "\\_<")
            (looking-back "\\_>" 1)))
   :ref 'identifier
   :get-obj
-  (when (not (objed--in-string-or-comment-p))
-    (bounds-of-thing-at-point 'symbol))
+  (bounds-of-thing-at-point 'symbol)
   :try-next
-  (objed--next-symbol)
+  (re-search-forward  "\\_<" nil t)
   :try-prev
-  (objed--prev-symbol))
+  (re-search-backward  "\\_>" nil t))
 
 
 (objed-define-object nil subword
