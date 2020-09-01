@@ -813,9 +813,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; (define-key map "M" 'objed-unmark-all)
 
     (define-key map "@" 'objed-extend)
-    ;; TODO: second + include more
     (define-key map "+" 'objed-include-forward)
-    ;; (define-key map "" 'objed-include-backward)
+    (define-key map "-" 'objed-include-backward)
 
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
