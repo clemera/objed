@@ -766,6 +766,14 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "b" (objed--call-and-switch
                          objed--backward-sexp sexp))
 
+    (define-key map "F" (defun objed-forward-defun ()
+                          (interactive)
+                          (objed--switch-to 'defun)
+                          (goto-char (objed--end))))
+
+    (define-key map "B" (objed--call-and-switch
+                         beginning-of-defun defun))
+
     (define-key map "p" (objed--call-and-switch
                          previous-line line
                          nil
