@@ -1080,7 +1080,7 @@ Use `objed-define-dispatch' to define a dispatch command.")
 (objed-define-dispatch "#" objed--ace-switch-object)
 (objed-define-dispatch "=" objed--ace-switch-in-current)
 (objed-define-dispatch "`" objed--backward-until)
-(objed-define-dispatch "´" objed--forward-until)
+(objed-define-dispatch "'" objed--forward-until)
 
 (defun objed--backward-until (name)
   "Activate part from point backward until object NAME."
