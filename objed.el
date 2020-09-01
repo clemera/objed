@@ -1002,24 +1002,26 @@ To define new operations see `objed-define-op'.")
 (defvar objed-user-map nil
   "Keymap for custom user bindings.
 You need to define a prefix key for this map to be able to use
-it. See `objed-set-user-map-keys'.")
+it. See `objed-set-user-map-prefix-keys'.")
 
 (defvar objed-other-user-map nil
   "Keymap for custom user bindings.
 You need to define a prefix key for this map to be able to use
-it. See `objed-set-user-map-keys'.")
+it. See `objed-set-user-map-prefix-keys'.")
 
-(defun objed-set-user-map-keys (key1 key2)
-  "Set KEY1 and KEY2 as prefix keys for user maps.
-KEY1 is the prefix for `objed-user-map' and KEY2 the prefix for
+(defun objed-set-user-map-prefix-keys (user-map other-user-map)
+  "Set USER-MAP and OTHER-USER-MAP as prefix keys for user maps.
+USER-MAP is the prefix for `objed-user-map' and OTHER-USER-MAP the prefix for
 `objed-other-user-map'."
-  (let ((map1 (objed--define-prefix key1 'objed-user-map))
-        (map2 (objed--define-prefix key2 'objed-other-user-map)))
-    (define-key objed-map key1 'objed-user-map)
-    (define-key objed-map key2 'objed-other-user-map)
-    (setq objed-user-map map1)
-    (setq objed-other-user-map map2)))
+  (when user-map
+    (objed--define-map-prefix user-map 'objed-user-map))
+  (when other-user-map
+    (objed--define-map-prefix other-user-map 'objed-other-user-map)))
 
+(defun objed--define-map-prefix (key map-sym)
+  (let ((map (objed--define-prefix key 'objed-user-map)))
+    (define-key objed-map key map-sym)
+    (set map-sym map)))
 
 (defvar objed-object-map
   (let ((map (objed--define-prefix "c" 'objed-object-map)))
