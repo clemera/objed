@@ -801,11 +801,11 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "e" 'objed-end-of-block)
     (define-key map "h" 'objed-expand-block)
 
-    (define-key map "A" (defun objed-forward-defun ()
+    (define-key map "E" (defun objed-forward-defun ()
                           (interactive)
                           (objed--switch-to 'defun)
                           (goto-char (objed--end))))
-    (define-key map "E" (objed--call-and-switch
+    (define-key map "A" (objed--call-and-switch
                          beginning-of-defun defun))
 
 
