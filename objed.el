@@ -918,21 +918,11 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     map)
   "Keymap for commands when `objed' is active.")
 
-(defun objed-forward-line (arg)
-  "Like `forward-word' but for lines."
-  (interactive "p")
-  (when (eolp)
-    (forward-line 1))
-  (move-end-of-line arg))
-
-(defun objed-backward-line (arg)
-  "Like `backward-word' but for lines."
-  (interactive "p")
-  (when (bolp)
-    (forward-line -1))
-  (forward-line (1+ (- arg)))
-  (move-beginning-of-line 1))
-
+(defun objed-backward-symbol (arg)
+  "Wrapper around `forward-symbol'.
+Move ARG times backward."
+  (interactive "^p")
+  (forward-symbol (- arg)))
 
 (defun objed--define-prefix (key cmd)
   "Create a prefix keymap for `objed-map'.
