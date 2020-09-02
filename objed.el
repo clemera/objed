@@ -783,11 +783,11 @@ BEFORE and AFTER are forms to execute before/after calling the command."
                           (goto-char (objed--end))))
     (define-key map "P" (objed--call-and-switch backward-paragraph paragraph))
 
-    (define-key map "`" 'objed-backward-until-context)
-    (define-key map "'" 'objed-forward-until-context)
+    (define-key map "-" 'objed-include-backward)
+    (define-key map "+" 'objed-include-forward)
 
-    (define-key map "(" 'objed-include-backward)
-    (define-key map ")" 'objed-include-forward)
+    (define-key map "(" 'objed-backward-until-context)
+    (define-key map ")" 'objed-forward-until-context)
     (define-key map "[" 'objed-previous) 
     (define-key map "]" 'objed-next)
     (define-key map "{" 'objed-move-object-backward)
@@ -1094,8 +1094,8 @@ To define new objects see `objed-define-object'.")
 
 Use `objed-define-dispatch' to define a dispatch command.")
 
-(objed-define-dispatch "-" objed--backward-until)
-(objed-define-dispatch "+" objed--forward-until)
+(objed-define-dispatch "`'" objed--backward-until)
+(objed-define-dispatch "'" objed--forward-until)
 (objed-define-dispatch "=" objed--ace-switch-in-current)
 (objed-define-dispatch "#" objed--ace-switch-object)
 
