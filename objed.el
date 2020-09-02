@@ -2385,7 +2385,7 @@ The active region will be used as the current object when an
 objed operation is used."
   (interactive)
   (when objed--marked-ovs
-    (user-error "objed-extend: Currently not supported with marked objects"))
+    (user-error "Currently not supported with marked objects"))
   (if (region-active-p)
       (if (fboundp 'er/expand-region)
           (call-interactively 'er/expand-region)
