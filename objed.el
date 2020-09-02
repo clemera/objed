@@ -315,6 +315,11 @@ be used to restore previous states."
     kmacro-start-macro-or-insert-counter
     kmacro-end-or-call-macro
     kmacro-call-macro
+    isearch-forward
+    isearch-forward-regexp
+    isearch-forward-symbol
+    isearch-backward
+    isearch-backward-regexp
     )
   "Regular Emacs commands which should not exit modal edit state.
 
@@ -1500,6 +1505,12 @@ one of `objed-keeper-commands'."
     (or (commandp ocmd)
         objed--with-allow-input
         (and this-command
+             ;; those are handled on exit in objed--reset--objed-buffer
+             (not (memq this-command '(isearch-forward
+                                       isearch-forward-regexp
+                                       isearch-forward-symbol
+                                       isearch-backward
+                                       isearch-backward-regexp)))
              (or (memq this-command objed-keeper-commands)
                  (assq this-command objed-cmd-alist))
              (prog1 #'ignore
@@ -3964,7 +3975,21 @@ Reset and reinitilize objed if appropriate."
               (set (car setting) (cdr setting))
             (kill-local-variable setting))))
       (remove-hook 'pre-command-hook 'objed--push-state t)
+
+      (when (and (memq this-command '(isearch-forward
+                                      isearch-forward-regexp
+                                      isearch-forward-symbol
+                                      isearch-backward
+                                      isearch-backward-regexp))
+                 (memq this-command objed-keeper-commands))
+        (add-hook 'isearch-mode-end-hook #'objed-reactivate-after-isearch))
+
       (run-hooks 'objed-exit-hook))))
+
+(defun objed-reactivate-after-isearch ()
+  "Reactivate objed after isearch."
+  (remove-hook 'isearch-mode-end-hook #'objed-reactivate-after-isearch)
+  (run-at-time 0 nil #'objed-activate))
 
 (defun objed--reset ()
   "Reset variables and state information."
