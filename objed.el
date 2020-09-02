@@ -785,6 +785,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     (define-key map "-" 'objed-include-backward)
     (define-key map "+" 'objed-include-forward)
+    (define-key map "_" 'objed-include)
 
     (define-key map "(" 'objed-backward-until-context)
     (define-key map ")" 'objed-forward-until-context)
@@ -854,7 +855,6 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; direct object switches
     (define-key map "." 'objed-goto-next-identifier)
     (define-key map "," 'objed-goto-prev-identifier)
-    (define-key map "_" 'objed-toggle-indentifier-place)
 
     ;; prefix keys
     (define-key map "x" 'objed-op-map)
@@ -2297,37 +2297,6 @@ On repeat or at boundary move to next."
   (when (objed--switch-to 'identifier)
     (goto-char (objed--beg))))
 
-(let (state)
-  (defun objed-toggle-indentifier-place ()
-    "Toggle between current and special places of identifier.
-
-Special places are for example defintion declarations or key
-bindings."
-    (interactive)
-    (when (eq major-mode 'emacs-lisp-mode)
-      (cond ((eq last-command 'objed-goto-definition)
-             (objed--restore-state state))
-            (t
-             (unless (eq objed--object 'identifier)
-               (objed--switch-to 'identifier)
-               (goto-char (objed--beg)))
-             (when (eq this-command 'objed-toggle-indentifier-place)
-               (setq state (objed--get-current-state)))
-             (let* ((format (objed--get-ident-format))
-                    (pos (save-excursion
-                           (goto-char (point-min))
-                           (when (re-search-forward
-                                  (format "(def.*? \\(%s\\)" format) nil t)
-                             (match-beginning 1)))))
-               (if (and pos (not (= pos (point))))
-                   (progn (goto-char pos)
-                          (objed--switch-to 'identifier)
-                          (setq this-command 'objed-goto-definition))
-                 (objed-top-object)
-                 (when (and pos (= pos (point)))
-                   (objed-bottom-object)))))))))
-
-
 (defun objed-goto-next-identifier ()
   "Switch to next identifier."
   (interactive)
@@ -2403,6 +2372,12 @@ objed operation is used."
              (objed--skip-ws 'back))
            (point))))
     (objed--change-to :beg beg)))
+
+(defun objed-include ()
+  "Include leading and trailing whitespace of punctuation."
+  (interactive)
+  (objed-include-forward)
+  (objed-include-backward))
 
 (defun objed-contents-object ()
   "Switch to reference of an object.
