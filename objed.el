@@ -720,7 +720,13 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; general movement
     (define-key map "f" (objed--call-and-switch right-char char))
     (define-key map "b" (objed--call-and-switch left-char char))
-    (define-key map "F" (defun objed-forward-word ()
+
+    (define-key map "F" (objed--call-and-switch
+                         forward-symbol symbol))
+    (define-key map "B" (objed--call-and-switch
+                         objed-backward-symbol symbol))
+
+    (define-key map "s" (defun objed-forward-word ()
                           "Call `forward-word' and switch to object word"
                           (interactive)
                           (if (objed--inner-p)
@@ -736,7 +742,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
                                             (if (eq objed--object 'word)
                                                 objed--obj-state
                                               'whole))))
-    (define-key map "B" (defun objed-backward-word ()
+    (define-key map "r" (defun objed-backward-word ()
                           "Call `backward-word' and switch to object word"
                           (interactive)
                           (if (objed--inner-p)
@@ -752,11 +758,6 @@ BEFORE and AFTER are forms to execute before/after calling the command."
                                             (if (eq objed--object 'word)
                                                 objed--obj-state
                                               'whole))))
-
-    (define-key map "s" (objed--call-and-switch
-                         forward-symbol symbol))
-    (define-key map "r" (objed--call-and-switch
-                         backward-symbol symbol))
 
     (define-key map "S" (objed--call-and-switch
                          objed--forward-sexp sexp))
