@@ -782,8 +782,12 @@ BEFORE and AFTER are forms to execute before/after calling the command."
                           (goto-char (objed--end))))
     (define-key map "P" (objed--call-and-switch backward-paragraph paragraph))
 
-    (define-key map "(" 'objed-backward-until-context)
-    (define-key map ")" 'objed-forward-until-context)
+
+    (define-key map "-" 'objed-backward-until-context)
+    (define-key map "+" 'objed-forward-until-context)
+
+    (define-key map ")" 'objed-include-forward)
+    (define-key map "(" 'objed-include-backward)
     (define-key map "[" 'objed-previous) ;; objed-current-or-previous-context
     (define-key map "]" 'objed-next) ;; objed-current-or-next-context
     (define-key map "{" 'objed-move-object-backward)
@@ -796,7 +800,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; block expansions
     (define-key map "a" 'objed-beg-of-block)
     (define-key map "e" 'objed-end-of-block)
-    (define-key map "v" 'objed-expand-block)
+    (define-key map "h" 'objed-expand-block)
 
     (define-key map "A" (defun objed-forward-defun ()
                           (interactive)
@@ -822,8 +826,6 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; (define-key map "M" 'objed-unmark-all)
 
     (define-key map "@" 'objed-extend)
-    (define-key map "+" 'objed-include-forward)
-    (define-key map "-" 'objed-include-backward)
 
     ;; basic edit ops
     (define-key map "k" 'objed-kill)
