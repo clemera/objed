@@ -689,12 +689,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
       (define-key map (kbd (format "M-%c" n)) 'digit-argument)
       (define-key map (kbd (format "C-%c" n)) 'digit-argument))
     ;; common emacs keys
-    (define-key map (kbd "C-g") 'objed-quit)
     (define-key map (kbd "?") 'objed-show-top-level)
-    ;; (define-key map (kbd "C-o") 'objed-open-line)
 
-    ;; TODO: switch with q, so quit window is qq?
-    (define-key map "g" 'objed-quit)
     (define-key map "q" 'objed-quit-window-or-reformat)
     ;; TODO: support repeated invokation
     (define-key map (kbd "C-u") 'universal-argument)
@@ -813,10 +809,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
 
     ;; context expansions
-    (define-key map "o" 'objed-expand-context)
-    (define-key map "O" 'objed-current-or-previous-context)
-
-    (define-key map "i" 'objed-del-insert)
+    (define-key map "c" 'objed-del-insert)
+    (define-key map "i" 'objed-quit)
     (define-key map "t" 'objed-toggle-state)
     (define-key map "j" 'objed-toggle-side)
 
@@ -857,20 +851,20 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "," 'objed-goto-prev-identifier)
 
     ;; prefix keys
+    (define-key map "o" 'objed-object-map)
     (define-key map "x" 'objed-op-map)
-    (define-key map "c" 'objed-object-map)
-
-    ;; for custom user object and op commands
-    (define-key map (kbd "M-g o") 'objed-occur)
 
     ;; special commands
     (define-key map "*" 'objed-mark-more)
-    (define-key map "u" 'objed-last)
+    (define-key map "u" 'objed-expand-context)
+    (define-key map "U" 'objed-current-or-previous-context)
+    (define-key map "l" 'objed-last)
     ;; zap to object, jump to objects with avy
-    (define-key map "z" 'objed-ace)
-    ;; swiper like object search
-    ;; TODO: start query replace in current object,
-    ;; or for all
+    (define-key map "g" 'objed-ace)
+    (define-key map "G" 'objed-occur)
+    (define-key map (kbd "M-g o") 'objed-occur)
+
+    ;; TODO: start query replace in current object, or for all
     (define-key map "%" 'objed-replace)
     (define-key map ":" 'objed-eval-expression)
 
@@ -3827,7 +3821,6 @@ and RANGE hold the object position data."
                 (objed-make-object :beg (point)
                                    :end end)))))))
 
-
 (defun objed-quit ()
   "Quit and deactivate.
 
@@ -4001,8 +3994,8 @@ whitespace they build a sequence."
 
 (defvar objed-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-SPC") 'objed-activate)
-    (define-key map (kbd "M-#") 'objed-activate-object)
+    (define-key map (kbd "M-i") 'objed-activate)
+    (define-key map (kbd "M-o") 'objed-activate-object)
     (define-key map (kbd "M-[") 'objed-beg-of-object-at-point)
     (define-key map (kbd "M-]") 'objed-end-of-object-at-point)
     (define-key map (kbd "C-,") 'objed-prev-identifier)
