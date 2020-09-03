@@ -711,6 +711,8 @@ BEFORE and AFTER are forms to execute before/after calling the command."
 
     ;; todo: restore object state, too?
     (define-key map "/" (objed--call-and-switch undo char))
+    (define-key map "u" 'objed-undo)
+    (define-key map "U" (objed--call-and-switch undo-redo char))
     (define-key map "~" 'objed-undo-in-object)
 
     ;; general movement
@@ -853,11 +855,12 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; prefix keys
     (define-key map "o" 'objed-object-map)
     (define-key map "x" 'objed-op-map)
+    (define-key map "z" 'objed-user-map)
 
     ;; special commands
     (define-key map "*" 'objed-mark-more)
-    (define-key map "u" 'objed-expand-context)
-    (define-key map "U" 'objed-current-or-previous-context)
+    (define-key map "v" 'objed-expand-context)
+    (define-key map "V" 'objed-current-or-previous-context)
     (define-key map "l" 'objed-last)
     ;; zap to object, jump to objects with avy
     (define-key map "g" 'objed-ace)
