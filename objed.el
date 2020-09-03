@@ -787,7 +787,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "_" 'objed-include)
     (define-key map "(" 'objed-include-backward)
     (define-key map ")" 'objed-include-forward)
-    (define-key map "[" 'objed-previous) 
+    (define-key map "[" 'objed-previous)
     (define-key map "]" 'objed-next)
     (define-key map "{" 'objed-move-object-backward)
     (define-key map "}" 'objed-move-object-forward)
@@ -2312,7 +2312,7 @@ The active region will be used as the current object when an
 objed operation is used."
   (interactive)
   (when objed--marked-ovs
-    (user-error "objed-extend: Currently not supported with marked objects"))
+    (user-error "Currently not supported with marked objects"))
   (if (region-active-p)
       (if (fboundp 'er/expand-region)
           (call-interactively 'er/expand-region)
