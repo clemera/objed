@@ -301,9 +301,18 @@ This option holds the number of times `objed-last' can
 be used to restore previous states."
   :type 'integer)
 
+(defvar objed--isearch-cmds
+  '(isearch-forward
+    isearch-forward-regexp
+    isearch-forward-symbol
+    isearch-backward
+    isearch-backward-regexp
+    isearch-forward-symbol-at-point
+    isearch-forward-word)
+  "Isearch commands known to objed.")
 
 (defcustom objed-keeper-commands
-  '(save-buffer
+  `(save-buffer
     read-only-mode
     undo
     undo-only
@@ -315,17 +324,15 @@ be used to restore previous states."
     kmacro-start-macro-or-insert-counter
     kmacro-end-or-call-macro
     kmacro-call-macro
-    isearch-forward
-    isearch-forward-regexp
-    isearch-forward-symbol
-    isearch-backward
-    isearch-backward-regexp
+    ,@objed--isearch-cmds
     )
   "Regular Emacs commands which should not exit modal edit state.
 
 When regular commands are executed `objed' will exit its editing
 state. Commands added to this list wont do that."
   :type '(repeat function))
+
+
 
 (defcustom objed-cursor-color "#e52b50"
   "Cursor color to use when `objed' is active."
@@ -1506,11 +1513,7 @@ one of `objed-keeper-commands'."
         objed--with-allow-input
         (and this-command
              ;; those are handled on exit in objed--reset--objed-buffer
-             (not (memq this-command '(isearch-forward
-                                       isearch-forward-regexp
-                                       isearch-forward-symbol
-                                       isearch-backward
-                                       isearch-backward-regexp)))
+             (not (memq this-command objed--isearch-cmds))
              (or (memq this-command objed-keeper-commands)
                  (assq this-command objed-cmd-alist))
              (prog1 #'ignore
@@ -3976,11 +3979,7 @@ Reset and reinitilize objed if appropriate."
             (kill-local-variable setting))))
       (remove-hook 'pre-command-hook 'objed--push-state t)
 
-      (when (and (memq this-command '(isearch-forward
-                                      isearch-forward-regexp
-                                      isearch-forward-symbol
-                                      isearch-backward
-                                      isearch-backward-regexp))
+      (when (and (memq this-command objed--isearch-cmds)
                  (memq this-command objed-keeper-commands))
         (add-hook 'isearch-mode-end-hook #'objed-reactivate-after-isearch))
 
