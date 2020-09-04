@@ -856,6 +856,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "o" 'objed-object-map)
     (define-key map "x" 'objed-op-map)
     (define-key map "z" 'objed-user-map)
+    (define-key map "Z" 'objed-other-user-map)
 
     ;; special commands
     (define-key map "*" 'objed-mark-more)
@@ -1014,6 +1015,10 @@ To define new operations see `objed-define-op'.")
 
 (defvar objed-user-map
   (objed--define-prefix "z" 'objed-user-map)
+  "Keymap for custom user bindings.")
+
+(defvar objed-other-user-map
+  (objed--define-prefix "Z" 'objed-user-map)
   "Keymap for custom user bindings.")
 
 (defvar objed-object-map
