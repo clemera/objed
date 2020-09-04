@@ -855,13 +855,11 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     ;; prefix keys
     (define-key map "o" 'objed-object-map)
     (define-key map "x" 'objed-op-map)
-    (define-key map "z" 'objed-user-map)
-    (define-key map "Z" 'objed-other-user-map)
+    (define-key map "v" 'objed-user-map)
+    (define-key map "z" 'objed-other-user-map)
 
     ;; special commands
     (define-key map "*" 'objed-mark-more)
-    (define-key map "v" 'objed-expand-context)
-    (define-key map "V" 'objed-current-or-previous-context)
     (define-key map "l" 'objed-last)
     ;; zap to object, jump to objects with avy
     (define-key map "g" 'objed-ace)
@@ -2109,7 +2107,10 @@ On expand move to start of object."
             (objed-context-object)
             (goto-char (objed--beg))))
       (objed-context-object)
-      (goto-char (objed--beg)))))
+      (goto-char (objed--beg))))
+  (let ((map (make-sparse-keymap)))
+    (define-key map "o" 'objed-expand-context)
+    (set-transient-map map t)))
 
 (defun objed-upto-context ()
   "Toggle between inner sides of object at point.
