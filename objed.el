@@ -1020,7 +1020,7 @@ To define new operations see `objed-define-op'.")
   "Keymap for custom user bindings.")
 
 (defvar objed-object-map
-  (let ((map (objed--define-prefix "c" 'objed-object-map)))
+  (let ((map (objed--define-prefix "o" 'objed-object-map)))
     ;; choose via completion
     (define-key map (kbd "TAB") 'objed-object-x)
     (define-key map (kbd "SPC") 'objed-region-object)
