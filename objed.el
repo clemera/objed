@@ -3042,49 +3042,68 @@ Moves point over any whitespace afterwards."
 
 Swaps the current object with the next one."
   (interactive)
-  (let* ((current (buffer-substring (objed--beg)
-                                    (objed--end)))
+  (let ((reg (use-region-p)))
+    (when reg
+      (setq objed--current-obj
+            (objed-make-object :beg (region-beginning)
+                               :end (region-end)))
+      (deactivate-mark))
 
-         (nexto (objed--get-next))
-         (next (and nexto (apply #'buffer-substring
-                                 (objed--current nexto))))
-         (nend (objed--end nexto)))
-    (apply #'delete-region (objed--current nexto))
-    (goto-char (objed--beg nexto))
-    (insert current)
+    (let* ((current (buffer-substring (objed--beg)
+                                      (objed--end)))
+           (nexto (objed--get-next))
+           (next (and nexto (apply #'buffer-substring
+                                   (objed--current nexto))))
+           (nend (objed--end nexto)))
+      (apply #'delete-region (objed--current nexto))
+      (goto-char (objed--beg nexto))
+      (insert current)
 
-    (apply #'delete-region (objed--current))
-    (goto-char (objed--beg))
-    (insert next)
+      (apply #'delete-region (objed--current))
+      (goto-char (objed--beg))
+      (insert next)
 
-    (goto-char (- nend (length current)))
-    (objed--update-current-object)))
-
+      (when reg
+        (push-mark nend t t)
+        (setq deactivate-mark nil))
+      (goto-char (- nend (length current)))
+      (unless reg
+        (objed--update-current-object)))))
 
 (defun objed-move-object-backward ()
   "Move object backward.
 
 Swaps the current object with the previous one."
   (interactive)
-  (let* ((current (buffer-substring (objed--beg)
-                                    (objed--end)))
+  (let ((reg (use-region-p)))
+    (when reg
+      (setq objed--current-obj
+            (objed-make-object :beg (region-beginning)
+                               :end (region-end)))
+      (deactivate-mark))
 
-         (prevo (objed--get-prev))
-         (prev (and prevo (apply #'buffer-substring
-                                 (objed--current prevo))))
-         (pbeg (objed--beg prevo)))
+    (let* ((current (buffer-substring (objed--beg)
+                                      (objed--end)))
 
-    (apply #'delete-region (objed--current))
-    (goto-char (objed--beg))
-    (insert prev)
+           (prevo (objed--get-prev))
+           (prev (and prevo (apply #'buffer-substring
+                                   (objed--current prevo))))
+           (pbeg (objed--beg prevo)))
 
-    (apply #'delete-region (objed--current prevo))
-    (goto-char (objed--beg prevo))
-    (insert current)
-    (goto-char pbeg)
-    (objed--update-current-object)))
+      (apply #'delete-region (objed--current))
+      (goto-char (objed--beg))
+      (insert prev)
 
+      (apply #'delete-region (objed--current prevo))
+      (goto-char (objed--beg prevo))
+      (insert current)
 
+      (when reg
+        (push-mark (point) t t)
+        (setq deactivate-mark nil))
+      (goto-char pbeg)
+      (unless reg
+        (objed--update-current-object)))))
 
 (defun objed--switch-and-move (o dir)
   "Switch to object O and move it in direction DIR."
