@@ -2287,8 +2287,9 @@ On repeat or at boundary move to next."
       (goto-char (point-min))
       (when (re-search-forward format nil t)
         (goto-char (match-beginning 0))
-        (when (= (point) ib)
-          (message "No previous indentifier"))))))
+        (if (= (point) ib)
+            (message "No other instance found")
+          (message "Moved to first insance"))))))
 
 ;;;###autoload
 (defun objed-last-identifier ()
@@ -2302,8 +2303,9 @@ On repeat or at boundary move to next."
     (when format
       (goto-char (point-max))
       (re-search-backward format nil t)
-      (when (= (point) ib)
-        (message "No next indentifier")))))
+      (if (= (point) ib)
+          (message "No other instance found")
+        (message "Moved to last insance")))))
 
 ;;;###autoload
 (defun objed-next-identifier ()

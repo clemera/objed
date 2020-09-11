@@ -2545,7 +2545,16 @@ non-nil the indentation block can contain empty lines."
           (goto-char (car bds))
           (when (or (eq real-this-command #'objed-next-identifier)
                     (eq real-this-command #'objed-goto-next-identifier))
-            (run-at-time 0 nil (apply-partially #'message "No next identifier"))))))))
+            (objed-first-identifier)
+            (objed--flash-object 'match)))))))
+
+(defun objed--flash-object (face &optional time)
+  "Flash current object using FACE for TIME (defaults to 0.4)."
+  (let ((cookie (face-remap-add-relative
+                 'objed-hl face)))
+    (run-at-time (or time .3) nil
+                 (lambda ()
+                   (face-remap-remove-relative cookie)))))
 
 (defun objed--prev-identifier ()
   "Move to previous identifier."
@@ -2563,7 +2572,8 @@ non-nil the indentation block can contain empty lines."
             (goto-char (car bds))
             (when (or (eq real-this-command #'objed-prev-identifier)
                       (eq real-this-command #'objed-goto-prev-identifier))
-              (run-at-time 0 nil (apply-partially #'message "No previous identifier")))))))))
+              (objed-last-identifier)
+              (objed--flash-object 'match))))))))
 
 
 
