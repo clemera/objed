@@ -27,6 +27,7 @@
 
 ;; * Bytecomp
 
+(require 'cl-lib)
 (require 'subword)
 (require 'face-remap)
 
