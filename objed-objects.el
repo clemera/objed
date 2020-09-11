@@ -28,6 +28,7 @@
 ;; * Bytecomp
 
 (require 'subword)
+(require 'face-remap)
 
 ;; info for byte-comp
 (defvar objed-map)
@@ -60,6 +61,9 @@
 (declare-function objed-goto-prev-identifier "ext:objed")
 (declare-function objed-next-identifier "ext:objed")
 (declare-function objed-prev-identifier "ext:objed")
+(declare-function objed-first-identifier "ext:objed")
+(declare-function objed-last-identifier "ext:objed")
+
 
 
 
@@ -2986,3 +2990,4 @@ non-nil the indentation block can contain empty lines."
 
 (provide 'objed-objects)
 ;;; objed-objects.el ends here
+
