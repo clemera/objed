@@ -1340,7 +1340,9 @@ See `objed-cmd-alist'."
   "Return non-nil when any self insertion key is rebound."
   (cl-dolist (char (string-to-list "abcdefghijklmnopqrstuvwxyz"))
     (let ((binding (key-binding (vector char))))
-      (when (not (string-match "insert" (symbol-name binding)))
+      (when (not (and
+                  (symbolp binding)
+                  (string-match "insert" (symbol-name binding))))
         (cl-return binding)))))
 
 (defun objed-init-p ()
