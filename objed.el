@@ -128,6 +128,7 @@
 (require 'hl-line)
 
 (require 'objed-objects)
+(require 'objed-tutorial)
 
 ;; * Customization
 
