@@ -29,7 +29,9 @@
 
 (require 'org)
 
-(defun objed-tutorial () "Open a buffer with the objed tutorial."
+;;;###autoload
+(defun objed-tutorial ()
+  "Open a buffer with the objed tutorial."
   (interactive)
   (switch-to-buffer (generate-new-buffer "*Objed Tutorial*"))
   (objed-mode t)
