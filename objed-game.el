@@ -194,7 +194,7 @@
             `(progn
                (setq objed-game--continue 'objed-game--next-frame)
                (,intro))
-          '(objed-game--next-frame)))))
+          '(objed-game--next-frame))))
 
 ;;;; Utility expressions:
 
