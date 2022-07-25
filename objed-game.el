@@ -187,6 +187,7 @@
        (switch-to-buffer (get-buffer-create "*Objed game*"))
        (objed-game-mode)
        (setq objed-game--current-level
+             (make-objed-game-level
               :name ',name
               :next ',next
               :frames (copy-sequence ',frames)))
@@ -194,7 +195,7 @@
             `(progn
                (setq objed-game--continue 'objed-game--next-frame)
                (,intro))
-          '(objed-game--next-frame))))
+          '(objed-game--next-frame)))))
 
 ;;;; Utility expressions:
 
