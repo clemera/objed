@@ -45,11 +45,6 @@
 
 ;;;; Variables:
 
-(defconst objed-game--ignored-commands
-  '(handle-select-window
-    other-window)
-  "Commands which will not trigger checking the win condition.")
-
 (defvar-local objed-game--show-stats nil
   "Whether to show stats for the current frame.")
 
@@ -117,16 +112,15 @@
 (defun objed-game--post-command-function ()
   "Function which calls `objed-game--win-condition' in the `post-command' hook."
   (when objed-game--win-condition
-    (unless (member this-command objed-game--ignored-commands)
-      (pcase (funcall objed-game--win-condition)
-        ('partial)
-        ('t
-         (setq objed-game--win-condition nil)
-         (objed-game--success))
-        ('nil
-         (cl-incf (objed-game-frame-attempts objed-game--current-frame))
-         (setq objed-game--win-condition nil)
-         (objed-game--failure))))))
+    (pcase (funcall objed-game--win-condition)
+      ('partial)
+      ('t
+       (setq objed-game--win-condition nil)
+       (objed-game--success))
+      ('nil
+       (cl-incf (objed-game-frame-attempts objed-game--current-frame))
+       (setq objed-game--win-condition nil)
+       (objed-game--failure)))))
 
 (defvar-keymap objed-game-mode-map
   :doc "Keymap for the Objed game."
