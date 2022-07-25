@@ -174,6 +174,7 @@
                          'objed-game--verify-keys
                        'objed-game--verify-commands)))))))
 
+;;;###autoload
 (defmacro objed-game-level (name &rest frames)
   "Create a level for the Objed game."
   (declare (indent 1) (doc-string 2))
