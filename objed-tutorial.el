@@ -1,11 +1,10 @@
-
-;;; objed.el --- Navigate and edit text objects. -*- lexical-binding: t -*-
+;;; objed-tutorial.el --- Tutorial for objed -*- lexical-binding: t; -*-
 ;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
-;; Author: Clemens Radermacher <clemera@posteo.net>
+;; Author: Tyler Grinn <tylergrinn@gmail.com>
 ;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
-;; Version: 0.8.3
-;; Keywords: convenience
+;; Version: 0.8.1
+;; Maintainer: Clemens Radermacher <clemera@posteo.net>
 ;; URL: https://github.com/clemera/objed
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -23,7 +22,8 @@
 
 ;;; Commentary:
 ;;
-;; Tutorial for `objed'
+;; Tutorial for `objed'.  Use the command `objed-tutorial' to start a
+;; new training session.
 
 ;;; Code:
 
@@ -31,8 +31,7 @@
 
 (defun objed-tutorial () "Open a buffer with the objed tutorial."
   (interactive)
-  (switch-to-buffer (generate-new-buffer
-		     "OBJED TUTORIAL"))
+  (switch-to-buffer (generate-new-buffer "*Objed Tutorial*"))
   (objed-mode t)
   (org-mode)
   (outline-show-all)
@@ -578,6 +577,8 @@ derived from the standard Emacs tutorial,
 
 Copyright (C) 1985, 1996, 1998, 2001-2019 Free Software
 Foundation, Inc.")))
-(goto-char 1))
+  (goto-char 1))
 
 (provide 'objed-tutorial)
+
+;;; objed-tutorial.el ends here
